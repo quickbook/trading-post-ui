@@ -1,14 +1,15 @@
 import ContentInfoSection from "../sections/ContentInfoSection";
 import FirmDetailsTableSection from "../sections/FirmDetailsTableSection";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { LoadingScreen } from "./HomePage";
+import { MainContext } from "../../App";
 
 // Option 1: Using styled() API
 
 // Your component using styled API
 const CompareFirmsPage = () => {
   // Add loading state
-    const [isLoading, setIsLoading] = useState(true);
+    const {isLoading, setIsLoading} = useContext(MainContext);
   
     // Simulate loading effect
     useEffect(() => {

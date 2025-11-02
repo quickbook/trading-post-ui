@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { Box } from "@mui/material";
 import Reviews from "../sections/Reviews";
 import { LoadingScreen } from "./HomePage";
+import { MainContext } from "../../App";
 
 const ReviewsPage = () => {
   // Add loading state
-  const [isLoading, setIsLoading] = useState(true);
+  const {isLoading, setIsLoading} = useContext(MainContext);
 
   // Simulate loading effect
   useEffect(() => {

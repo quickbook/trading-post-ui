@@ -22,6 +22,7 @@ import AdminRegisterPage from "./components/pages/AdminRegisterPage";
 export const MainContext = createContext();
 
 function App() {
+  const [isLoading, setIsLoading] = useState(true);
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [openForm, setOpenForm] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -78,6 +79,14 @@ function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // ✅ Check for stored session token on app load
+  useEffect(() => {
+    const token = sessionStorage?.getItem("adminToken");
+    if (token) {
+      setAdminLoggedIn(true);
+    }
+  }, []);
+
   const StyledContainer = styled(Box)(({ theme }) => ({
     display: "flex",
     flexDirection: "column",
@@ -95,6 +104,8 @@ function App() {
           openForm,
           setOpenForm,
           handleOpenForm,
+          isLoading,
+          setIsLoading,
           adminLoggedIn,
           setAdminLoggedIn,
           setSnackbarOpen,

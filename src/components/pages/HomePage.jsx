@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import TradingCards from "../sections/TradingCards";
 import PromotionalCardsSection from "../sections/PromotionalCardsSection";
 import ContentInfoSection from "../sections/ContentInfoSection";
 import TradingPostBanner from "../sections/TradingPostBanner";
 import TrustedFirms from "../sections/TrustedFirms";
 import { Box, Typography } from "@mui/material";
+import { MainContext } from "../../App";
 
 export const LoadingScreen = () => (
   <Box
@@ -50,13 +51,13 @@ export const LoadingScreen = () => (
 
 const HomePage = () => {
   // Add loading state
-  const [isLoading, setIsLoading] = useState(true);
+  const {isLoading, setIsLoading} = useContext(MainContext);
 
   // Simulate loading effect
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 500); // Show loading for 1 second
+    }, 600); // Show loading for 1 second
 
     return () => clearTimeout(timer);
   }, []);

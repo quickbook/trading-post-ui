@@ -6,9 +6,8 @@ import PromotionalCardsSection from "../sections/PromotionalCardsSection";
 
 const FeatureFirmsPage = () => {
   // Access context
-  const { handleOpenForm } = useContext(MainContext);
+  const { handleOpenForm, isLoading, setIsLoading } = useContext(MainContext);
   // Add loading state
-  const [isLoading, setIsLoading] = useState(true);
 
   // Simulate loading effect
   useEffect(() => {

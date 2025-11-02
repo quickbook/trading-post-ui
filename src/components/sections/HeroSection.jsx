@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { use, useContext, useEffect, useState } from "react";
 import { Link as RouterLink, useNavigate } from "react-router-dom";
 import {
   Box,
@@ -29,7 +29,7 @@ import SocialMediaMenu from "./SocialMediaMenu";
 import { MainContext } from "../../App";
 
 const AdminMenu = () => {
-  const { adminLoggedIn, setAdminLoggedIn } = useContext(MainContext);
+  const { adminLoggedIn, setAdminLoggedIn,} = useContext(MainContext);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const navigate = useNavigate();
@@ -48,9 +48,11 @@ const AdminMenu = () => {
   };
 
   const handleLogout = () => {
-    setAdminLoggedIn(false);
-    handleMenuClose();
-  };
+  sessionStorage.removeItem("adminToken");
+  sessionStorage.removeItem("adminUser");
+  setAdminLoggedIn(false);
+  handleMenuClose();
+};
 
   const handleAdminOption = () => {
     alert("Redirecting to Admin Dashboard...");
@@ -106,7 +108,7 @@ const AdminMenu = () => {
 };
 
 const HeroSection = () => {
-  const { handleOpenForm } = useContext(MainContext);
+  const { handleOpenForm, setIsLoading,  } = useContext(MainContext);
   const location = window.location.pathname;
   const navigationItems = [
     { label: "Home", href: "/" },
@@ -122,6 +124,7 @@ const HeroSection = () => {
   const navigate = useNavigate();
 
   const handleNavClick = (label) => {
+    
     setActiveItem(label);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -133,6 +136,7 @@ const HeroSection = () => {
     const currentLoc = navigationItems.find((loc) => loc.href === location);
     setActiveItem(currentLoc?.label || "Home");
   }, [location]);
+
 
   return (
     <AppBar
