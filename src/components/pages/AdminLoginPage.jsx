@@ -2,9 +2,17 @@ import React, { useState } from "react";
 import { Box, TextField, Button, Typography, Link, Paper } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { MainContext } from "../../App";
+import { LoadingScreen } from "./HomePage";
 
 const AdminLoginPage = () => {
-  const { setAdminLoggedIn, setSnackbarMessage, setSnackbarOpen, setSnackbarSeverity } = React.useContext(MainContext);
+  const {
+    setAdminLoggedIn,
+    setSnackbarMessage,
+    setSnackbarOpen,
+    setSnackbarSeverity,
+    isLoading,
+    setIsLoading,
+  } = React.useContext(MainContext);
   const [formData, setFormData] = useState({ name: "", password: "" });
   const [errors, setErrors] = useState({ name: "", password: "" });
   const navigate = useNavigate();
@@ -39,21 +47,61 @@ const AdminLoginPage = () => {
     return isValid;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validate()) {
+    if (!validate()) return;
+
+    setIsLoading(true);
+    try {
+      const response = await fetch("https://your-backend.com/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userName: formData.name,
+          password: formData.password,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        throw new Error(data.message || "Invalid credentials");
+      }
+
+      // Save token and admin info
+      sessionStorage.setItem("adminToken", data.token);
+      sessionStorage.setItem("adminUser", JSON.stringify(data.admin));
+
+      // Update context
       setAdminLoggedIn(true);
-      //alert("Login successful ✅");
-      // Success
+
+      // Snackbar success
       setSnackbarMessage("Login successful! Welcome back.");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
-      // Proceed with further login logic here
-      navigate("/admin");
+
+      // Redirect
+      navigate("/");
+    } catch (err) {
+      console.error(err);
+      setSnackbarMessage(err.message || "Login failed. Try again.");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  return (
+  // Logout helper (optional, can be used later)
+  // const handleLogout = () => {
+  //   localStorage.removeItem("adminToken");
+  //   localStorage.removeItem("adminUser");
+  //   setAdminLoggedIn(false);
+  // };
+
+  return isLoading ? (
+    <LoadingScreen />
+  ) : (
     <Box
       sx={{
         minHeight: { xs: "60vh", md: "80vh" },

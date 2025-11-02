@@ -1,11 +1,17 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, TextField, Button, Typography, Paper, Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { MainContext } from "../../App";
+import { LoadingScreen } from "./HomePage";
 
 const AdminRegisterPage = () => {
-  const { setSnackbarMessage, setSnackbarOpen, setSnackbarSeverity } =
-    React.useContext(MainContext);
+  const {
+    setSnackbarMessage,
+    setSnackbarOpen,
+    setSnackbarSeverity,
+    isLoading,
+    setIsLoading,
+  } = React.useContext(MainContext);
 
   const navigate = useNavigate();
 
@@ -25,12 +31,14 @@ const AdminRegisterPage = () => {
   });
 
   const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+
+  // ✅ Password validation pattern - moved outside function for reuse
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,12}$/;
 
   // ✅ Field validation logic
   const validateField = (name, value) => {
     let error = "";
-    // Password validation pattern
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,12}$/;
 
     switch (name) {
       case "userName":
@@ -49,8 +57,8 @@ const AdminRegisterPage = () => {
 
       case "contactNumber":
         if (!value.trim()) error = "Contact number is required";
-        else if (!/^[0-9]{10,15}$/.test(value))
-          error = "Enter a valid number (10–15 digits)";
+        else if (!/^[0-9]{10}$/.test(value))
+          error = "Enter a valid number (10 digits)";
         break;
 
       case "gmail":
@@ -63,7 +71,9 @@ const AdminRegisterPage = () => {
 
       case "password":
         if (!value.trim()) error = "Password is required";
-        else if (!passwordRegex.test(formData.password)) error = "Password must be 8 to 12 letters, include at least one uppercase, lowercase, number & symbol";
+        else if (!passwordRegex.test(value))
+          error =
+            "Password must be 8 to 12 letters, include at least one uppercase, lowercase, number & symbol";
         break;
 
       case "address":
@@ -98,35 +108,100 @@ const AdminRegisterPage = () => {
     return error;
   };
 
+  // ✅ Handle field blur
+  const handleBlur = (e) => {
+    const { name } = e.target;
+    setTouched({ ...touched, [name]: true });
+    const error = validateField(name, formData[name]);
+    setErrors((prev) => ({ ...prev, [name]: error }));
+  };
+
   // ✅ Common onChange handler
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-    setErrors((prev) => ({ ...prev, [name]: validateField(name, value) }));
+
+    // Convert to uppercase for countryCode and stateCode
+    const processedValue =
+      name === "countryCode" || name === "stateCode"
+        ? value.toUpperCase()
+        : value;
+
+    setFormData((prev) => ({ ...prev, [name]: processedValue }));
+
+    // Only validate if field has been touched
+    if (touched[name]) {
+      const error = validateField(name, processedValue);
+      setErrors((prev) => ({ ...prev, [name]: error }));
+    }
   };
 
   // ✅ Validate all before submit
   const validateAll = () => {
     const newErrors = {};
+    const newTouched = {};
+
     Object.keys(formData).forEach((field) => {
+      newTouched[field] = true;
       newErrors[field] = validateField(field, formData[field]);
     });
+
+    setTouched(newTouched);
     setErrors(newErrors);
+
     return Object.values(newErrors).every((err) => !err);
   };
 
-  // ✅ Submit handler
-  const handleSubmit = (e) => {
+  // ✅ Submit handler with API call (register only, no auto-login)
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateAll()) {
-      setSnackbarMessage("Registration successful!");
-      setSnackbarSeverity("success");
+    
+    if (!validateAll()) {
+      setSnackbarMessage("Please fix the errors before submitting");
+      setSnackbarSeverity("error");
       setSnackbarOpen(true);
-      navigate("/login");
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    try {
+      // 🔹 Example API endpoint — replace with your actual backend URL
+      const response = await fetch("https://your-api.com/api/admin/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        // ✅ Registration success
+        setSnackbarMessage("Registration successful! Please log in.");
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+
+        // Navigate to login page
+        navigate("/login");
+      } else {
+        throw new Error(data.message || "Registration failed");
+      }
+    } catch (error) {
+      setSnackbarMessage(error.message || "Registration failed");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  return (
+  // ✅ Auto-redirect if already logged in
+  useEffect(() => {
+    const token = sessionStorage.getItem("adminToken");
+    if (token) navigate("/admin");
+  }, [navigate]);
+
+  return isLoading ? (
+    <LoadingScreen />
+  ) : (
     <Box
       sx={{
         minHeight: { xs: "60vh", md: "80vh" },
@@ -161,7 +236,7 @@ const AdminRegisterPage = () => {
         <Box component="form" onSubmit={handleSubmit}>
           <Grid container spacing={2}>
             {/* Username */}
-            <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 required
                 name="userName"
@@ -169,13 +244,15 @@ const AdminRegisterPage = () => {
                 fullWidth
                 value={formData.userName}
                 onChange={handleChange}
-                error={!!errors.userName}
-                helperText={errors.userName}
+                onBlur={handleBlur}
+                error={!!errors.userName && touched.userName}
+                helperText={touched.userName ? errors.userName : ""}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
               />
             </Grid>
 
             {/* First Name */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="firstName"
                 required
@@ -183,26 +260,28 @@ const AdminRegisterPage = () => {
                 fullWidth
                 value={formData.firstName}
                 onChange={handleChange}
-                error={!!errors.firstName}
-                helperText={errors.firstName}
+                onBlur={handleBlur}
+                error={!!errors.firstName && touched.firstName}
+                helperText={touched.firstName ? errors.firstName : ""}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
               />
             </Grid>
 
             {/* Middle Name */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="middleName"
                 label="Middle Name (Optional)"
                 fullWidth
                 value={formData.middleName}
                 onChange={handleChange}
-                error={!!errors.middleName}
-                helperText={errors.middleName}
+                onBlur={handleBlur}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
               />
             </Grid>
 
             {/* Last Name */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="lastName"
                 required
@@ -210,13 +289,15 @@ const AdminRegisterPage = () => {
                 fullWidth
                 value={formData.lastName}
                 onChange={handleChange}
-                error={!!errors.lastName}
-                helperText={errors.lastName}
+                onBlur={handleBlur}
+                error={!!errors.lastName && touched.lastName}
+                helperText={touched.lastName ? errors.lastName : ""}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
               />
             </Grid>
 
             {/* Contact Number */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="contactNumber"
                 required
@@ -224,13 +305,15 @@ const AdminRegisterPage = () => {
                 fullWidth
                 value={formData.contactNumber}
                 onChange={handleChange}
-                error={!!errors.contactNumber}
-                helperText={errors.contactNumber}
+                onBlur={handleBlur}
+                error={!!errors.contactNumber && touched.contactNumber}
+                helperText={touched.contactNumber ? errors.contactNumber : ""}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
               />
             </Grid>
 
             {/* Gmail */}
-            <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 name="gmail"
                 required
@@ -238,13 +321,15 @@ const AdminRegisterPage = () => {
                 fullWidth
                 value={formData.gmail}
                 onChange={handleChange}
-                error={!!errors.gmail}
-                helperText={errors.gmail}
+                onBlur={handleBlur}
+                error={!!errors.gmail && touched.gmail}
+                helperText={touched.gmail ? errors.gmail : ""}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
               />
             </Grid>
 
             {/* Password */}
-            <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 name="password"
                 required
@@ -253,13 +338,15 @@ const AdminRegisterPage = () => {
                 fullWidth
                 value={formData.password}
                 onChange={handleChange}
-                error={!!errors.password}
-                helperText={errors.password}
+                onBlur={handleBlur}
+                error={!!errors.password && touched.password}
+                helperText={touched.password ? errors.password : ""}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
               />
             </Grid>
 
             {/* Address */}
-            <Grid size={{ xs: 12 }}>
+            <Grid size={{ xs: 12}}>
               <TextField
                 name="address"
                 required
@@ -268,14 +355,16 @@ const AdminRegisterPage = () => {
                 multiline
                 value={formData.address}
                 onChange={handleChange}
-                error={!!errors.address}
-                helperText={errors.address}
+                onBlur={handleBlur}
+                error={!!errors.address && touched.address}
+                helperText={touched.address ? errors.address : ""}
                 rows={2}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
               />
             </Grid>
 
             {/* City */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="city"
                 required
@@ -283,13 +372,15 @@ const AdminRegisterPage = () => {
                 fullWidth
                 value={formData.city}
                 onChange={handleChange}
-                error={!!errors.city}
-                helperText={errors.city}
+                onBlur={handleBlur}
+                error={!!errors.city && touched.city}
+                helperText={touched.city ? errors.city : ""}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
               />
             </Grid>
 
             {/* Pin Code */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="pinCode"
                 required
@@ -297,13 +388,15 @@ const AdminRegisterPage = () => {
                 fullWidth
                 value={formData.pinCode}
                 onChange={handleChange}
-                error={!!errors.pinCode}
-                helperText={errors.pinCode}
+                onBlur={handleBlur}
+                error={!!errors.pinCode && touched.pinCode}
+                helperText={touched.pinCode ? errors.pinCode : ""}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
               />
             </Grid>
 
             {/* Country Code */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="countryCode"
                 required
@@ -311,21 +404,25 @@ const AdminRegisterPage = () => {
                 fullWidth
                 value={formData.countryCode}
                 onChange={handleChange}
-                error={!!errors.countryCode}
-                helperText={errors.countryCode}
+                onBlur={handleBlur}
+                error={!!errors.countryCode && touched.countryCode}
+                helperText={touched.countryCode ? errors.countryCode : ""}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
               />
             </Grid>
 
             {/* State Code */}
-            <Grid size={{ xs: 12, sm: 6 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 name="stateCode"
                 label="State Code (Optional)"
                 fullWidth
                 value={formData.stateCode}
                 onChange={handleChange}
-                error={!!errors.stateCode}
-                helperText={errors.stateCode}
+                onBlur={handleBlur}
+                error={!!errors.stateCode && touched.stateCode}
+                helperText={touched.stateCode ? errors.stateCode : ""}
+                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
               />
             </Grid>
           </Grid>
