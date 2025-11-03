@@ -28,11 +28,12 @@ import { BadgeContainer, getBadgeStyles } from "./TradingCards";
 export const platformSources = {
   MT: "/platforms/mt5.webp",
   MT5: "/platforms/mt5.webp",
-  MT4: "/platforms/mt5.webp",
+  MT4: "/platforms/mt4.webp",
   cTrader: "/platforms/ctrader.webp",
   "Match Trader": "/platforms/matchtrader.webp",
   "Trade Locker": "/platforms/trade-locker.webp",
   "Project-X": "/platforms/project-x.webp",
+  "DX Trade": "/platforms/DX-trade.webp"
 };
 
 const tableHeaders = [
@@ -176,7 +177,7 @@ const FirmDetailsTableSection = () => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        width: "100%",
+        width: {xs:"100%", xl: 1640},
         alignItems: "start",
         position: "relative",
         bgcolor: "#000",

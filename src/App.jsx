@@ -23,6 +23,7 @@ export const MainContext = createContext();
 
 function App() {
   const [isLoading, setIsLoading] = useState(true);
+  const [firmData, setFirmData] = useState([]);
   const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [openForm, setOpenForm] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
@@ -81,6 +82,26 @@ function App() {
 
   // ✅ Check for stored session token on app load
   useEffect(() => {
+    const fetchFirmData = async () => {
+      try {
+        // 🔹 Example API endpoint — replace with your actual backend URL
+        const response = await fetch(
+          "https://your-api.com/api/admin/register",
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              //"Authorization": `Bearer ${token}`
+            },
+          }
+        );
+        const cardData = await response.json();
+        setFirmData(cardData);
+        //setIsLoading(false);
+      } catch (error) {
+        console.error('Error fetching firms:', error);
+      }
+    };
     const token = sessionStorage?.getItem("adminToken");
     if (token) {
       setAdminLoggedIn(true);

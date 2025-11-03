@@ -200,6 +200,7 @@ const AdminLoginPage = () => {
               color: "purple",
               fontSize: "1rem",
               mt: 2,
+              cursor: "pointer",
             }}
           >
             Register

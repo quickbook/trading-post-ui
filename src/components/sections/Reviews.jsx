@@ -53,7 +53,7 @@ const TRADING_FIRMS = cardData.map((card) => ({
 }));
 
 // Helper function to format date
-const formatDate = (dateString) => {
+export const formatDate = (dateString) => {
   const date = new Date(dateString);
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
@@ -232,7 +232,7 @@ const initialReviews = [
 ];
 
 // Function to get color based on grade
-const getGradeColor = (grade) => {
+export const getGradeColor = (grade) => {
   switch (grade) {
     case "A+":
       return "#4caf50"; // Green
@@ -250,7 +250,7 @@ const getGradeColor = (grade) => {
 };
 
 // Function to get display text for grade
-const getGradeDisplay = (grade) => {
+export const getGradeDisplay = (grade) => {
   switch (grade) {
     case "A+":
       return "A+ (Excellent)";

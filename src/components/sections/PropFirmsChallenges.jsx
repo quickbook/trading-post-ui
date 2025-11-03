@@ -10,7 +10,6 @@ import {
   Button,
   Avatar,
   Chip,
-  Rating,
   Divider,
   TextField,
   MenuItem,
@@ -19,7 +18,7 @@ import {
 import PropTypes from "prop-types";
 import SearchIcon from "@mui/icons-material/Search";
 import { useNavigate } from "react-router-dom";
-import { filter } from "framer-motion/client";
+import { foreignNumberSystem } from "../commonFuctions/CommonFunctions";
 
 // Sample data for prop firms
 const sampleFirms = [
@@ -119,10 +118,10 @@ const PropFirmsChallenges = () => {
   const navigate = useNavigate();
 
   // Get unique values for filters
-  const firmNames = ["All", ...new Set(sampleFirms.map((firm) => firm.name))];
+  const firmNames = ["All", ...new Set(sampleFirms?.map((firm) => firm?.name))];
   const phaseTypes = [
     "All",
-    ...new Set(sampleFirms.map((firm) => firm.phaseType)),
+    ...new Set(sampleFirms?.map((firm) => firm?.phaseType)),
   ];
   const minAccountOptions = [
     "All",
@@ -134,24 +133,24 @@ const PropFirmsChallenges = () => {
   ];
 
   // Filter firms based on criteria
-  const filteredFirms = sampleFirms.filter((firm) => {
+  const filteredFirms = sampleFirms?.filter((firm) => {
     const matchesSearch =
-      firm.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      firm.features.some((feature) =>
+      firm?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      firm?.features.some((feature) =>
         feature.toLowerCase().includes(searchTerm.toLowerCase())
       );
-    const matchesFirm = selectedFirm === "All" || firm.name === selectedFirm;
+    const matchesFirm = selectedFirm === "All" || firm?.name === selectedFirm;
     const matchesPhase =
-      selectedPhase === "All" || firm.phaseType === selectedPhase;
+      selectedPhase === "All" || firm?.phaseType === selectedPhase;
 
     // Handle min account filter
     let matchesMinAccount = true;
     if (minAccountFilter !== "All") {
       const minAmount = parseInt(minAccountFilter.replace(/[$,+]/g, ""));
       if (minAccountFilter.includes("+")) {
-        matchesMinAccount = firm.minAccount >= minAmount;
+        matchesMinAccount = firm?.minAccount >= minAmount;
       } else {
-        matchesMinAccount = firm.minAccount <= minAmount;
+        matchesMinAccount = firm?.minAccount <= minAmount;
       }
     }
 
@@ -208,7 +207,7 @@ const PropFirmsChallenges = () => {
           sx={{ mb: 2 }}
           onClick={() => navigate(-1)}
         >
-          &larr; Back
+          Back
         </Button>
         {/* Header */}
         <Box
@@ -258,7 +257,7 @@ const PropFirmsChallenges = () => {
             p: 3,
             mb: 4,
             borderRadius: 2,
-            backgroundColor: "#000000",
+            backgroundColor: "#000000a9",
             color: "#FFFFFF",
           }}
         >
@@ -429,7 +428,7 @@ const PropFirmsChallenges = () => {
             }}
           >
             <Typography variant="body2" sx={{ color: "#FFFFFF" }}>
-              Showing {filteredFirms.length} of {sampleFirms.length} firms
+              Showing {filteredFirms?.length} of {sampleFirms?.length} firms
             </Typography>
             <Button
               variant="outlined"
@@ -487,7 +486,7 @@ const FirmGridView = ({ firms }) => {
   return (
     <Grid container spacing={3}>
       {firms.map((firm) => (
-        <Grid size={{ xs: 12 }} key={firm.id}>
+        <Grid size={{ xs: 12 }} key={firm?.id}>
           <FirmCard firm={firm} />
         </Grid>
       ))}
@@ -528,11 +527,11 @@ const FirmCard = ({ firm }) => {
         }}
       >
         <Avatar
-          src={firm.logo}
+          src={firm?.logo}
           sx={{ width: 80, height: 80, bgcolor: "#4b0082" }}
           variant="rounded"
         >
-          {firm.name.charAt(0)}
+          {firm?.name.charAt(0)}
         </Avatar>
       </Box>
 
@@ -550,10 +549,10 @@ const FirmCard = ({ firm }) => {
           >
             <Box>
               <Typography component="h2" variant="h5" gutterBottom>
-                {firm.name}
+                {firm?.name}
               </Typography>
               <Chip
-                label={firm.phaseType}
+                label={firm?.phaseType}
                 size="small"
                 color="secondary"
                 variant="outlined"
@@ -570,10 +569,10 @@ const FirmCard = ({ firm }) => {
               <Typography variant="body1" color="text.secondary">
                 Rating:{" "}
                 <strong style={{ color: "#000000", marginRight: "16px" }}>
-                  {firm.trustRating}
+                  {firm?.trustRating}
                 </strong>
               </Typography>
-              {firm.trusted && (
+              {firm?.trusted && (
                 <Chip label="Trusted" color="success" size="medium" />
               )}
             </Box>
@@ -581,7 +580,7 @@ const FirmCard = ({ firm }) => {
 
           {/* Features Chips */}
           <Box sx={{ mb: 2 }}>
-            {firm.features.map((feature, index) => (
+            {firm?.features.map((feature, index) => (
               <Chip
                 key={index}
                 label={feature}
@@ -601,7 +600,7 @@ const FirmCard = ({ firm }) => {
                 Min Account
               </Typography>
               <Typography variant="h6" color="primary" fontWeight="bold">
-                ${firm.minAccount}
+                ${foreignNumberSystem(firm?.minAccount)}
               </Typography>
             </Grid>
             <Grid size={{ xs: 6, md: 2 }}>
@@ -609,7 +608,7 @@ const FirmCard = ({ firm }) => {
                 Profit Target
               </Typography>
               <Typography variant="h6" color="success.main" fontWeight="bold">
-                {firm.profitTarget}%
+                {firm?.profitTarget}%
               </Typography>
             </Grid>
             <Grid size={{ xs: 6, md: 2 }}>
@@ -617,7 +616,7 @@ const FirmCard = ({ firm }) => {
                 Daily Loss Limit
               </Typography>
               <Typography variant="h6" color="error" fontWeight="bold">
-                {firm.daily_loss}%
+                {firm?.daily_loss}%
               </Typography>
             </Grid>
             <Grid size={{ xs: 6, md: 2 }}>
@@ -625,7 +624,7 @@ const FirmCard = ({ firm }) => {
                 Max loss Limit
               </Typography>
               <Typography variant="h6" color="error" fontWeight="bold">
-                {firm.max_loss}%
+                {firm?.max_loss}%
               </Typography>
             </Grid>
             <Grid size={{ xs: 6, md: 2 }}>
@@ -633,7 +632,7 @@ const FirmCard = ({ firm }) => {
                 Challenge Price
               </Typography>
               <Typography variant="h6" fontWeight="bold">
-                ${firm.challenge_price}
+                ${foreignNumberSystem(firm?.challenge_price)}
               </Typography>
             </Grid>
           </Grid>

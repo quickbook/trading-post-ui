@@ -307,6 +307,8 @@ const TradingCards = () => {
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState("");
 
+  const partnerFirms = cardData?.filter((e)=> e.firmType === 'partner')
+
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "lg"));
@@ -395,7 +397,7 @@ const TradingCards = () => {
       <CarouselContainer>
         <SliderContainer>
           <Slider {...settings}>
-            {cardData.map((card, index) => (
+            {cardData?.map((card, index) => (
               <Box key={index} sx={{ padding: "10px" }}>
                 <TradingCard
                   title={card.title}

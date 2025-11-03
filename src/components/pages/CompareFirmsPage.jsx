@@ -13,6 +13,7 @@ const CompareFirmsPage = () => {
   
     // Simulate loading effect
     useEffect(() => {
+      window.scrollTo({ top: 0, behaviour: "smooth" });
       const timer = setTimeout(() => {
         setIsLoading(false);
       }, 1000); // Show loading for 1 second

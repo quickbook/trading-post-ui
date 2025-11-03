@@ -156,9 +156,9 @@ const AdminRegisterPage = () => {
     e.preventDefault();
     
     if (!validateAll()) {
-      setSnackbarMessage("Please fix the errors before submitting");
-      setSnackbarSeverity("error");
-      setSnackbarOpen(true);
+      // setSnackbarMessage("Please fix the errors before submitting");
+      // setSnackbarSeverity("error");
+      // setSnackbarOpen(true);
       setIsLoading(false);
       return;
     }
@@ -446,6 +446,7 @@ const AdminRegisterPage = () => {
 
           <Button
             onClick={() => navigate("/login")}
+            disabled={errors.length > 0}
             fullWidth
             sx={{
               mt: 2,

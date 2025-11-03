@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import {
   Box,
   Typography,
@@ -18,8 +18,15 @@ import { cardData } from "../../../CardsData";
 import { CodeContainer, CodeValue, CopyIcon } from "../sections/TradingCards";
 import { foreignNumberSystem } from "../commonFuctions/CommonFunctions";
 import { platformSources } from "../sections/FirmDetailsTableSection";
+import {
+  formatDate,
+  getGradeColor,
+  getGradeDisplay,
+} from "../sections/Reviews";
+import { MainContext } from "../../App";
 
 export const PropFirmDetailsPage = () => {
+  const { adminLoggedIn } = useContext(MainContext);
   const params = useParams();
   const [firmDetails, setFirmDetails] = useState(null);
   const [copiedCode, setCopiedCode] = useState("");
@@ -27,8 +34,30 @@ export const PropFirmDetailsPage = () => {
   const navigate = useNavigate();
 
   const reviewData = [
-    { name: "M Johnson", date: "August 1, 2025", content: "Write a Review" },
-    { name: "M Johnson", date: "August 1, 2025", content: "Write a Review" },
+    {
+      id: 1,
+      product_id: 1, // Alpha Trading Group
+      reviewer_name: "John Doe",
+      prop_name: "Alpha Trading Group",
+      rating: "A",
+      description:
+        "Great product! The quality exceeded my expectations. Would definitely buy again. asasasa sasasa asasas ddd ffffffff fdfddfd dsdsdssd dddss sdsdsdsds dssdds",
+      created_at: "2024-01-15T10:30:00Z",
+      updated_at: "2024-01-15T10:30:00Z",
+      is_deleted: false,
+    },
+    {
+      id: 2,
+      product_id: 1, // Alpha Trading Group
+      reviewer_name: "Jane Smith",
+      prop_name: "Alpha Trading Group",
+      rating: "A+",
+      description:
+        "Excellent service and fast delivery. Highly recommended! The packaging was also very secure.",
+      created_at: "2024-01-16T14:20:00Z",
+      updated_at: "2024-01-16T14:20:00Z",
+      is_deleted: false,
+    },
   ];
 
   const handleCopyCode = (code) => {
@@ -49,6 +78,14 @@ export const PropFirmDetailsPage = () => {
 
   return (
     <>
+      <Button
+        variant="contained"
+        color="secondary"
+        sx={{ display: {xs:'none', md:'block'},mb: 2, position: 'fixed', top: 100, left: 40, }}
+        onClick={() => navigate(-1)}
+      >
+        Back
+      </Button>
       <Box
         sx={{
           width: "100%",
@@ -134,24 +171,27 @@ export const PropFirmDetailsPage = () => {
 
           {/* Buttons */}
           <Box display="flex" gap={2}>
-            <Button
-              variant="outlined"
-              sx={{
-                bgcolor: "black",
-                color: "white",
-                border: "1px solid white",
-                "&:hover": { bgcolor: "grey.900" },
-                borderRadius: "20px",
-                px: 2,
-                py: 1,
-                fontFamily: "Montserrat, Helvetica",
-                fontWeight: 600,
-                fontSize: "14px",
-                height: "auto",
-              }}
-            >
-              Leave a Review
-            </Button>
+            {adminLoggedIn && (
+              <Button
+                variant="outlined"
+                onClick={navigate("/reviews")}
+                sx={{
+                  bgcolor: "black",
+                  color: "white",
+                  border: "1px solid white",
+                  "&:hover": { bgcolor: "grey.900" },
+                  borderRadius: "20px",
+                  px: 2,
+                  py: 1,
+                  fontFamily: "Montserrat, Helvetica",
+                  fontWeight: 600,
+                  fontSize: "14px",
+                  height: "auto",
+                }}
+              >
+                Leave a Review
+              </Button>
+            )}
 
             <Button
               variant="contained"
@@ -299,13 +339,7 @@ export const PropFirmDetailsPage = () => {
               textAlign: "justify",
             }}
           >
-            {firmDetails?.title} is a proprietary trading firm that started in
-            2022 and offers a variety of funding challenges for traders:
-            Simulated evaluation challenges (one-step, two-step) Instant funding
-            accounts High-tier "Funded King" challenge up to $1M accounts Profit
-            share up to 90%, with daily to bi-weekly payouts via Rise Pay They
-            integrate their own TradeLocker platform alongside MT5 and
-            MatchTrader for trading.
+            {firmDetails?.title}&nbsp;{firmDetails?.description}
           </Typography>
         </Box>
 
@@ -315,7 +349,7 @@ export const PropFirmDetailsPage = () => {
             <Typography variant="h5" color="white">
               Customer Reviews
             </Typography>
-            <Button
+            {/* <Button
               variant="contained"
               sx={{
                 bgcolor: "#4b0082",
@@ -324,11 +358,11 @@ export const PropFirmDetailsPage = () => {
               }}
             >
               Write a Review
-            </Button>
+            </Button> */}
           </Box>
 
           <Typography variant="body2" color="white" textAlign="right" mb={2}>
-            Showing 10 reviews
+            Showing {reviewData?.length} reviews
           </Typography>
 
           <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
@@ -349,14 +383,25 @@ export const PropFirmDetailsPage = () => {
                     }}
                   >
                     <Typography color="white" fontWeight="bold">
-                      {review.name}
+                      {review?.reviewer_name}
                     </Typography>
                     <Typography color="rgba(255,255,255,0.7)">
-                      {review.date}
+                      {formatDate(review.updated_at)}
                     </Typography>
                   </Box>
-                  <Typography color="white" fontWeight="bold">
-                    {review.content}
+                  <Typography
+                    variant="body1"
+                    fontWeight="bold"
+                    sx={{ color: getGradeColor(review?.rating) }}
+                  >
+                    {getGradeDisplay(review?.rating)}
+                  </Typography>
+                  <Typography
+                    color="white"
+                    fontWeight="bold"
+                    sx={{ wordBreak: "break-word" }}
+                  >
+                    {review.description}
                   </Typography>
                 </CardContent>
               </Card>
