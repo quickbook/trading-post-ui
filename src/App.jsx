@@ -1,5 +1,12 @@
 import React, { createContext, useEffect, useRef, useState } from "react";
 import "./App.css";
+import { useDispatch, useSelector } from "react-redux";
+import { initApp } from "./redux/initApp";
+import {
+  selectFirms,
+  selectFirmsStatus,
+  selectFirmsError,
+} from "./features/firms/firmsSelectors";
 import HomePage from "./components/pages/HomePage";
 import HeroSection from "./components/sections/HeroSection";
 import FooterSection from "./components/sections/FooterSection";
@@ -22,9 +29,13 @@ import AdminRegisterPage from "./components/pages/AdminRegisterPage";
 export const MainContext = createContext();
 
 function App() {
+  const dispatch = useDispatch();
+  const firmsData = useSelector(selectFirms);
+  const status = useSelector(selectFirmsStatus);
+  const error = useSelector(selectFirmsError);
   const [isLoading, setIsLoading] = useState(true);
   const [firmData, setFirmData] = useState([]);
-  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
+  const [adminLoggedIn, setAdminLoggedIn] = useState(true);
   const [openForm, setOpenForm] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -74,38 +85,15 @@ function App() {
     });
   };
 
+  // useEffect(() => {
+  //   // Run only once on first mount
+  //   dispatch(initApp());
+  // }, [dispatch]);
+
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);
     handleScroll(); // initialize once
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
-  // ✅ Check for stored session token on app load
-  useEffect(() => {
-    const fetchFirmData = async () => {
-      try {
-        // 🔹 Example API endpoint — replace with your actual backend URL
-        const response = await fetch(
-          "https://your-api.com/api/admin/register",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-              //"Authorization": `Bearer ${token}`
-            },
-          }
-        );
-        const cardData = await response.json();
-        setFirmData(cardData);
-        //setIsLoading(false);
-      } catch (error) {
-        console.error('Error fetching firms:', error);
-      }
-    };
-    const token = sessionStorage?.getItem("adminToken");
-    if (token) {
-      setAdminLoggedIn(true);
-    }
   }, []);
 
   const StyledContainer = styled(Box)(({ theme }) => ({
@@ -161,7 +149,7 @@ function App() {
           {/* Login Snackbar */}
           <Snackbar
             open={snackbarOpen}
-            autoHideDuration={3000}
+            autoHideDuration={2000}
             onClose={handleSnackbarClose}
             anchorOrigin={{ vertical: "top", horizontal: "center" }}
           >
