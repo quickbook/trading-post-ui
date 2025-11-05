@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { MainContext } from "../../App";
 import { LoadingScreen } from "./HomePage";
 
-const AdminRegisterPage = () => {
+const RegisterPage = () => {
   const {
     setSnackbarMessage,
     setSnackbarOpen,
@@ -462,4 +462,4 @@ const AdminRegisterPage = () => {
   );
 };
 
-export default AdminRegisterPage;
+export default RegisterPage;

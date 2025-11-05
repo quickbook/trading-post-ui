@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Box,
   Typography,
@@ -34,6 +34,12 @@ import {
   Delete as DeleteIcon,
   FilterList as FilterListIcon,
 } from "@mui/icons-material";
+import { useDispatch, useSelector } from "react-redux";
+import { selectUser, selectRole, selectUserId } from "../../features/auth/loginSlice";
+import {
+  fetchReviews, createReview, updateReview, deleteReview,
+  selectReviews, selectReviewsStatus, selectReviewsError
+} from "../../features/reviews/reviewsSlice";
 import { cardData } from "/CardsData";
 import { MainContext } from "../../App";
 
@@ -268,6 +274,13 @@ export const getGradeDisplay = (grade) => {
 };
 
 const Reviews = () => {
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
+  const role = useSelector(selectRole);     // "admin" | "user" | "guest"
+  const userId = useSelector(selectUserId); // number | null
+  //const reviews = useSelector(selectReviews);
+  const status = useSelector(selectReviewsStatus);
+  const error = useSelector(selectReviewsError);
   const { adminLoggedIn } = React.useContext(MainContext);
   const [reviews, setReviews] = useState(initialReviews);
   const [openModal, setOpenModal] = useState(false);
@@ -283,11 +296,19 @@ const Reviews = () => {
   const [newReview, setNewReview] = useState({
     id: null,
     product_id: "",
+    //reviewer_id: userId || null,
     reviewer_name: "",
     prop_name: "",
     rating: "",
     description: "",
   });
+
+  // permissions
+  const canModify = (review) => {
+    if (role === "admin") return true;
+    if (role === "user" && userId) return review.reviewer_id === userId;
+    return false;
+  };
 
   // Action card handlers
   const handleActionMenuOpen = (reviewId) => {
@@ -306,6 +327,7 @@ const Reviews = () => {
     setNewReview({
       id: null,
       product_id: "",
+      //reviewer_id: userId || null,
       reviewer_name: "",
       prop_name: "",
       rating: "",
@@ -332,6 +354,7 @@ const Reviews = () => {
     setNewReview({
       id: review.id,
       product_id: review.product_id,
+      //reviewer_id: review.reviewer_id,
       reviewer_name: review.reviewer_name,
       prop_name: review.prop_name,
       rating: review.rating,
@@ -388,13 +411,21 @@ const Reviews = () => {
   };
 
   // Filter and pagination logic
-  const filteredReviews = reviews.filter((review) => {
-    const ratingMatch =
-      ratingFilter === "all" || review.rating === ratingFilter;
-    const propNameMatch =
-      propNameFilter === "all" || review.prop_name === propNameFilter;
-    return ratingMatch && propNameMatch;
-  });
+  // const filteredReviews = reviews.filter((review) => {
+  //   const ratingMatch =
+  //     ratingFilter === "all" || review.rating === ratingFilter;
+  //   const propNameMatch =
+  //     propNameFilter === "all" || review.prop_name === propNameFilter;
+  //   return ratingMatch && propNameMatch;
+  // });
+
+  const filteredReviews = useMemo(() => {
+    return (reviews || []).filter((r) => {
+      const matchRating = ratingFilter === "all" || r.rating === ratingFilter;
+      const matchFirm = propNameFilter === "all" || r.prop_name === propNameFilter;
+      return matchRating && matchFirm;
+    });
+  }, [reviews, ratingFilter, propNameFilter]);
 
   const displayedReviews = showAllReviews
     ? filteredReviews
@@ -417,6 +448,32 @@ const Reviews = () => {
   const handlePropNameFilterChange = (event) => {
     setPropNameFilter(event.target.value);
     setShowAllReviews(false);
+  };
+
+  const handleSubmit = async () => {
+    if (!form.reviewer_name || !form.description || !form.rating || !form.prop_name) return;
+
+    if (isEditing && form.id) {
+      await dispatch(updateReview({
+        id: form.id,
+        data: {
+          product_id: form.product_id,
+          prop_name: form.prop_name,
+          rating: form.rating,
+          description: form.description,
+        },
+      }));
+    } else {
+      await dispatch(createReview({
+        product_id: form.product_id,
+        prop_name: form.prop_name,
+        rating: form.rating,
+        description: form.description,
+        reviewer_name: form.reviewer_name,
+        reviewer_id: form.reviewer_id,
+      }));
+    }
+    handleCloseModal();
   };
 
   const handleSubmitReview = () => {

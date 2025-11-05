@@ -21,10 +21,10 @@ import { PropFirmDetailsPage } from "./components/pages/PropFirmDetailsPage";
 import ErrorPage from "./components/pages/ErrorPage";
 import PropFirmsChallenges from "./components/sections/PropFirmsChallenges";
 import AdminPage from "./components/pages/AdminPage";
-import AdminLoginPage from "./components/pages/AdminLoginPage";
+import LoginPage from "./components/pages/LoginPage";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import AdminRegisterPage from "./components/pages/AdminRegisterPage";
+import RegisterPage from "./components/pages/RegisterPage";
 
 export const MainContext = createContext();
 
@@ -96,6 +96,14 @@ function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  useEffect(()=>{
+   const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000); // Show loading for 1 second
+
+    return () => clearTimeout(timer); 
+  })
+
   const StyledContainer = styled(Box)(({ theme }) => ({
     display: "flex",
     flexDirection: "column",
@@ -135,8 +143,8 @@ function App() {
             <Route path="/featurefirms" element={<FeatureFirmsPage />} />
             <Route path="/reviews" element={<ReviewsPage />} />
             <Route path="/propfirm/:id" element={<PropFirmDetailsPage />} />
-            <Route path="/login" element={<AdminLoginPage />} />
-            <Route path="/register" element={<AdminRegisterPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
             <Route
               path="/admin"
               element={adminLoggedIn ? <AdminPage /> : <Navigate to="/login" />}

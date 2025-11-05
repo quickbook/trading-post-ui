@@ -10,7 +10,7 @@ export const cardData = [
     profitSplit: 80,
     account: 1000000.0,
     code: "TPO",
-    logo: "/alpha-trading.png",
+    logo: "/firms/alpha-trading.png",
     isActive: true, // add new
     rating: "A+",
     allRatings: 36,

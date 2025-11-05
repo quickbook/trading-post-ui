@@ -21,23 +21,29 @@ const drawerWidth = '320px';
 
 const AdminPage = () => {
   const [activeView, setActiveView] = useState("add");
-  const [firms, setFirms] = useState([]);
+  const [firms, setFirms] = useState(cardData);
   const [editingFirm, setEditingFirm] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
 
-  // Load firms from localStorage on component mount
-  useEffect(() => {
-    const savedFirms = localStorage.getItem("tradingFirms");
-    if (savedFirms) {
-      setFirms(JSON.parse(savedFirms));
-    }
-  }, []);
+  // // Load firms from localStorage on component mount
+  // useEffect(() => {
+  //   const savedFirms = localStorage.getItem("tradingFirms");
+  //   if (savedFirms) {
+  //     setFirms(JSON.parse(savedFirms));
+  //   }else{
+  //     setFirms(cardData)
+  //   }
+  // }, []);
 
-  // Save firms to localStorage whenever firms change
-  useEffect(() => {
-    localStorage.setItem("tradingFirms", JSON.stringify(firms));
-  }, [firms]);
+  // // Save firms to localStorage whenever firms change
+  // useEffect(() => {
+  //   localStorage.setItem("tradingFirms", JSON.stringify(firms));
+  // }, [firms]);
+
+  useEffect(()=>{
+    window.scrollTo({top: 0, behavior: 'smooth'});
+  },[])
 
   const handleAddFirm = (firmData) => {
     if (editingFirm) {
@@ -206,7 +212,7 @@ const AdminPage = () => {
           />
         ) : (
           <ViewAllFirms
-            firms={cardData}
+            firms={firms}
             onEdit={handleEditFirm}
             onDelete={handleDeleteFirm}
           />

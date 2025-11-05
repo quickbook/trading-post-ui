@@ -22,14 +22,20 @@ import {
 import { motion } from "framer-motion";
 import CloseIcon from "@mui/icons-material/Close";
 import CallIcon from "@mui/icons-material/Call";
-import ManageAccountsIcon from "@mui/icons-material/ManageAccounts";
+import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import { SocialLinks } from "./TradingPostBanner";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import SocialMediaMenu from "./SocialMediaMenu";
 import { MainContext } from "../../App";
 
 const AdminMenu = () => {
-  const { adminLoggedIn, setAdminLoggedIn,} = useContext(MainContext);
+  const {
+    adminLoggedIn,
+    setAdminLoggedIn,
+    setSnackbarOpen,
+    setSnackbarMessage,
+    setSnackbarSeverity,
+  } = useContext(MainContext);
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const navigate = useNavigate();
@@ -43,20 +49,27 @@ const AdminMenu = () => {
   };
 
   const handleLogin = () => {
-    navigate('/login');
+    navigate("/login");
+    handleMenuClose();
+  };
+  const handleRegister = () => {
+    navigate("/register");
     handleMenuClose();
   };
 
   const handleLogout = () => {
-  sessionStorage.removeItem("adminToken");
-  sessionStorage.removeItem("adminUser");
-  setAdminLoggedIn(false);
-  handleMenuClose();
-};
+    sessionStorage.removeItem("adminToken");
+    sessionStorage.removeItem("adminUser");
+    setAdminLoggedIn(false);
+    navigate("/login");
+    handleMenuClose();
+  };
 
   const handleAdminOption = () => {
-    alert("Redirecting to Admin Dashboard...");
-    navigate('/admin');
+    setSnackbarMessage("Redirecting to Admin Dashboard...");
+    setSnackbarSeverity("success");
+    setSnackbarOpen(true);
+    navigate("/admin");
     handleMenuClose();
   };
 
@@ -69,19 +82,19 @@ const AdminMenu = () => {
         title="Admin"
         sx={{
           backgroundColor: "#f5f5f5",
-          border: "1px solid #4b0082",
-          padding: adminLoggedIn ? '4px' : 1,
+          //border: "1px solid #4b0082",
+          padding: adminLoggedIn ? "4px" : 1,
           "&:hover": { bgcolor: "#bb9df1ff", opacity: 0.7 },
         }}
       >
         {adminLoggedIn ? (
           <Avatar
-            sx={{ bgcolor: "#4b0082", fontSize: 16, width: 32, height: 32 }}
+            sx={{ bgcolor: "#4b0082", fontSize: 18, width: 32, height: 32 }}
           >
             A
           </Avatar>
         ) : (
-          <ManageAccountsIcon sx={{ color: "#4b0082" }} />
+          <AccountCircleIcon sx={{ color: "#4b0082", fontSize: 32 }} />
         )}
       </IconButton>
 
@@ -94,12 +107,36 @@ const AdminMenu = () => {
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
         {!adminLoggedIn ? (
-          <MenuItem onClick={handleLogin}>Login</MenuItem>
+          <div>
+            <MenuItem
+              sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
+              onClick={handleLogin}
+            >
+              Login
+            </MenuItem>
+            <Divider />
+            <MenuItem
+              sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
+              onClick={handleRegister}
+            >
+              Register
+            </MenuItem>
+          </div>
         ) : (
           <div>
-            <MenuItem onClick={handleAdminOption}>Admin Dashboard</MenuItem>
+            <MenuItem
+              sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
+              onClick={handleAdminOption}
+            >
+              Admin Dashboard
+            </MenuItem>
             <Divider />
-            <MenuItem onClick={handleLogout}>Logout</MenuItem>
+            <MenuItem
+              sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
+              onClick={handleLogout}
+            >
+              Logout
+            </MenuItem>
           </div>
         )}
       </Menu>
@@ -108,7 +145,7 @@ const AdminMenu = () => {
 };
 
 const HeroSection = () => {
-  const { handleOpenForm, setIsLoading,  } = useContext(MainContext);
+  const { handleOpenForm, setIsLoading } = useContext(MainContext);
   const location = window.location.pathname;
   const navigationItems = [
     { label: "Home", href: "/" },
@@ -124,7 +161,6 @@ const HeroSection = () => {
   const navigate = useNavigate();
 
   const handleNavClick = (label) => {
-    
     setActiveItem(label);
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
@@ -136,7 +172,6 @@ const HeroSection = () => {
     const currentLoc = navigationItems.find((loc) => loc.href === location);
     setActiveItem(currentLoc?.label || "Home");
   }, [location]);
-
 
   return (
     <AppBar

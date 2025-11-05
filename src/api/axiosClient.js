@@ -19,6 +19,8 @@ const getStore = () => {
 
 const axiosClient = axios.create({
   baseURL: "https://your-api-url.com",
+  //baseURL: process.env.REACT_APP_API_BASE_URL || "https://dev01-api.pranalyticx.cloud",
+  headers: { "Content-Type": "application/json" },
 });
 
 // Attach Bearer token

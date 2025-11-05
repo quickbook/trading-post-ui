@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { MainContext } from "../../App";
 import { LoadingScreen } from "./HomePage";
 
-const AdminLoginPage = () => {
+const LoginPage = () => {
   const {
     setAdminLoggedIn,
     setSnackbarMessage,
@@ -211,4 +211,4 @@ const AdminLoginPage = () => {
   );
 };
 
-export default AdminLoginPage;
+export default LoginPage;
