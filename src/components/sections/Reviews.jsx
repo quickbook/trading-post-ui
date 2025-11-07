@@ -35,10 +35,19 @@ import {
   FilterList as FilterListIcon,
 } from "@mui/icons-material";
 import { useDispatch, useSelector } from "react-redux";
-import { selectUser, selectRole, selectUserId } from "../../features/auth/loginSlice";
 import {
-  fetchReviews, createReview, updateReview, deleteReview,
-  selectReviews, selectReviewsStatus, selectReviewsError
+  selectUser,
+  selectRole,
+  selectUserId,
+} from "../../features/auth/loginSlice";
+import {
+  fetchReviews,
+  createReview,
+  updateReview,
+  deleteReview,
+  selectReviews,
+  selectReviewsStatus,
+  selectReviewsError,
 } from "../../features/reviews/reviewsSlice";
 import { cardData } from "/CardsData";
 import { MainContext } from "../../App";
@@ -52,19 +61,13 @@ const GRADE_OPTIONS = [
   { value: "D", label: "D (Poor)" },
 ];
 
-// Trading firms data
-const TRADING_FIRMS = cardData.map((card) => ({
-  id: card.id,
-  name: card.title,
-}));
-
 // Helper function to format date
 export const formatDate = (dateString) => {
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric'
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 };
 
@@ -76,7 +79,8 @@ const initialReviews = [
     reviewer_name: "John Doe",
     prop_name: "Alpha Trading Group",
     rating: "A",
-    description: "Great product! The quality exceeded my expectations. Would definitely buy again. asasasa sasasa asasas ddd ffffffff fdfddfd dsdsdssd dddss sdsdsdsds dssdds",
+    description:
+      "Great product! The quality exceeded my expectations. Would definitely buy again. asasasa sasasa asasas ddd ffffffff fdfddfd dsdsdssd dddss sdsdsdsds dssdds",
     created_at: "2024-01-15T10:30:00Z",
     updated_at: "2024-01-15T10:30:00Z",
     is_deleted: false,
@@ -87,7 +91,8 @@ const initialReviews = [
     reviewer_name: "Jane Smith",
     prop_name: "Alpha Trading Group",
     rating: "A+",
-    description: "Excellent service and fast delivery. Highly recommended! The packaging was also very secure.",
+    description:
+      "Excellent service and fast delivery. Highly recommended! The packaging was also very secure.",
     created_at: "2024-01-16T14:20:00Z",
     updated_at: "2024-01-16T14:20:00Z",
     is_deleted: false,
@@ -98,7 +103,8 @@ const initialReviews = [
     reviewer_name: "Mike Johnson",
     prop_name: "Auqa Funded",
     rating: "C",
-    description: "Good product but could be improved in some areas. Delivery was slower than expected.",
+    description:
+      "Good product but could be improved in some areas. Delivery was slower than expected.",
     created_at: "2024-01-17T09:15:00Z",
     updated_at: "2024-01-17T09:15:00Z",
     is_deleted: false,
@@ -109,7 +115,8 @@ const initialReviews = [
     reviewer_name: "Sarah Wilson",
     prop_name: "Auqa Funded",
     rating: "B",
-    description: "Very satisfied with the purchase. The product matches the description perfectly.",
+    description:
+      "Very satisfied with the purchase. The product matches the description perfectly.",
     created_at: "2024-01-18T16:45:00Z",
     updated_at: "2024-01-18T16:45:00Z",
     is_deleted: false,
@@ -120,7 +127,8 @@ const initialReviews = [
     reviewer_name: "David Brown",
     prop_name: "Blue Guardian",
     rating: "D",
-    description: "Average product. Not bad but not great either. Might consider other options next time.",
+    description:
+      "Average product. Not bad but not great either. Might consider other options next time.",
     created_at: "2024-01-19T11:30:00Z",
     updated_at: "2024-01-19T11:30:00Z",
     is_deleted: false,
@@ -131,7 +139,8 @@ const initialReviews = [
     reviewer_name: "Emily Davis",
     prop_name: "Blue Guardian",
     rating: "A+",
-    description: "Absolutely love it! Better than I expected. Customer service was also very helpful.",
+    description:
+      "Absolutely love it! Better than I expected. Customer service was also very helpful.",
     created_at: "2024-01-20T13:20:00Z",
     updated_at: "2024-01-20T13:20:00Z",
     is_deleted: false,
@@ -142,7 +151,8 @@ const initialReviews = [
     reviewer_name: "Alex Turner",
     prop_name: "Blueberry Funded",
     rating: "A",
-    description: "Solid product with great features. Would recommend to friends and family.",
+    description:
+      "Solid product with great features. Would recommend to friends and family.",
     created_at: "2024-01-21T08:45:00Z",
     updated_at: "2024-01-21T08:45:00Z",
     is_deleted: false,
@@ -153,7 +163,8 @@ const initialReviews = [
     reviewer_name: "Maria Garcia",
     prop_name: "Blueberry Funded",
     rating: "B",
-    description: "Good value for money. Met my basic expectations but nothing extraordinary.",
+    description:
+      "Good value for money. Met my basic expectations but nothing extraordinary.",
     created_at: "2024-01-22T15:10:00Z",
     updated_at: "2024-01-22T15:10:00Z",
     is_deleted: false,
@@ -164,7 +175,8 @@ const initialReviews = [
     reviewer_name: "Chris Lee",
     prop_name: "QUANT REKEL",
     rating: "A+",
-    description: "Outstanding quality! The attention to detail is impressive. Will purchase again.",
+    description:
+      "Outstanding quality! The attention to detail is impressive. Will purchase again.",
     created_at: "2024-01-23T12:30:00Z",
     updated_at: "2024-01-23T12:30:00Z",
     is_deleted: false,
@@ -175,7 +187,8 @@ const initialReviews = [
     reviewer_name: "Lisa Wang",
     prop_name: "QUANT REKEL",
     rating: "C",
-    description: "Decent product but had some issues with functionality. Customer support was helpful.",
+    description:
+      "Decent product but had some issues with functionality. Customer support was helpful.",
     created_at: "2024-01-24T10:15:00Z",
     updated_at: "2024-01-24T10:15:00Z",
     is_deleted: false,
@@ -186,7 +199,8 @@ const initialReviews = [
     reviewer_name: "James Taylor",
     prop_name: "Real Funded",
     rating: "B",
-    description: "Reliable product that does what it promises. Good for everyday use.",
+    description:
+      "Reliable product that does what it promises. Good for everyday use.",
     created_at: "2024-01-25T14:50:00Z",
     updated_at: "2024-01-25T14:50:00Z",
     is_deleted: false,
@@ -197,7 +211,8 @@ const initialReviews = [
     reviewer_name: "Emma Wilson",
     prop_name: "Real Funded",
     rating: "A",
-    description: "Very pleased with this purchase. The quality is top-notch and delivery was fast.",
+    description:
+      "Very pleased with this purchase. The quality is top-notch and delivery was fast.",
     created_at: "2024-01-26T09:25:00Z",
     updated_at: "2024-01-26T09:25:00Z",
     is_deleted: false,
@@ -208,7 +223,8 @@ const initialReviews = [
     reviewer_name: "Ben Tennyson",
     prop_name: "Soar Fundeding",
     rating: "D",
-    description: "Disappointed with the quality. Expected better for the price. Would not recommend.",
+    description:
+      "Disappointed with the quality. Expected better for the price. Would not recommend.",
     created_at: "2024-01-27T16:40:00Z",
     updated_at: "2024-01-27T16:40:00Z",
     is_deleted: false,
@@ -219,7 +235,8 @@ const initialReviews = [
     reviewer_name: "Sophia Chen",
     prop_name: "Alpha Trading Group",
     rating: "A+",
-    description: "Exceptional product! Exceeded all my expectations. Worth every penny.",
+    description:
+      "Exceptional product! Exceeded all my expectations. Worth every penny.",
     created_at: "2024-01-28T11:20:00Z",
     updated_at: "2024-01-28T11:20:00Z",
     is_deleted: false,
@@ -230,7 +247,8 @@ const initialReviews = [
     reviewer_name: "Daniel Kim",
     prop_name: "Soar Fundeding",
     rating: "B",
-    description: "Good overall product. Some minor issues but nothing major. Satisfied with purchase.",
+    description:
+      "Good overall product. Some minor issues but nothing major. Satisfied with purchase.",
     created_at: "2024-01-29T13:35:00Z",
     updated_at: "2024-01-29T13:35:00Z",
     is_deleted: false,
@@ -276,7 +294,7 @@ export const getGradeDisplay = (grade) => {
 const Reviews = () => {
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
-  const role = useSelector(selectRole);     // "admin" | "user" | "guest"
+  const role = useSelector(selectRole); // "admin" | "user" | "guest"
   const userId = useSelector(selectUserId); // number | null
   //const reviews = useSelector(selectReviews);
   const status = useSelector(selectReviewsStatus);
@@ -302,6 +320,16 @@ const Reviews = () => {
     rating: "",
     description: "",
   });
+
+  // Trading firm names
+  const TRADING_FIRMS = [
+    ...new Set(
+      cardData.map((card) => ({
+        id: card.id,
+        name: card.title,
+      }))
+    ),
+  ].sort();
 
   // permissions
   const canModify = (review) => {
@@ -395,11 +423,11 @@ const Reviews = () => {
 
     // Automatically set product_id when prop_name is selected
     if (field === "prop_name" && value) {
-      const selectedFirm = TRADING_FIRMS.find(firm => firm.name === value);
+      const selectedFirm = TRADING_FIRMS.find((firm) => firm.name === value);
       if (selectedFirm) {
-        setNewReview(prev => ({
+        setNewReview((prev) => ({
           ...prev,
-          product_id: selectedFirm.id
+          product_id: selectedFirm.id,
         }));
       }
     }
@@ -422,7 +450,8 @@ const Reviews = () => {
   const filteredReviews = useMemo(() => {
     return (reviews || []).filter((r) => {
       const matchRating = ratingFilter === "all" || r.rating === ratingFilter;
-      const matchFirm = propNameFilter === "all" || r.prop_name === propNameFilter;
+      const matchFirm =
+        propNameFilter === "all" || r.prop_name === propNameFilter;
       return matchRating && matchFirm;
     });
   }, [reviews, ratingFilter, propNameFilter]);
@@ -451,27 +480,37 @@ const Reviews = () => {
   };
 
   const handleSubmit = async () => {
-    if (!form.reviewer_name || !form.description || !form.rating || !form.prop_name) return;
+    if (
+      !form.reviewer_name ||
+      !form.description ||
+      !form.rating ||
+      !form.prop_name
+    )
+      return;
 
     if (isEditing && form.id) {
-      await dispatch(updateReview({
-        id: form.id,
-        data: {
+      await dispatch(
+        updateReview({
+          id: form.id,
+          data: {
+            product_id: form.product_id,
+            prop_name: form.prop_name,
+            rating: form.rating,
+            description: form.description,
+          },
+        })
+      );
+    } else {
+      await dispatch(
+        createReview({
           product_id: form.product_id,
           prop_name: form.prop_name,
           rating: form.rating,
           description: form.description,
-        },
-      }));
-    } else {
-      await dispatch(createReview({
-        product_id: form.product_id,
-        prop_name: form.prop_name,
-        rating: form.rating,
-        description: form.description,
-        reviewer_name: form.reviewer_name,
-        reviewer_id: form.reviewer_id,
-      }));
+          reviewer_name: form.reviewer_name,
+          reviewer_id: form.reviewer_id,
+        })
+      );
     }
     handleCloseModal();
   };
@@ -484,7 +523,7 @@ const Reviews = () => {
       newReview.prop_name
     ) {
       const currentTime = new Date().toISOString();
-      
+
       if (isEditing && newReview.id) {
         // Update existing review
         setReviews((prev) =>
@@ -548,16 +587,16 @@ const Reviews = () => {
             },
           }}
         >
-          <CardContent sx={{ flexGrow: 1, pb: 1, position: 'relative' }}>
+          <CardContent sx={{ flexGrow: 1, pb: 1, position: "relative" }}>
             {/* Updated Date at top right */}
             <Typography
               variant="caption"
               color="text.secondary"
               sx={{
-                position: 'absolute',
+                position: "absolute",
                 top: 8,
                 right: 16,
-                fontSize: '0.8rem',
+                fontSize: "0.8rem",
               }}
             >
               {formatDate(review.updated_at)}
@@ -1044,7 +1083,7 @@ const Reviews = () => {
               ? "Be the first to share your experience!"
               : `No reviews found with the current filters`}
           </Typography>
-          <Button
+          {/* <Button
             variant="contained"
             startIcon={<AddIcon />}
             onClick={handleOpenModal}
@@ -1063,7 +1102,7 @@ const Reviews = () => {
             }}
           >
             Write the First Review
-          </Button>
+          </Button> */}
         </Box>
       )}
 
@@ -1077,8 +1116,9 @@ const Reviews = () => {
         <DialogTitle>Delete Review</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete {selectedReview?.reviewer_name}'s review for{" "}
-            {selectedReview?.prop_name}? This action cannot be undone.
+            Are you sure you want to delete {selectedReview?.reviewer_name}'s
+            review for {selectedReview?.prop_name}? This action cannot be
+            undone.
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -1149,7 +1189,9 @@ const Reviews = () => {
               fullWidth
               label="Your Name"
               value={newReview.reviewer_name}
-              onChange={(e) => handleInputChange("reviewer_name", e.target.value)}
+              onChange={(e) =>
+                handleInputChange("reviewer_name", e.target.value)
+              }
               variant="outlined"
               required
             />

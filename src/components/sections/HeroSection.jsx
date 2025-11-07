@@ -27,8 +27,14 @@ import { SocialLinks } from "./TradingPostBanner";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import SocialMediaMenu from "./SocialMediaMenu";
 import { MainContext } from "../../App";
+import { useDispatch, useSelector } from "react-redux";
+import { logout, selectUser, selectRole } from "../../features/auth/loginSlice";
 
 const AdminMenu = () => {
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
+  const role = useSelector(selectRole);
+
   const {
     adminLoggedIn,
     setAdminLoggedIn,
@@ -57,9 +63,8 @@ const AdminMenu = () => {
     handleMenuClose();
   };
 
-  const handleLogout = () => {
-    sessionStorage.removeItem("adminToken");
-    sessionStorage.removeItem("adminUser");
+  const handleLogout = async () => {
+    await dispatch(logout());
     setAdminLoggedIn(false);
     navigate("/login");
     handleMenuClose();
@@ -89,9 +94,10 @@ const AdminMenu = () => {
       >
         {adminLoggedIn ? (
           <Avatar
+          title={user?.name|| 'A'}
             sx={{ bgcolor: "#4b0082", fontSize: 18, width: 32, height: 32 }}
           >
-            A
+            {user?.name.charAt(0).toUppercase() || 'A'}
           </Avatar>
         ) : (
           <AccountCircleIcon sx={{ color: "#4b0082", fontSize: 32 }} />
@@ -106,23 +112,7 @@ const AdminMenu = () => {
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        {!adminLoggedIn ? (
-          <div>
-            <MenuItem
-              sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
-              onClick={handleLogin}
-            >
-              Login
-            </MenuItem>
-            <Divider />
-            <MenuItem
-              sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
-              onClick={handleRegister}
-            >
-              Register
-            </MenuItem>
-          </div>
-        ) : (
+        {role === "admin" ? (
           <div>
             <MenuItem
               sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
@@ -136,6 +126,29 @@ const AdminMenu = () => {
               onClick={handleLogout}
             >
               Logout
+            </MenuItem>
+          </div>
+        ) : role === "user" ? (
+          <MenuItem
+            sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
+            onClick={handleLogout}
+          >
+            Logout
+          </MenuItem>
+        ) : (
+          <div>
+            <MenuItem
+              sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
+              onClick={handleLogin}
+            >
+              Login
+            </MenuItem>
+            <Divider />
+            <MenuItem
+              sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
+              onClick={handleRegister}
+            >
+              Register
             </MenuItem>
           </div>
         )}

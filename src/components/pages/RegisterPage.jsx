@@ -3,8 +3,11 @@ import { Box, TextField, Button, Typography, Paper, Grid } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { MainContext } from "../../App";
 import { LoadingScreen } from "./HomePage";
+import { useDispatch, useSelector } from "react-redux";
+import { registerUser } from "../../features/auth/registrationSlice";
 
 const RegisterPage = () => {
+  const dispatch = useDispatch();
   const {
     setSnackbarMessage,
     setSnackbarOpen,
@@ -164,26 +167,7 @@ const RegisterPage = () => {
     }
     setIsLoading(true);
     try {
-      // 🔹 Example API endpoint — replace with your actual backend URL
-      const response = await fetch("https://your-api.com/api/admin/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        // ✅ Registration success
-        setSnackbarMessage("Registration successful! Please log in.");
-        setSnackbarSeverity("success");
-        setSnackbarOpen(true);
-
-        // Navigate to login page
-        navigate("/login");
-      } else {
-        throw new Error(data.message || "Registration failed");
-      }
+      dispatch(registerUser(formData))
     } catch (error) {
       setSnackbarMessage(error.message || "Registration failed");
       setSnackbarSeverity("error");

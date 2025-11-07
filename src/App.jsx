@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { initApp } from "./redux/initApp";
 import {
   selectFirms,
-  selectFirmsStatus,
+  selectFirmsStatus, 
   selectFirmsError,
 } from "./features/firms/firmsSelectors";
 import HomePage from "./components/pages/HomePage";
@@ -35,7 +35,7 @@ function App() {
   const error = useSelector(selectFirmsError);
   const [isLoading, setIsLoading] = useState(true);
   const [firmData, setFirmData] = useState([]);
-  const [adminLoggedIn, setAdminLoggedIn] = useState(true);
+  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [openForm, setOpenForm] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");

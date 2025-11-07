@@ -3,8 +3,13 @@ import { Box, TextField, Button, Typography, Link, Paper } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import { MainContext } from "../../App";
 import { LoadingScreen } from "./HomePage";
+import { useDispatch, useSelector } from "react-redux";
+import { login, logout, selectUser, selectRole } from "../../features/auth/loginSlice";
 
 const LoginPage = () => {
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
+  const role = useSelector(selectRole);
   const {
     setAdminLoggedIn,
     setSnackbarMessage,
@@ -13,8 +18,8 @@ const LoginPage = () => {
     isLoading,
     setIsLoading,
   } = React.useContext(MainContext);
-  const [formData, setFormData] = useState({ name: "", password: "" });
-  const [errors, setErrors] = useState({ name: "", password: "" });
+  const [formData, setFormData] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({ email: "", password: "" });
   const navigate = useNavigate();
 
   // Password validation pattern
@@ -22,14 +27,14 @@ const LoginPage = () => {
 
   const validate = () => {
     let isValid = true;
-    const newErrors = { name: "", password: "" };
+    const newErrors = { email: "", password: "" };
 
-    // Name validation
-    if (!formData.name.trim()) {
-      newErrors.name = "Name is required";
+    // email validation
+    if (!formData.email.trim()) {
+      newErrors.email = "Email is required";
       isValid = false;
-    } else if (formData.name.length < 3) {
-      newErrors.name = "Name must be at least 3 characters";
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(value)) {
+      newErrors.email = "Email must be valid";
       isValid = false;
     }
 
@@ -53,24 +58,7 @@ const LoginPage = () => {
 
     setIsLoading(true);
     try {
-      const response = await fetch("https://your-backend.com/api/admin/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userName: formData.name,
-          password: formData.password,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(data.message || "Invalid credentials");
-      }
-
-      // Save token and admin info
-      sessionStorage.setItem("adminToken", data.token);
-      sessionStorage.setItem("adminUser", JSON.stringify(data.admin));
+      dispatch(login(formData))
 
       // Update context
       setAdminLoggedIn(true);
@@ -135,12 +123,12 @@ const LoginPage = () => {
           sx={{ display: "flex", flexDirection: "column", gap: 2 }}
         >
           <TextField
-            label="User Name"
+            label="Email"
             variant="outlined"
-            value={formData.name}
-            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-            error={!!errors.name}
-            helperText={errors.name}
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            error={!!errors.email}
+            helperText={errors.email}
             sx={{
               "& .MuiOutlinedInput-root": {
                 borderRadius: "10px",

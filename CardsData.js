@@ -17,7 +17,7 @@ export const cardData = [
     country: "USA",
     flag: "/flags/usaflag.jpeg",
     assets: ["forex", "crypto", "indices"],
-    platforms: ["MT4", "Match Trader", "Trade Locker"],
+    platforms: ["MT4", "Match Trader", "Trade Locker"], // updated
     maxAllocation: 1000000,
   },
   {
