@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { cardData } from "/CardsData";
 import Slider from "react-slick";
 import {
@@ -18,6 +18,9 @@ import { styled, useTheme } from "@mui/material/styles";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { foreignNumberSystem } from "../commonFuctions/CommonFunctions";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectFirms } from "../../features/firms/firmsSelectors";
 
 // Styled components for custom styling
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -237,6 +240,7 @@ const TradingCard = ({
   onCopyCode,
   logo,
   firmType = "partner",
+  firmPageURL = "#"
   //badgeLabel,
 }) => {
   const badgeStyles = getBadgeStyles(firmType);
@@ -294,7 +298,7 @@ const TradingCard = ({
       </CardBody>
 
       <CardFooter>
-        <FundButton variant="contained" size="large">
+        <FundButton componnent='a' href={firmPageURL} target="blank" variant="contained" size="large">
           Get Funded
         </FundButton>
       </CardFooter>
@@ -304,10 +308,12 @@ const TradingCard = ({
 
 // Main Component - Rest of the code remains the same...
 const TradingCards = () => {
+  const allFirms = useSelector(selectFirms)
+  const [firmsData, setFirmsData] = useState( allFirms.length ? allFirms : cardData )
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState("");
 
-  const partnerFirms = cardData?.filter((e)=> e.firmType === 'partner')
+  const partnerFirms = useMemo(()=>firmsData?.filter((e)=> e.firmType === 'partner'),[firmsData])
 
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
@@ -397,7 +403,7 @@ const TradingCards = () => {
       <CarouselContainer>
         <SliderContainer>
           <Slider {...settings}>
-            {cardData?.map((card, index) => (
+            {firmsData?.map((card, index) => (
               <Box key={index} sx={{ padding: "10px" }}>
                 <TradingCard
                   title={card.title}
@@ -406,6 +412,7 @@ const TradingCards = () => {
                   code={card.code}
                   logo={card.logo}
                   firmType={card.firmType}
+                  firmPageURL={card.firmPageURL}
                   //badgeLabel={card.badgeLabel}
                   onCopyCode={handleCopyCode}
                 />

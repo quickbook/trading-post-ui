@@ -24,6 +24,7 @@ import { foreignNumberSystem } from "../commonFuctions/CommonFunctions";
 const sampleFirms = [
   {
     id: 1,
+    prop_id: 11,
     name: "Alpha Trading Group",
     daily_loss: 3,
     max_loss: 5,
@@ -38,6 +39,7 @@ const sampleFirms = [
   },
   {
     id: 2,
+    prop_id: 12,
     name: "Auqa Funded",
     logo: "/firms/Auqa-funded.png",
     daily_loss: 3,
@@ -52,6 +54,7 @@ const sampleFirms = [
   },
   {
     id: 3,
+    prop_id: 13,
     name: "Blue Guardian",
     daily_loss: 3,
     max_loss: 5,
@@ -66,6 +69,7 @@ const sampleFirms = [
   },
   {
     id: 4,
+    prop_id: 14,
     name: "Apex Trader Funding",
     logo: "/static/images/avatar/4.jpg",
     daily_loss: 3,
@@ -80,6 +84,7 @@ const sampleFirms = [
   },
   {
     id: 5,
+    prop_id: 15,
     name: "The 5%ers",
     logo: "/static/images/avatar/5.jpg",
     daily_loss: 3,
@@ -94,6 +99,7 @@ const sampleFirms = [
   },
   {
     id: 6,
+    prop_id: 16,
     name: "Funded Trading Plus",
     logo: "/static/images/avatar/6.jpg",
     daily_loss: 3,
