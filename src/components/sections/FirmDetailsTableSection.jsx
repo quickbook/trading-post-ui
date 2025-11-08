@@ -27,6 +27,7 @@ import { BadgeContainer, getBadgeStyles } from "./TradingCards";
 import { useDispatch, useSelector } from "react-redux"; // Add this import
 import { fetchFirmsData } from "../../features/firms/firmsSlice"; // Add this import
 import { selectFirms,selectFirmsError,selectFirmsStatus,selectPagination } from "../../features/firms/firmsSelectors";
+import { cardData } from "../../../CardsData";
 
 export const platformSources = {
   MT: "/platforms/mt5.webp",
@@ -135,7 +136,7 @@ const FirmDetailsTableSection = () => {
   const status = useSelector(selectFirmsStatus);
   const error = useSelector(selectFirmsError);
    // Replace useGetFirmsQuery // Replace useGetFirmsQuery
-  const [filteredFirms, setFilteredFirms] = useState([]);
+  const [filteredFirms, setFilteredFirms] = useState(cardData);
   const hasInitialFetch = useRef(false);
   useEffect(() => {
     if (status === 'idle' && !hasInitialFetch.current) {
@@ -148,9 +149,11 @@ const FirmDetailsTableSection = () => {
 
  useEffect(() => {
   console.log(filteredFirms)
-    if (firms) {
-      setFilteredFirms(firms);
-    }
+    // if (firms) {
+    //   setFilteredFirms(firms);
+    // }else{
+    //   setFilteredFirms(cardData);
+    // }
       console.log(filteredFirms)
   }, [firms]);
 
@@ -552,7 +555,7 @@ const FirmDetailsTableSection = () => {
                               bgcolor: "#4b0082",
                             }}
                           >
-                            {platform.slice(0, 1).toUpperCase()}
+                            {platform?.slice(0, 1).toUpperCase()}
                           </Avatar>
                         )
                       )}

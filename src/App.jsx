@@ -26,17 +26,19 @@ import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import RegisterPage from "./components/pages/RegisterPage";
 import { initializeAuth } from './api/axiosClient';
+import { selectAccessToken } from "./features/auth/authSlice";
 
 export const MainContext = createContext();
 
 function App() {
   const dispatch = useDispatch();
+  const token = useSelector(selectAccessToken)
   const firmsData = useSelector(selectFirms);
   const status = useSelector(selectFirmsStatus);
   const error = useSelector(selectFirmsError);
   const [isLoading, setIsLoading] = useState(true);
   const [firmData, setFirmData] = useState([]);
-  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
+  const [adminLoggedIn, setAdminLoggedIn] = useState(true);
   const [openForm, setOpenForm] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -74,7 +76,7 @@ function App() {
       }
     }
   };
-
+  //console.log(token)
   // Scroll actions
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -91,10 +93,10 @@ function App() {
     initializeAuth();
   }, []);
 
-  // useEffect(() => {
-  //   // Run only once on first mount
-  //   dispatch(initApp());
-  // }, [dispatch]);
+  useEffect(() => {
+    // Run only once on first mount
+    dispatch(initApp());
+  }, [dispatch]);
 
   useEffect(() => {
     window.addEventListener("scroll", handleScroll);

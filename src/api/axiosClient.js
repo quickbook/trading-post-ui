@@ -18,7 +18,7 @@ const getStore = () => {
  
 const axiosClient = axios.create({
   //baseURL: process.env.REACT_APP_API_BASE_URL || "https://dev01-api.pranalyticx.cloud",
-  baseURL: "http://localhost:9098",
+  baseURL: "https://dev01-api.pranalyticx.cloud",
   headers: { "Content-Type": "application/json" },
 });
 

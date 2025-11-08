@@ -174,7 +174,7 @@ export const PropFirmDetailsPage = () => {
             {adminLoggedIn && (
               <Button
                 variant="outlined"
-                onClick={navigate("/reviews")}
+                onClick={()=>navigate("/reviews")}
                 sx={{
                   bgcolor: "black",
                   color: "white",

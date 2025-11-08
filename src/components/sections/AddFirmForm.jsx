@@ -17,8 +17,13 @@ import {
   FormControlLabel,
   Switch,
   Divider,
+  Card,
+  CardContent,
+  CardActions,
+  IconButton,
+  Avatar,
 } from "@mui/material";
-import { Save, Cancel } from "@mui/icons-material";
+import { Save, Cancel, Delete, Add, CloudUpload } from "@mui/icons-material";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -32,12 +37,12 @@ const MenuProps = {
 };
 
 const assetOptions = [
-  "forex",
-  "crypto",
-  "indices",
-  "commodities",
-  "stocks",
-  "etfs",
+  "FX",
+  "Crypto",
+  "Indices",
+  "Commodities",
+  "Stocks",
+  "ETFs",
 ];
 const platformOptions = [
   "MT4",
@@ -48,26 +53,57 @@ const platformOptions = [
   "Project-X",
   "DXtrade",
 ];
+const tierOptions = ["King", "Queen", "Prince", "Knight"];
+const phaseOptions = ["1-Step Challenge", "2-Step Challenge", "Evaluation"];
+const firmTypeOptions = ["premium", "trusted", "partner"];
 
 const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
   const [formData, setFormData] = useState({
-    title: "",
-    firmType: "partner",
-    profitSplit: 80,
-    account: 100000,
-    code: "",
+    name: "",
+    slug: "",
     logo: "",
-    rating: "A",
-    country: "",
-    flag: "",
-    assets: [],
-    platforms: [],
-    maxAllocation: 100000,
-    isActive: true,
+    firmType: "partner",
+    rating: "A+",
+    description: "",
+    tradingConditions: {
+      maximumAccountSizeUsd: 100000,
+      profitSplitPct: 80,
+      tradingPlatforms: [],
+      availableAssets: [],
+      discountCode: "",
+      keyFeatures: [],
+      withdrawalSpeed: "1-3 Business Days",
+    },
+    about: {
+      legalName: "",
+      registrationNo: "",
+      establishedDate: "",
+      founders: "",
+      headquarters: "",
+      jurisdiction: "",
+      firmStatus: "Active",
+    },
+    challenges: [],
   });
 
+  const [newChallenge, setNewChallenge] = useState({
+    tier: "King",
+    phase: "2-Step Challenge",
+    profitTargetPct: 10.0,
+    dailyLossPct: 3.0,
+    maxLossPct: 5.0,
+    accountSizeUsd: 100000,
+    price: { amount: 0, currency: "USD" },
+    buyUrl: "",
+  });
+
+  const [logoPreview, setLogoPreview] = useState("");
+
   useEffect(() => {
-    if (firm) setFormData(firm);
+    if (firm) {
+      setFormData(firm);
+      if (firm.logo) setLogoPreview(firm.logo);
+    }
   }, [firm]);
 
   const handleChange = (e) => {
@@ -75,11 +111,30 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
     setFormData((p) => ({ ...p, [name]: value }));
   };
 
+  const handleTradingConditionsChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((p) => ({
+      ...p,
+      tradingConditions: { ...p.tradingConditions, [name]: value },
+    }));
+  };
+
+  const handleAboutChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((p) => ({
+      ...p,
+      about: { ...p.about, [name]: value },
+    }));
+  };
+
   const handleMultiSelect = (e) => {
     const { name, value } = e.target;
     setFormData((p) => ({
       ...p,
-      [name]: typeof value === "string" ? value.split(",") : value,
+      tradingConditions: {
+        ...p.tradingConditions,
+        [name]: typeof value === "string" ? value.split(",") : value,
+      },
     }));
   };
 
@@ -88,37 +143,130 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
     setFormData((p) => ({ ...p, [name]: parseFloat(value) || 0 }));
   };
 
+  const handleTradingNumberChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((p) => ({
+      ...p,
+      tradingConditions: {
+        ...p.tradingConditions,
+        [name]: parseFloat(value) || 0,
+      },
+    }));
+  };
+
+  const handleLogoUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64String = reader.result;
+        setLogoPreview(base64String);
+        setFormData((p) => ({ ...p, logo: base64String }));
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleChallengeChange = (e) => {
+    const { name, value } = e.target;
+    if (name.startsWith("price.")) {
+      const field = name.split(".")[1];
+      setNewChallenge((p) => ({
+        ...p,
+        price: {
+          ...p.price,
+          [field]: field === "amount" ? parseFloat(value) || 0 : value,
+        },
+      }));
+    } else {
+      setNewChallenge((p) => ({
+        ...p,
+        [name]:
+          name.includes("Pct") || name === "accountSizeUsd"
+            ? parseFloat(value) || 0
+            : value,
+      }));
+    }
+  };
+
+  const addChallenge = () => {
+    if (newChallenge.accountSizeUsd > 0 && newChallenge.price.amount > 0) {
+      setFormData((p) => ({
+        ...p,
+        challenges: [...p.challenges, { ...newChallenge }],
+      }));
+      setNewChallenge({
+        tier: "King",
+        phase: "2-Step Challenge",
+        profitTargetPct: 10.0,
+        dailyLossPct: 3.0,
+        maxLossPct: 5.0,
+        accountSizeUsd: 100000,
+        price: { amount: 0, currency: "USD" },
+        buyUrl: "",
+      });
+    }
+  };
+
+  const removeChallenge = (index) => {
+    setFormData((p) => ({
+      ...p,
+      challenges: p.challenges.filter((_, i) => i !== index),
+    }));
+  };
+
+  const handleFirmStatusToggle = (e) => {
+    const isActive = e.target.checked;
+    setFormData((p) => ({
+      ...p,
+      about: {
+        ...p.about,
+        firmStatus: isActive ? "Active" : "Inactive",
+      },
+    }));
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    const processedPlatforms = formData.platforms.map((platform) => ({
-      src: `/platforms/${platform.toLowerCase().replace(" ", "-")}.webp`,
-      alt: platform,
-    }));
 
-    const submitData = {
+    // Generate slug from name if not provided
+    const finalFormData = {
       ...formData,
-      platforms: processedPlatforms,
-      flag: formData.flag || `/flags/${formData.country.toLowerCase()}.jpeg`,
+      slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, "-"),
     };
 
-    onSubmit(submitData);
+    onSubmit(finalFormData);
+
     if (!firm) {
       setFormData({
-        title: "",
-        firmType: "partner",
-        profitSplit: 80,
-        account: 100000,
-        code: "",
+        name: "",
+        slug: "",
         logo: "",
+        firmType: "partner",
         rating: "A",
-        //allRatings: 0,
-        country: "",
-        flag: "",
-        assets: [],
-        platforms: [],
-        maxAllocation: 100000,
-        isActive: true,
+        allRatings: 0,
+        description: "",
+        tradingConditions: {
+          maximumAccountSizeUsd: 100000,
+          profitSplitPct: 80,
+          tradingPlatforms: [],
+          availableAssets: [],
+          discountCode: "",
+          keyFeatures: [],
+          withdrawalSpeed: "1-3 Business Days",
+        },
+        about: {
+          legalName: "",
+          registrationNo: "",
+          establishedDate: "",
+          founders: "",
+          headquarters: "",
+          jurisdiction: "",
+          firmStatus: "Active",
+        },
+        challenges: [],
       });
+      setLogoPreview("");
     }
   };
 
@@ -127,7 +275,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
       elevation={4}
       sx={{
         p: 4,
-        maxWidth: 900,
+        maxWidth: 1000,
         mx: "auto",
         borderRadius: 3,
         bgcolor: "background.paper",
@@ -151,12 +299,22 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
               required
               fullWidth
               label="Firm Name"
-              name="title"
-              value={formData.title}
+              name="name"
+              value={formData.name}
               onChange={handleChange}
             />
           </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              fullWidth
+              label="Slug"
+              name="slug"
+              value={formData.slug}
+              onChange={handleChange}
+              placeholder="auto-generated-from-name"
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 4 }}>
             <FormControl fullWidth required>
               <InputLabel>Firm Type</InputLabel>
               <Select
@@ -165,65 +323,14 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 label="Firm Type"
                 onChange={handleChange}
               >
-                <MenuItem value="partner">Partner</MenuItem>
-                <MenuItem value="premium">Premium</MenuItem>
-                <MenuItem value="trusted">Trusted</MenuItem>
+                {firmTypeOptions.map((type) => (
+                  <MenuItem key={type} value={type}>
+                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
-              required
-              fullWidth
-              type="number"
-              label="Profit Split (%)"
-              name="profitSplit"
-              value={formData.profitSplit}
-              onChange={handleNumberChange}
-              inputProps={{ min: 0, max: 100 }}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
-              required
-              fullWidth
-              type="number"
-              label="Account Size ($)"
-              name="account"
-              value={formData.account}
-              onChange={handleNumberChange}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
-              required
-              fullWidth
-              label="Discount Code"
-              name="code"
-              value={formData.code}
-              onChange={handleChange}
-            />
-          </Grid>
-          <Grid size={{ xs: 12, md: 6 }}>
-            <TextField
-              fullWidth
-              label="Logo URL"
-              name="logo"
-              value={formData.logo}
-              onChange={handleChange}
-              placeholder="/alpha-trading.png"
-            />
-          </Grid>
-        </Grid>
-
-        <Divider sx={{ mb: 3 }} />
-
-        {/* Ratings Section */}
-        <Typography variant="h6" gutterBottom fontWeight={600} color="primary">
-          Ratings & Location
-        </Typography>
-
-        <Grid container spacing={3} sx={{ mb: 3 }}>
           <Grid size={{ xs: 12, md: 4 }}>
             <FormControl fullWidth>
               <InputLabel>Rating</InputLabel>
@@ -233,55 +340,92 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 label="Rating"
                 onChange={handleChange}
               >
-                {["A+", "A", "B", "C", "D"].map(
-                  (r) => (
-                    <MenuItem key={r} value={r}>
-                      {r}
-                    </MenuItem>
-                  )
-                )}
+                {["A+", "A", "B", "C", "D"].map((r) => (
+                  <MenuItem key={r} value={r}>
+                    {r}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Grid>
-          {/* <Grid size={{ xs: 12, md: 4 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+              <Button
+                variant="outlined"
+                component="label"
+                startIcon={<CloudUpload />}
+              >
+                Upload Logo
+                <input
+                  type="file"
+                  hidden
+                  accept="image/*"
+                  onChange={handleLogoUpload}
+                />
+              </Button>
+              {logoPreview && (
+                <Avatar
+                  src={logoPreview}
+                  sx={{ width: 75, height: 65 }}
+                  variant="rounded"
+                />
+              )}
+            </Box>
+          </Grid>
+          <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
-              type="number"
-              label="Total Ratings"
-              name="allRatings"
-              value={formData.allRatings}
-              onChange={handleNumberChange}
-            />
-          </Grid> */}
-          <Grid size={{ xs: 12, md: 4 }}>
-            <TextField
-              fullWidth
-              label="Country"
-              name="country"
-              value={formData.country}
+              multiline
+              rows={3}
+              label="Description"
+              name="description"
+              value={formData.description}
               onChange={handleChange}
-              placeholder="USA"
+              placeholder="Enter firm description..."
             />
           </Grid>
         </Grid>
 
         <Divider sx={{ mb: 3 }} />
 
-        {/* Trading Details */}
+        {/* Trading Conditions */}
         <Typography variant="h6" gutterBottom fontWeight={600} color="primary">
-          Trading Details
+          Trading Conditions
         </Typography>
 
-        <Grid container spacing={3}>
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              required
+              fullWidth
+              type="number"
+              label="Maximum Account Size (USD)"
+              name="maximumAccountSizeUsd"
+              value={formData.tradingConditions.maximumAccountSizeUsd}
+              onChange={handleTradingNumberChange}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              required
+              fullWidth
+              type="number"
+              label="Profit Split (%)"
+              name="profitSplitPct"
+              value={formData.tradingConditions.profitSplitPct}
+              onChange={handleTradingNumberChange}
+              inputProps={{ min: 0, max: 100 }}
+            />
+          </Grid>
           <Grid size={{ xs: 12, md: 6 }}>
             <FormControl fullWidth>
-              <InputLabel>Assets</InputLabel>
+              <InputLabel>Available Assets</InputLabel>
               <Select
                 multiple
-                name="assets"
-                value={formData.assets}
+                name="availableAssets"
+                value={formData.tradingConditions.availableAssets}
                 onChange={handleMultiSelect}
-                input={<OutlinedInput label="Assets" />}
+                input={<OutlinedInput label="Available Assets" />}
                 renderValue={(selected) => (
                   <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
                     {selected.map((value) => (
@@ -293,27 +437,32 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
               >
                 {assetOptions.map((asset) => (
                   <MenuItem key={asset} value={asset}>
-                    <Checkbox checked={formData.assets.indexOf(asset) > -1} />
+                    <Checkbox
+                      checked={
+                        formData.tradingConditions.availableAssets.indexOf(
+                          asset
+                        ) > -1
+                      }
+                    />
                     <ListItemText primary={asset} />
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
-
           <Grid size={{ xs: 12, md: 6 }}>
             <FormControl fullWidth>
-              <InputLabel>Platforms</InputLabel>
+              <InputLabel>Trading Platforms</InputLabel>
               <Select
                 multiple
-                name="platforms"
-                value={formData.platforms}
+                name="tradingPlatforms"
+                value={formData.tradingConditions.tradingPlatforms}
                 onChange={handleMultiSelect}
-                input={<OutlinedInput label="Platforms" />}
+                input={<OutlinedInput label="Trading Platforms" />}
                 renderValue={(selected) => (
                   <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                    {selected.map((value,i) => (
-                      <Chip key={i+'chip'} label={value} size="small" />
+                    {selected.map((value, i) => (
+                      <Chip key={i + "chip"} label={value} size="small" />
                     ))}
                   </Box>
                 )}
@@ -322,7 +471,11 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 {platformOptions.map((platform) => (
                   <MenuItem key={platform} value={platform}>
                     <Checkbox
-                      checked={formData.platforms.indexOf(platform) > -1}
+                      checked={
+                        formData.tradingConditions.tradingPlatforms.indexOf(
+                          platform
+                        ) > -1
+                      }
                     />
                     <ListItemText primary={platform} />
                   </MenuItem>
@@ -330,39 +483,255 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
               </Select>
             </FormControl>
           </Grid>
-
           <Grid size={{ xs: 12, md: 6 }}>
             <TextField
               fullWidth
-              type="number"
-              label="Max Allocation ($)"
-              name="maxAllocation"
-              value={formData.maxAllocation}
-              onChange={handleNumberChange}
+              label="Discount Code"
+              name="discountCode"
+              value={formData.tradingConditions.discountCode}
+              onChange={handleTradingConditionsChange}
             />
           </Grid>
-
-          <Grid size={{ xs: 12, md: 6 }} display="flex" alignItems="center">
-            <FormControlLabel
-              control={
-                <Switch
-                  checked={formData.isActive}
-                  onChange={(e) =>
-                    setFormData((p) => ({ ...p, isActive: e.target.checked }))
-                  }
-                  name="isActive"
-                  color="success"
-                />
-              }
-              label="Active Firm"
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              fullWidth
+              label="Withdrawal Speed"
+              name="withdrawalSpeed"
+              value={formData.tradingConditions.withdrawalSpeed}
+              onChange={handleTradingConditionsChange}
             />
           </Grid>
         </Grid>
 
-        {/* Action Buttons */}
-        <Box
-          sx={{ mt: 8, display: "flex", justifyContent: "center", gap: 2 }}
+        <Divider sx={{ mb: 3 }} />
+
+        {/* About Section */}
+        <Typography variant="h6" gutterBottom fontWeight={600} color="primary">
+          About the Firm
+        </Typography>
+
+        <Grid container spacing={3} sx={{ mb: 3 }}>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              fullWidth
+              label="Legal Name"
+              name="legalName"
+              value={formData.about.legalName}
+              onChange={handleAboutChange}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              fullWidth
+              label="Registration Number"
+              name="registrationNo"
+              value={formData.about.registrationNo}
+              onChange={handleAboutChange}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              fullWidth
+              type="date"
+              label="Established Date"
+              name="establishedDate"
+              value={formData.about.establishedDate}
+              onChange={handleAboutChange}
+              InputLabelProps={{ shrink: true }}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              fullWidth
+              label="Headquarters"
+              name="headquarters"
+              value={formData.about.headquarters}
+              onChange={handleAboutChange}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <TextField
+              fullWidth
+              label="Jurisdiction"
+              name="jurisdiction"
+              value={formData.about.jurisdiction}
+              onChange={handleAboutChange}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 6 }}>
+            <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+              <FormControlLabel
+                control={
+                  <Switch
+                    checked={formData.about.firmStatus === "Active"}
+                    onChange={handleFirmStatusToggle}
+                    color="success"
+                  />
+                }
+                label={
+                  <Box>
+                    <Typography variant="body1">
+                      Firm Status: {formData.about.firmStatus}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {formData.about.firmStatus === "Active"
+                        ? "Active"
+                        : "Inactive"}
+                    </Typography>
+                  </Box>
+                }
+              />
+            </Box>
+          </Grid>
+        </Grid>
+
+        <Divider sx={{ mb: 3 }} />
+
+        {/* Challenges Section */}
+        <Typography variant="h6" gutterBottom fontWeight={600} color="primary">
+          Trading Challenges
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={addChallenge}
+          sx={{ width: "fit-content", bgcolor: "#4b0082", mb: 4 }}
+          fullWidth
         >
+          Add Challenge
+        </Button>
+
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <FormControl fullWidth>
+              <InputLabel>Tier</InputLabel>
+              <Select
+                name="tier"
+                value={newChallenge.tier}
+                label="Tier"
+                onChange={handleChallengeChange}
+              >
+                {tierOptions.map((tier) => (
+                  <MenuItem key={tier} value={tier}>
+                    {tier}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <FormControl fullWidth>
+              <InputLabel>Phase</InputLabel>
+              <Select
+                name="phase"
+                value={newChallenge.phase}
+                label="Phase"
+                onChange={handleChallengeChange}
+              >
+                {phaseOptions.map((phase) => (
+                  <MenuItem key={phase} value={phase}>
+                    {phase}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Account Size (USD)"
+              name="accountSizeUsd"
+              value={newChallenge.accountSizeUsd}
+              onChange={handleChallengeChange}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Price (USD)"
+              name="price.amount"
+              value={newChallenge.price.amount}
+              onChange={handleChallengeChange}
+            />
+          </Grid>
+        </Grid>
+
+        <Grid container spacing={2} sx={{ mb: 3 }}>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Profit Target (%)"
+              name="profitTargetPct"
+              value={newChallenge.profitTargetPct}
+              onChange={handleChallengeChange}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Daily Loss (%)"
+              name="dailyLossPct"
+              value={newChallenge.dailyLossPct}
+              onChange={handleChallengeChange}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <TextField
+              fullWidth
+              type="number"
+              label="Max Loss (%)"
+              name="maxLossPct"
+              value={newChallenge.maxLossPct}
+              onChange={handleChallengeChange}
+            />
+          </Grid>
+          <Grid size={{ xs: 12, md: 3 }}>
+            <TextField
+              fullWidth
+              label="Page URL"
+              name="buyUrl"
+              value={newChallenge.buyUrl}
+              onChange={handleChallengeChange}
+            />
+          </Grid>
+        </Grid>
+
+        {/* Challenges List */}
+        {formData.challenges.map((challenge, index) => (
+          <Card key={index} sx={{ mb: 2 }}>
+            <CardContent>
+              <Box
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Typography variant="h6">
+                  {challenge.tier} - {challenge.phase}
+                </Typography>
+                <IconButton
+                  color="error"
+                  onClick={() => removeChallenge(index)}
+                >
+                  <Delete />
+                </IconButton>
+              </Box>
+              <Typography>
+                Account Size: ${challenge.accountSizeUsd.toLocaleString()} |
+                Price: ${challenge.price.amount} | Profit Target:{" "}
+                {challenge.profitTargetPct}%
+              </Typography>
+            </CardContent>
+          </Card>
+        ))}
+
+        {/* Action Buttons */}
+        <Box sx={{ mt: '6rem', display: "flex", justifyContent: "center", gap: 2 }}>
           {onCancel && (
             <Button
               variant="outlined"
