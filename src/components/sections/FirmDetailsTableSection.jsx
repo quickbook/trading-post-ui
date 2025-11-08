@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, useRef } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Table,
   TableBody,
@@ -16,17 +16,14 @@ import {
   Pagination,
   Typography,
   Avatar,
-  CircularProgress
 } from "@mui/material";
 import PropTypes from "prop-types";
 import { styled } from "@mui/material/styles";
+import { cardData } from "/CardsData";
 import { foreignNumberSystem } from "../commonFuctions/CommonFunctions";
 import FirmsFilterSection from "./FirmsFilterSection";
 import { Link, useNavigate } from "react-router-dom";
 import { BadgeContainer, getBadgeStyles } from "./TradingCards";
-import { useDispatch, useSelector } from "react-redux"; // Add this import
-import { fetchFirmsData } from "../../features/firms/firmsSlice"; // Add this import
-import { selectFirms,selectFirmsError,selectFirmsStatus,selectPagination } from "../../features/firms/firmsSelectors";
 
 export const platformSources = {
   MT: "/platforms/mt5.webp",
@@ -126,47 +123,21 @@ function a11yProps(index) {
 const FirmDetailsTableSection = () => {
   const [value, setValue] = useState(0);
   const [page, setPage] = useState(1);
-    const dispatch = useDispatch(); 
- // const [filteredFirms, setFilteredFirms] = useState([]);
+  const [cardDetails, setCardDetails] = useState(cardData);
   const navigate = useNavigate();
   const rowsPerPage = 8;
-  const firms = useSelector(selectFirms);
-  const { pageNumber, pageSize, totalElements, totalPages } = useSelector(selectPagination);
-  const status = useSelector(selectFirmsStatus);
-  const error = useSelector(selectFirmsError);
-   // Replace useGetFirmsQuery // Replace useGetFirmsQuery
-  const [filteredFirms, setFilteredFirms] = useState([]);
-  const hasInitialFetch = useRef(false);
-  useEffect(() => {
-    if (status === 'idle' && !hasInitialFetch.current) {
-      hasInitialFetch.current = true;
-      dispatch(fetchFirmsData());
-      
-    }
-    
-  }, [dispatch, status]);
-
- useEffect(() => {
-  console.log(filteredFirms)
-    if (firms) {
-      setFilteredFirms(firms);
-    }
-      console.log(filteredFirms)
-  }, [firms]);
 
   function filterFirmsByTab(index) {
-    if (!firms) return;
-    
     switch (index) {
       case 0:
-        return setFilteredFirms(firms); // All Firms
+        return setCardDetails(cardData); // All Firms
       case 1:
-        return setFilteredFirms(
-          firms.filter((firm) => firm.rating === "A+" || firm.rating === "A")
+        return setCardDetails(
+          cardData.filter((firm) => firm.rating === "A+" || firm.rating === "A")
         ); // Top Rated
       case 2:
-        return setFilteredFirms(
-          firms.filter(
+        return setCardDetails(
+          cardData.filter(
             (firm) =>
               firm.rating === "B" || firm.rating === "C" || firm.rating === "D"
           )
@@ -174,10 +145,10 @@ const FirmDetailsTableSection = () => {
       case 3:
         return navigate("/comparefirms/challenges");
       default:
-        setFilteredFirms(firms);
+        setCardDetails(cardData);
     }
   }
-  
+
   const handleChangePage = (event, newPage) => {
     setPage(newPage);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -190,34 +161,16 @@ const FirmDetailsTableSection = () => {
   };
 
   const paginatedUsers = useMemo(() => {
-    return filteredFirms.slice((page - 1) * rowsPerPage, page * rowsPerPage);
-  }, [filteredFirms, page, rowsPerPage]);
+    return cardDetails.slice((page - 1) * rowsPerPage, page * rowsPerPage);
+  }, [cardDetails, page, rowsPerPage]);
 
   const start = useMemo(() => {
     return (page - 1) * rowsPerPage + 1;
-  }, [page, rowsPerPage]);
+  }, [cardDetails, page, rowsPerPage]);
 
   const end = useMemo(() => {
-    return Math.min(page * rowsPerPage, filteredFirms.length);
-  }, [filteredFirms.length, page, rowsPerPage]);
-
-   // Loading state
-  if (status === 'loading') {
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'center', p: 3 }}>
-        <CircularProgress />
-      </Box>
-    );
-  }
-
-  // Error state
-  if (status === 'failed') {
-    return (
-      <Box sx={{ p: 3, color: 'error.main' }}>
-        Error loading firms: {error}
-      </Box>
-    );
-  }
+    return Math.min(page * rowsPerPage, cardDetails.length);
+  }, [cardDetails.length, page, rowsPerPage]);
 
   return (
     <Box
@@ -231,7 +184,7 @@ const FirmDetailsTableSection = () => {
         padding: "8px 24px",
       }}
     >
-      <FirmsFilterSection setFilteredFirms={setFilteredFirms} setPage={setPage}  initialData={firms}/>
+      <FirmsFilterSection setCardDetails={setCardDetails} setPage={setPage} />
       <Box sx={{ width: "100%", mb: 4 }}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs
@@ -301,7 +254,7 @@ const FirmDetailsTableSection = () => {
           pr: 2,
         }}
       >
-        Showing {start}–{end} of {filteredFirms.length} results
+        Showing {start}–{end} of {cardDetails.length} results
       </Typography>
       <TableContainer
         component={Paper}
@@ -321,7 +274,7 @@ const FirmDetailsTableSection = () => {
                   sx={{
                     color: "#cecece",
                     borderRight:
-                      index === filteredFirms.length - 1
+                      index === cardDetails.length - 1
                         ? "none"
                         : "1px solid #49454f",
                   }}
@@ -646,10 +599,10 @@ const FirmDetailsTableSection = () => {
           variant="body1"
           sx={{ fontFamily: "'Lora', Helvetica", color: "#cecece" }}
         >
-          Showing {start}–{end} of {filteredFirms.length} results
+          Showing {start}–{end} of {cardDetails.length} results
         </Typography>
         <Pagination
-          count={Math.ceil(filteredFirms.length / rowsPerPage)}
+          count={Math.ceil(cardDetails.length / rowsPerPage)}
           page={page}
           onChange={handleChangePage}
           color="primary"

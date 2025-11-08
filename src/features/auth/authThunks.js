@@ -1,6 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { API_ENDPOINTS, getFullUrl } from "../../config/apiEndpoints";
 
 /**
  * Example auth endpoints (adjust to your API):
@@ -13,10 +12,10 @@ import { API_ENDPOINTS, getFullUrl } from "../../config/apiEndpoints";
 const toExpiresAt = (expiresInSec) => Date.now() + expiresInSec * 1000;
 
 export const fetchAuthToken = createAsyncThunk(
-   `auth${API_ENDPOINTS.AUTH.TOKEN}`,
+  "auth/fetchAuthToken",
   async (_, { rejectWithValue }) => {
     try {
-     const res = await axios.post(getFullUrl(API_ENDPOINTS.AUTH.TOKEN));
+      const res = await axios.post("/api/auth/token");
       const { accessToken, refreshToken, expiresIn } = res.data;
       return {
         accessToken,
@@ -30,14 +29,11 @@ export const fetchAuthToken = createAsyncThunk(
 );
 
 export const refreshAccessToken = createAsyncThunk(
-  `auth${API_ENDPOINTS.AUTH.REFRESH}`,
+  "auth/refreshAccessToken",
   async (_, { getState, rejectWithValue }) => {
     try {
       const { refreshToken } = getState().auth;
-    const res = await axios.post(
-        getFullUrl(API_ENDPOINTS.AUTH.REFRESH), 
-        { refreshToken }
-      );
+      const res = await axios.post("/api/auth/refresh", { refreshToken });
       const { accessToken, refreshToken: newRefresh, expiresIn } = res.data;
       return {
         accessToken,
