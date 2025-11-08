@@ -88,13 +88,13 @@ const RegisterPage = () => {
         break;
 
       case "pinCode":
-        if (!value.trim()) error = "Pin code is required";
+        if (!value.trim()) error = "Zip code is required";
         else if (!/^[0-9]{4,10}$/.test(value))
-          error = "Enter a valid pin code (4–10 digits)";
+          error = "Enter a valid zip code (4–10 digits)";
         break;
 
       case "countryCode":
-        if (!value.trim()) error = "Country code is required";
+        if (!value.trim()) error = "Country is required";
         else if (!/^[A-Z]{2,3}$/.test(value))
           error = "Use valid code (e.g. IN, USA)";
         break;
