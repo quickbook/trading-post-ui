@@ -153,7 +153,7 @@ const LoginPage = () => {
             }}
           />
 
-          {/* <Link
+          <Link
             href="#"
             underline="hover"
             sx={{
@@ -164,7 +164,7 @@ const LoginPage = () => {
             }}
           >
             forgot password
-          </Link> */}
+          </Link>
 
           <Button
             variant="contained"
