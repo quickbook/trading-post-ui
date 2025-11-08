@@ -1,11 +1,27 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosClient from "../../api/axiosClient";
+import { API_ENDPOINTS, getFullUrl } from "../../config/apiEndpoints";
+const FETCH_FIRMS_ACTION = `firms${API_ENDPOINTS.FIRMS.BASE}`;
+
+const initialState = {
+  content: [],          // firms data
+  pagination: {
+    pageNumber: 0,
+    pageSize: 20,
+    totalElements: 0,
+    totalPages: 0,
+  },
+  status: "idle",
+  error: null,
+  message: null
+};
+
 
 export const fetchFirmsData = createAsyncThunk(
-  "firms/fetchFirmsData",
+ FETCH_FIRMS_ACTION,
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.get("/api/firmsData");
+      const res = await axiosClient.get(getFullUrl(API_ENDPOINTS.FIRMS.BASE));
       return res.data; // expect array/object per your API
     } catch (err) {
       return rejectWithValue(
@@ -17,11 +33,7 @@ export const fetchFirmsData = createAsyncThunk(
 
 const firmsSlice = createSlice({
   name: "firms",
-  initialState: {
-    data: [], // All firms data
-    status: "idle", // loading | succeeded | failed
-    error: null, // error message if any
-  },
+   initialState,
   reducers: {
     // 🔹 Manually add a firm (local only)
     addFirm: (state, action) => {
@@ -30,7 +42,7 @@ const firmsSlice = createSlice({
 
     // 🔹 Update a firm by ID or index
     updateFirm: (state, action) => {
-      const { id, updatedData } = action.payload;
+      const { id, updatedData } = action.payload.data;
       const index = state.data.findIndex((firm) => firm.id === id);
       if (index !== -1) {
         state.data[index] = { ...state.data[index], ...updatedData };
@@ -59,12 +71,23 @@ const firmsSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchFirmsData.fulfilled, (state, action) => {
+         const { data, message, success } = action.payload;
+        console.log("Fetched firms data:", action);
         state.status = "succeeded";
-        state.data = action.payload; // set new data
+        if (success) {
+          state.content = data.content;
+          state.pagination = {
+            pageNumber: data.pageable.pageNumber,
+            pageSize: data.pageable.pageSize,
+            totalElements: data.totalElements,
+            totalPages: data.totalPages
+          };
+          state.message = message;
+        }
       })
       .addCase(fetchFirmsData.rejected, (state, action) => {
         state.status = "failed";
-        state.error = action.payload;
+        state.error = action.payload.message || "Failed to fetch firms data";
       });
   },
 });
