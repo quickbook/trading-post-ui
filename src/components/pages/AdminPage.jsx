@@ -16,8 +16,9 @@ import ViewListIcon from "@mui/icons-material/ViewList";
 import AddFirmForm from "../sections/AddFirmForm";
 import ViewAllFirms from "../sections/ViewAllFirms";
 import { cardData } from "../../../CardsData";
+import FirmChallengesEdit from "../sections/FirmChallengesEdit";
 
-const drawerWidth = '320px';
+const drawerWidth = "320px";
 
 const AdminPage = () => {
   const [activeView, setActiveView] = useState("add");
@@ -41,9 +42,9 @@ const AdminPage = () => {
   //   localStorage.setItem("tradingFirms", JSON.stringify(firms));
   // }, [firms]);
 
-  useEffect(()=>{
-    window.scrollTo({top: 0, behavior: 'smooth'});
-  },[])
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const handleAddFirm = (firmData) => {
     if (editingFirm) {
@@ -92,7 +93,12 @@ const AdminPage = () => {
     {
       text: "View All Firms",
       icon: <ViewListIcon />,
-      view: "view",
+      view: "view firms",
+    },
+    {
+      text: "Challenges",
+      icon: <ViewListIcon />,
+      view: "view challenges",
     },
   ];
 
@@ -102,7 +108,7 @@ const AdminPage = () => {
         variant="h6"
         sx={{
           p: 2,
-          mt: '90px',
+          mt: "90px",
           textAlign: "center",
           borderBottom: "1px solid rgba(0, 0, 0, 0.12)",
           backgroundColor: "#ffffff30",
@@ -210,12 +216,16 @@ const AdminPage = () => {
             onSubmit={handleAddFirm}
             onCancel={editingFirm ? handleCancelEdit : null}
           />
-        ) : (
+        ) : activeView === "view firms" ? (
           <ViewAllFirms
             firms={firms}
             onEdit={handleEditFirm}
             onDelete={handleDeleteFirm}
           />
+        ) : activeView === "view challenges" ? (
+          <FirmChallengesEdit />
+        ) : (
+          <></>
         )}
       </Box>
     </Box>

@@ -296,11 +296,11 @@ const Reviews = () => {
   const user = useSelector(selectUser);
   const role = useSelector(selectRole); // "admin" | "user" | "guest"
   const userId = useSelector(selectUserId); // number | null
-  //const reviews = useSelector(selectReviews);
+  const allReviews = useSelector(selectReviews);
   const status = useSelector(selectReviewsStatus);
   const error = useSelector(selectReviewsError);
   const { adminLoggedIn } = React.useContext(MainContext);
-  const [reviews, setReviews] = useState(initialReviews);
+  const [reviews, setReviews] = useState(allReviews.length ? allReviews : initialReviews);
   const [openModal, setOpenModal] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedReview, setSelectedReview] = useState(null);

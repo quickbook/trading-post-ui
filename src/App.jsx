@@ -2,11 +2,7 @@ import React, { createContext, useEffect, useRef, useState } from "react";
 import "./App.css";
 import { useDispatch, useSelector } from "react-redux";
 import { initApp } from "./redux/initApp";
-import {
-  selectFirms,
-  selectFirmsStatus, 
-  selectFirmsError,
-} from "./features/firms/firmsSelectors";
+import { selectFirms, selectFirmsError, selectFirmsStatus } from "./features/firms/firmsSlice";
 import HomePage from "./components/pages/HomePage";
 import HeroSection from "./components/sections/HeroSection";
 import FooterSection from "./components/sections/FooterSection";
@@ -35,7 +31,7 @@ function App() {
   const error = useSelector(selectFirmsError);
   const [isLoading, setIsLoading] = useState(true);
   const [firmData, setFirmData] = useState([]);
-  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
+  const [adminLoggedIn, setAdminLoggedIn] = useState(true);
   const [openForm, setOpenForm] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -96,13 +92,13 @@ function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(()=>{
-   const timer = setTimeout(() => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000); // Show loading for 1 second
 
-    return () => clearTimeout(timer); 
-  })
+    return () => clearTimeout(timer);
+  });
 
   const StyledContainer = styled(Box)(({ theme }) => ({
     display: "flex",

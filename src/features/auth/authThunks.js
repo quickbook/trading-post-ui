@@ -15,7 +15,7 @@ export const fetchAuthToken = createAsyncThunk(
   "auth/fetchAuthToken",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axios.post("/api/auth/token");
+      const res = await axios.post("/auth/token");
       const { accessToken, refreshToken, expiresIn } = res.data;
       return {
         accessToken,
@@ -33,7 +33,7 @@ export const refreshAccessToken = createAsyncThunk(
   async (_, { getState, rejectWithValue }) => {
     try {
       const { refreshToken } = getState().auth;
-      const res = await axios.post("/api/auth/refresh", { refreshToken });
+      const res = await axios.post("/auth/refresh", { refreshToken });
       const { accessToken, refreshToken: newRefresh, expiresIn } = res.data;
       return {
         accessToken,

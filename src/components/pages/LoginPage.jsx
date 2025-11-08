@@ -114,7 +114,7 @@ const LoginPage = () => {
           variant="h6"
           sx={{ fontWeight: "bold", mb: 6, color: "black" }}
         >
-          ADMIN LOGIN
+          LOGIN
         </Typography>
 
         <Box

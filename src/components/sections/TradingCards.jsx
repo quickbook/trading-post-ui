@@ -20,7 +20,7 @@ import "slick-carousel/slick/slick-theme.css";
 import { foreignNumberSystem } from "../commonFuctions/CommonFunctions";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { selectFirms } from "../../features/firms/firmsSelectors";
+import { selectFirms } from "../../features/firms/firmsSlice";
 
 // Styled components for custom styling
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -308,8 +308,8 @@ const TradingCard = ({
 
 // Main Component - Rest of the code remains the same...
 const TradingCards = () => {
-  const allFirms = useSelector(selectFirms)
-  const [firmsData, setFirmsData] = useState( allFirms.length ? allFirms : cardData )
+  const allFirms = useSelector(selectFirms);
+  const [firmsData, setFirmsData] = useState( allFirms.length ? allFirms : cardData );
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState("");
 

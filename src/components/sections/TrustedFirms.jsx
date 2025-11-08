@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -12,9 +12,11 @@ import {
 } from "@mui/material";
 import { cardData } from "/CardsData";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectFirms } from "../../features/firms/firmsSlice";
 
 // Card Component
-const TradingCard = ({ title, logo }) => (
+const TradingCard = ({ title, logo, firmPageURL='#' }) => (
   <Box
     sx={{
       display: "flex",
@@ -61,6 +63,8 @@ const TradingCard = ({ title, logo }) => (
     {/* Buy now button */}
     <Button
       variant="contained"
+      href={firmPageURL}
+      target="blank"
       sx={{
         backgroundColor: "#000000b5",
         borderRadius: "12px",
@@ -84,11 +88,14 @@ const TradingCard = ({ title, logo }) => (
 );
 
 export const TrustedFirms = () => {
+  const allFirms = useSelector(selectFirms);
+  const [firmsData, setFirmsData] = useState( allFirms.length ? allFirms : cardData )
   const navigate = useNavigate();
+
+  const trustedFirms = useMemo(()=>firmsData?.filter((e)=> e.firmType === 'trusted'),[firmsData])
 
   const handleViewAll = () => {
     navigate("/comparefirms");
-    window.scroll({ top: 0, left: 0, behavior: "smooth" });
   };
 
   return (
@@ -182,7 +189,7 @@ export const TrustedFirms = () => {
           alignItems="center"
           //sx={{ maxWidth: "1120px", margin: "0 auto" }}
         >
-          {cardData.map((card, index) => (
+          {trustedFirms.map((card, index) => (
             <Grid
               size={{
                 xs: 6, // 2 cards per row on mobile

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Card,
   CardContent,
@@ -24,9 +24,13 @@ import {
   CopyIcon,
   getBadgeStyles,
 } from "./TradingCards";
+import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
+import { selectFirms } from "../../features/firms/firmsSlice";
 
 // Card Component
 const TradingCard = ({
+  id,
   title,
   profitSplit,
   logo,
@@ -37,6 +41,8 @@ const TradingCard = ({
   firmType = "partner",
 }) => {
   const badgeStyles = getBadgeStyles(firmType);
+  const navigate = useNavigate();
+
   return (
     <Box
       sx={{
@@ -67,6 +73,7 @@ const TradingCard = ({
             boxShadow: "0 0 2px 3px #ffd700",
           },
         }}
+        onClick={()=>navigate(`/propfirm/${id}`)}
       >
         <CardContent
           sx={{
@@ -242,9 +249,11 @@ const TradingCard = ({
 };
 
 export const PromotionalCardsSection = ({ length }) => {
+  const allFirms = useSelector(selectFirms);
+  const [firmsData, setFirmsData] = useState( allFirms.length ? allFirms : cardData )
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState("");
-  const premiumCards = cardData?.filter((e) => e.firmType === "premium");
+  const premiumCards = useMemo(()=>firmsData?.filter((e)=> e.firmType === 'premium'),[firmsData])
   const displayedCards = length ? premiumCards.slice(0, length) : premiumCards;
 
   const handleCopyCode = (code) => {

@@ -5,19 +5,9 @@ import { MainContext } from "../../App";
 import PromotionalCardsSection from "../sections/PromotionalCardsSection";
 
 const FeatureFirmsPage = () => {
-  // Access context
+
   const { handleOpenForm, isLoading, setIsLoading } = useContext(MainContext);
-  // Add loading state
-
-  // Simulate loading effect
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 1000); // Show loading for 1 second
-
-    return () => clearTimeout(timer);
-  }, []);
-
+  
   return isLoading ? (
     <LoadingScreen />
   ) : (

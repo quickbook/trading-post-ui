@@ -97,7 +97,7 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
   }
 
   return (
-    <Box sx={{width: {xs:'100%',md:960,xl:'75vw'}}}>
+    <Box sx={{p:1, width: {xs:'100%',md:960,xl:'75vw'}}}>
       {/* Header Section */}
       <Box sx={{ mb: 2 }}>
         <Typography variant="h4" gutterBottom>

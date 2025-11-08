@@ -24,6 +24,8 @@ import { foreignNumberSystem } from "../commonFuctions/CommonFunctions";
 import FirmsFilterSection from "./FirmsFilterSection";
 import { Link, useNavigate } from "react-router-dom";
 import { BadgeContainer, getBadgeStyles } from "./TradingCards";
+import { useSelector } from "react-redux";
+import { selectFirms } from "../../features/firms/firmsSlice";
 
 export const platformSources = {
   MT: "/platforms/mt5.webp",
@@ -121,9 +123,10 @@ function a11yProps(index) {
 }
 
 const FirmDetailsTableSection = () => {
+  const allFirms = useSelector(selectFirms);
   const [value, setValue] = useState(0);
   const [page, setPage] = useState(1);
-  const [cardDetails, setCardDetails] = useState(cardData);
+  const [cardDetails, setCardDetails] = useState(allFirms.length ? allFirms : cardData);
   const navigate = useNavigate();
   const rowsPerPage = 8;
 

@@ -21,7 +21,7 @@ import { useNavigate } from "react-router-dom";
 import { foreignNumberSystem } from "../commonFuctions/CommonFunctions";
 
 // Sample data for prop firms
-const sampleFirms = [
+export const sampleFirmChallenges = [
   {
     id: 1,
     prop_id: 11,
@@ -85,7 +85,7 @@ const sampleFirms = [
   {
     id: 5,
     prop_id: 15,
-    name: "The 5%ers",
+    name: "The 5fers",
     logo: "/static/images/avatar/5.jpg",
     daily_loss: 3,
     max_loss: 5,
@@ -124,10 +124,10 @@ const PropFirmsChallenges = () => {
   const navigate = useNavigate();
 
   // Get unique values for filters
-  const firmNames = ["All", ...new Set(sampleFirms?.map((firm) => firm?.name))];
+  const firmNames = ["All", ...new Set(sampleFirmChallenges?.map((firm) => firm?.name))];
   const phaseTypes = [
     "All",
-    ...new Set(sampleFirms?.map((firm) => firm?.phaseType)),
+    ...new Set(sampleFirmChallenges?.map((firm) => firm?.phaseType)),
   ];
   const minAccountOptions = [
     "All",
@@ -139,7 +139,7 @@ const PropFirmsChallenges = () => {
   ];
 
   // Filter firms based on criteria
-  const filteredFirms = sampleFirms?.filter((firm) => {
+  const filteredFirms = sampleFirmChallenges?.filter((firm) => {
     const matchesSearch =
       firm?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       firm?.features.some((feature) =>
@@ -434,7 +434,7 @@ const PropFirmsChallenges = () => {
             }}
           >
             <Typography variant="body2" sx={{ color: "#FFFFFF" }}>
-              Showing {filteredFirms?.length} of {sampleFirms?.length} firms
+              Showing {filteredFirms?.length} of {sampleFirmChallenges?.length} firms
             </Typography>
             <Button
               variant="outlined"

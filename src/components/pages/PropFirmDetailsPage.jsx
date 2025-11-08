@@ -24,13 +24,21 @@ import {
   getGradeDisplay,
 } from "../sections/Reviews";
 import { MainContext } from "../../App";
+import { useSelector } from "react-redux";
+import { selectFirms } from "../../features/firms/firmsSlice";
 
 export const PropFirmDetailsPage = () => {
-  const { adminLoggedIn } = useContext(MainContext);
+  const {
+    adminLoggedIn,
+    setSnackbarOpen,
+    setSnackbarMessage,
+    setSnackbarSeverity,
+  } = useContext(MainContext);
   const params = useParams();
+  const allFirms = useSelector(selectFirms);
   const [firmDetails, setFirmDetails] = useState(null);
   const [copiedCode, setCopiedCode] = useState("");
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [onCopyOpen, setOnCopyOpen] = useState(false);
   const navigate = useNavigate();
 
   const reviewData = [
@@ -63,25 +71,34 @@ export const PropFirmDetailsPage = () => {
   const handleCopyCode = (code) => {
     navigator.clipboard.writeText(code).then(() => {
       setCopiedCode(code);
-      setSnackbarOpen(true);
+      setOnCopyOpen(true);
     });
   };
 
   useEffect(() => {
-    const propFirm = cardData?.find((prop) => String(prop.id) === params.id);
+    const propFirm = (allFirms.length ? allFirms : cardData)?.find((prop) => String(prop.id) === params.id);
     if (!propFirm) {
+      setSnackbarOpen(true);
+      setSnackbarMessage("Trading Firm Not Found !!");
+      setSnackbarSeverity("error");
       navigate("/");
     }
     setFirmDetails(propFirm);
     window.scrollTo({ top: 0, behaviour: "smooth" });
-  });
+  }, []);
 
   return (
     <>
       <Button
         variant="contained"
         color="secondary"
-        sx={{ display: {xs:'none', md:'block'},mb: 2, position: 'fixed', top: 100, left: 40, }}
+        sx={{
+          display: { xs: "none", md: "block" },
+          mb: 2,
+          position: "fixed",
+          top: 100,
+          left: 40,
+        }}
         onClick={() => navigate(-1)}
       >
         Back
@@ -174,7 +191,7 @@ export const PropFirmDetailsPage = () => {
             {adminLoggedIn && (
               <Button
                 variant="outlined"
-                onClick={navigate("/reviews")}
+                onClick={() => navigate("/reviews")}
                 sx={{
                   bgcolor: "black",
                   color: "white",
@@ -214,9 +231,9 @@ export const PropFirmDetailsPage = () => {
           </Box>
         </Box>
         <Snackbar
-          open={snackbarOpen}
+          open={onCopyOpen}
           autoHideDuration={2000}
-          onClose={() => setSnackbarOpen(false)}
+          onClose={() => setOnCopyOpen(false)}
           anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         >
           <Alert severity="success" sx={{ width: "100%" }}>

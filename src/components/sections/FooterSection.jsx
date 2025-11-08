@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext } from "react";
 import {
   Box,
   Typography,
@@ -13,8 +13,10 @@ import { SocialLinks } from "./TradingPostBanner";
 import { Link, useNavigate } from "react-router-dom";
 import { li } from "framer-motion/client";
 import { color } from "framer-motion";
+import { MainContext } from "../../App";
 
 const FooterSection = () => {
+  const {handleOpenForm} = useContext(MainContext);
   const navigationItems = [
     { label: "Home", href: "/" },
     { label: "Our Reviews", href: "/reviews" },
@@ -239,6 +241,7 @@ const FooterSection = () => {
             />
             <Button
               variant="contained"
+              onClick={()=>handleOpenForm(true)}
               sx={{
                 width: 180,
                 height: "auto",
