@@ -25,6 +25,7 @@ import LoginPage from "./components/pages/LoginPage";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import RegisterPage from "./components/pages/RegisterPage";
+import { initializeAuth } from './api/axiosClient';
 
 export const MainContext = createContext();
 
@@ -42,6 +43,7 @@ function App() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success' or 'error'
   const downRef = useRef(null);
   const upRef = useRef(null);
+    const hasInitialFetch = useRef(false);
   const handleSnackbarClose = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -84,6 +86,10 @@ function App() {
       behavior: "smooth",
     });
   };
+
+   useEffect(() => {
+    initializeAuth();
+  }, []);
 
   // useEffect(() => {
   //   // Run only once on first mount
