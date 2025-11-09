@@ -24,10 +24,12 @@ import {
   CopyIcon,
   getBadgeStyles,
 } from "./TradingCards";
+import { useNavigate } from "react-router-dom";
 
 // Card Component
 const TradingCard = ({
-  title,
+  id,
+  name,
   profitSplit,
   logo,
   account,
@@ -37,6 +39,7 @@ const TradingCard = ({
   firmType = "partner",
 }) => {
   const badgeStyles = getBadgeStyles(firmType);
+  const navigate = useNavigate();
   return (
     <Box
       sx={{
@@ -54,6 +57,7 @@ const TradingCard = ({
       }}
     >
       <Card
+      onClick={()=>navigate(`/propfirm/${id}`)}
         sx={{
           width: "100%",
           maxWidth: { xs: "100%", md: 380 },
@@ -101,7 +105,7 @@ const TradingCard = ({
             <Box
               component="img"
               src={logo}
-              alt="Trading card"
+              alt={name}
               sx={{
                 width: 44,
                 height: 44,
@@ -130,7 +134,7 @@ const TradingCard = ({
                   textAlign: "center",
                 }}
               >
-                {title}
+                {name}
               </Typography>
             </Box>
           </Box>
@@ -189,7 +193,7 @@ const TradingCard = ({
                   color: "black",
                 }}
               >
-                Upto $&nbsp;{foreignNumberSystem(account)}
+                Upto $&nbsp;{account}
               </Typography>
             </Box>
 
@@ -320,7 +324,19 @@ export const PromotionalCardsSection = ({ length }) => {
               wrap="wrap"
               sx={{ placeItems: "center" }}
             >
-              <TradingCard {...card} onCopyCode={handleCopyCode} />
+              <TradingCard
+              id={card.id}
+                name={card.name}
+                profitSplit={card.tradingConditions.profitSplitPct}
+                account={foreignNumberSystem(
+                  card.tradingConditions.maximumAccountSizeUsd
+                )}
+                code={card.tradingConditions.discountCode}
+                logo={card.logo}
+                firmType={card.firmType}
+                rating={card.rating}
+                onCopyCode={handleCopyCode}
+              />
             </Grid>
           ))}
         </Grid>

@@ -15,7 +15,13 @@ import {
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { cardData } from "../../../CardsData";
-import { CodeContainer, CodeValue, CopyIcon } from "../sections/TradingCards";
+import {
+  BadgeContainer,
+  CodeContainer,
+  CodeValue,
+  CopyIcon,
+  getBadgeStyles,
+} from "../sections/TradingCards";
 import { foreignNumberSystem } from "../commonFuctions/CommonFunctions";
 import { platformSources } from "../sections/FirmDetailsTableSection";
 import {
@@ -41,7 +47,7 @@ export const PropFirmDetailsPage = () => {
       prop_name: "Alpha Trading Group",
       rating: "A",
       description:
-        "Great product! The quality exceeded my expectations. Would definitely buy again. asasasa sasasa asasas ddd ffffffff fdfddfd dsdsdssd dddss sdsdsdsds dssdds",
+        "Great product! The quality exceeded my expectations. Would definitely buy again.",
       created_at: "2024-01-15T10:30:00Z",
       updated_at: "2024-01-15T10:30:00Z",
       is_deleted: false,
@@ -67,21 +73,31 @@ export const PropFirmDetailsPage = () => {
     });
   };
 
+  const badgeStyles = getBadgeStyles(firmDetails?.firmType);
+
   useEffect(() => {
-    const propFirm = cardData?.find((prop) => String(prop.id) === params.id);
+    const propFirm = cardData?.find((prop) => String(prop.id) == params.id);
     if (!propFirm) {
       navigate("/");
     }
     setFirmDetails(propFirm);
+    //setFirmDetails(cardData[0])
+    //console.log("propfirm",propFirm)
     window.scrollTo({ top: 0, behaviour: "smooth" });
-  });
+  }, []);
 
   return (
     <>
       <Button
         variant="contained"
         color="secondary"
-        sx={{ display: {xs:'none', md:'block'},mb: 2, position: 'fixed', top: 100, left: 40, }}
+        sx={{
+          display: { xs: "none", md: "block" },
+          mb: 2,
+          position: "fixed",
+          top: 100,
+          left: 40,
+        }}
         onClick={() => navigate(-1)}
       >
         Back
@@ -126,7 +142,7 @@ export const PropFirmDetailsPage = () => {
                 whiteSpace: "nowrap",
               }}
             >
-              {firmDetails?.title}
+              {firmDetails?.name}
             </Typography>
             <Typography
               sx={{
@@ -140,6 +156,28 @@ export const PropFirmDetailsPage = () => {
             >
               Rating:&nbsp; {firmDetails?.rating || "A+"}
             </Typography>
+            <BadgeContainer
+              sx={{
+                width: "fit-content",
+                position: "static",
+                backgroundColor: badgeStyles.bg,
+                color: badgeStyles.color,
+                padding: "6px",
+                mt: 1,
+              }}
+            >
+              {badgeStyles.icon}
+              <Typography
+                sx={{
+                  fontSize: "12px",
+                  fontWeight: "700",
+                  lineHeight: 1,
+                  letterSpacing: "1px",
+                }}
+              >
+                {badgeStyles.text}
+              </Typography>
+            </BadgeContainer>
           </Box>
 
           {/* Code Badge */}
@@ -161,10 +199,14 @@ export const PropFirmDetailsPage = () => {
             </Typography>
             <CodeContainer
               sx={{ bgcolor: "#00000060" }}
-              onClick={() => handleCopyCode(firmDetails?.code)}
+              onClick={() =>
+                handleCopyCode(firmDetails?.tradingConditions.discountCode)
+              }
               title="Click to copy code"
             >
-              <CodeValue>{firmDetails?.code}</CodeValue>
+              <CodeValue>
+                {firmDetails?.tradingConditions.discountCode}
+              </CodeValue>
               <CopyIcon />
             </CodeContainer>
           </Box>
@@ -174,7 +216,7 @@ export const PropFirmDetailsPage = () => {
             {adminLoggedIn && (
               <Button
                 variant="outlined"
-                onClick={()=>navigate("/reviews")}
+                onClick={() => navigate("/reviews")}
                 sx={{
                   bgcolor: "black",
                   color: "white",
@@ -195,6 +237,8 @@ export const PropFirmDetailsPage = () => {
 
             <Button
               variant="contained"
+              href={firmDetails?.firmPageURL || "#"}
+              target="blank"
               sx={{
                 bgcolor: "#4b0082",
                 color: "white",
@@ -257,13 +301,15 @@ export const PropFirmDetailsPage = () => {
             <Box sx={{ color: "white", mb: 2 }}>
               <Typography>
                 Maximum Account Size:{" "}
-                {foreignNumberSystem(firmDetails?.maxAllocation)}
+                {foreignNumberSystem(firmDetails?.maximumAccountSizeUsd)}
               </Typography>
-              <Typography>Profit Split: 90%</Typography>
+              <Typography>
+                Profit Split: {firmDetails?.tradingConditions.profitSplitPct}%
+              </Typography>
               {/* Trading platforms */}
               <Box sx={{ display: "flex", gap: 2, mb: 1 }}>
                 <Typography>Trading Platforms:</Typography>
-                {firmDetails?.platforms.map((p, idx) =>
+                {firmDetails?.tradingConditions.tradingPlatforms.map((p, idx) =>
                   platformSources[`${p}`] ? (
                     <img
                       key={idx}
@@ -296,22 +342,26 @@ export const PropFirmDetailsPage = () => {
               {/* Assets */}
               <Box sx={{ display: "flex", gap: 1 }}>
                 <Typography>Available Assets:</Typography>
-                {firmDetails?.assets.map((asset, idx) => (
-                  <Chip
-                    key={idx}
-                    label={asset}
-                    size="small"
-                    sx={{
-                      bgcolor: "rgba(255,255,255,0.4)",
-                      color: "white",
-                      fontWeight: "bold",
-                    }}
-                  />
-                ))}
+                {firmDetails?.tradingConditions.availableAssets.map(
+                  (asset, idx) => (
+                    <Chip
+                      key={idx}
+                      label={asset}
+                      size="small"
+                      sx={{
+                        bgcolor: "rgba(255,255,255,0.4)",
+                        color: "white",
+                        fontWeight: "bold",
+                      }}
+                    />
+                  )
+                )}
               </Box>
               <Typography>
                 Discount Code: &nbsp;
-                <CodeValue variant="span">{firmDetails?.code}</CodeValue>{" "}
+                <CodeValue variant="span">
+                  {firmDetails?.tradingConditions.discountCode}
+                </CodeValue>{" "}
               </Typography>
             </Box>
           </Box>
@@ -321,15 +371,43 @@ export const PropFirmDetailsPage = () => {
             <Typography variant="h6" color="white" gutterBottom>
               Key Features
             </Typography>
-            <Typography color="white">Multiple Account Sizes</Typography>
-            <Typography color="white">Fast Withdrawals</Typography>
+            {firmDetails?.tradingConditions.keyFeatures.map((e,i) => (
+              <Typography key={i} color="white">{e}</Typography>
+            ))}
           </Box>
         </Box>
 
         {/* About Section */}
         <Box sx={{ pt: 6, width: "80%" }}>
           <Typography variant="h6" color="white" gutterBottom>
-            About {firmDetails?.title}
+            About {firmDetails?.name}
+          </Typography>
+          {/* {Object.entries(firmDetails["about"]).map(([key, value='N/A']) => (
+            <Typography key={key} variant="body2" sx={{ mb: 1 }}>
+              <strong>{key.replace(/([A-Z])/g, " $1").trim()}:</strong>{" "}
+              {value}
+            </Typography>
+          ))} */}
+          <Typography variant="body1" sx={{ mb: 1, color: 'white', fontFamily: "Lora, Helvetica",}}>
+            <strong>Legal Name : </strong> {firmDetails?.about.legalName || "N/A"}
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1, color: 'white', fontFamily: "Lora, Helvetica",}}>
+            <strong>Registration No. : </strong> {firmDetails?.about.registrationNo || "N/A"}
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1, color: 'white', fontFamily: "Lora, Helvetica",}}>
+            <strong>Established Date : </strong> {firmDetails?.about.establishedDate || "N/A"}
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1, color: 'white', fontFamily: "Lora, Helvetica",}}>
+            <strong>Founders : </strong> {firmDetails?.about.founders || "N/A"}
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1, color: 'white', fontFamily: "Lora, Helvetica",}}>
+            <strong>Headquarters : </strong> {firmDetails?.about.headquarters || "N/A"}
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1, color: 'white', fontFamily: "Lora, Helvetica",}}>
+            <strong>Jurisdiction : </strong> {firmDetails?.about.jurisdiction || "N/A"}
+          </Typography>
+          <Typography variant="body1" sx={{ mb: 1, color: 'white', fontFamily: "Lora, Helvetica",}}>
+            <strong>Firm Status: </strong> {firmDetails?.about.firmStatus || "N/A"}
           </Typography>
           <Typography
             variant="body1"
@@ -339,7 +417,8 @@ export const PropFirmDetailsPage = () => {
               textAlign: "justify",
             }}
           >
-            {firmDetails?.title}&nbsp;{firmDetails?.description}
+            <strong>Description :</strong>&nbsp;
+            {firmDetails?.name}&nbsp;{firmDetails?.description}
           </Typography>
         </Box>
 

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Box,
   Container,
@@ -19,125 +19,120 @@ import PropTypes from "prop-types";
 import SearchIcon from "@mui/icons-material/Search";
 import { useNavigate } from "react-router-dom";
 import { foreignNumberSystem } from "../commonFuctions/CommonFunctions";
+import { cardData } from "../../../CardsData";
 
 // Sample data for prop firms challenges (individual challenge objects)
-export const sampleFirmChallenges = [
-  {
-    id: 1,
-    firmName: "Gilmer",
-    firmPageURL: 'https://gilmer.com/ref/123/',
-    logo: "/firms/gilmer.png",
-    firmType: 'standard',
-    tier: "Two Step Path",
-    phase: "2-Phase",
-    profitTarget: 13,
-    dailyLoss: 5,
-    maxLoss: 10,
-    price: 15,
-    maxAccountSize: 2000
-  },
-  {
-    id: 2,
-    firmName: "Alpha Trading Group",
-    firmPageURL: 'https://alphafunded.com/ref/1491/',
-    logo: "/firms/alpha-trading.png",
-    firmType: 'premium',
-    tier: "King",
-    phase: "1-Phase",
-    profitTarget: 25,
-    dailyLoss: 3,
-    maxLoss: 5,
-    price: 2000,
-    maxAccountSize: 1000000
-  },
-  {
-    id: 3,
-    firmName: "Alpha Trading Group",
-    firmPageURL: 'https://alphafunded.com/ref/1491/',
-    logo: "/firms/alpha-trading.png",
-    firmType: 'premium',
-    tier: "Duke",
-    phase: "2-Phase",
-    profitTarget: 20,
-    dailyLoss: 4,
-    maxLoss: 6,
-    price: 1500,
-    maxAccountSize: 500000
-  },
-  {
-    id: 4,
-    firmName: "Blue Guardian",
-    firmPageURL: 'https://blueguardian.com/ref/456/',
-    logo: "/firms/blue-guardian.png",
-    firmType: 'premium',
-    tier: "Guardian",
-    phase: "1-Phase",
-    profitTarget: 15,
-    dailyLoss: 4,
-    maxLoss: 8,
-    price: 99,
-    maxAccountSize: 50000
-  },
-  {
-    id: 5,
-    firmName: "Apex Trader Funding",
-    firmPageURL: 'https://apextrader.com/ref/789/',
-    logo: "/firms/apex-trader.png",
-    firmType: 'standard',
-    tier: "Pro",
-    phase: "Instant-Funding",
-    profitTarget: 20,
-    dailyLoss: 3,
-    maxLoss: 6,
-    price: 85,
-    maxAccountSize: 25000
-  },
-  {
-    id: 6,
-    firmName: "The 5%ers",
-    firmPageURL: 'https://the5ers.com/ref/101/',
-    logo: "/firms/5percenters.png",
-    firmType: 'standard',
-    tier: "One-stage",
-    phase: "Funded",
-    profitTarget: 50,
-    dailyLoss: 3,
-    maxLoss: 5,
-    price: 250,
-    maxAccountSize: 6000
-  },
-  {
-    id: 7,
-    firmName: "Funded Trading Plus",
-    firmPageURL: 'https://fundedtradingplus.com/ref/202/',
-    logo: "/firms/funded-trading-plus.png",
-    firmType: 'premium',
-    tier: "1 Step",
-    phase: "Instant-Funding",
-    profitTarget: 80,
-    dailyLoss: 3,
-    maxLoss: 5,
-    price: 299,
-    maxAccountSize: 15000
-  },
-  {
-    id: 8,
-    firmName: "Gilmer",
-    firmPageURL: 'https://gilmer.com/ref/123/',
-    logo: "/firms/gilmer.png",
-    firmType: 'standard',
-    tier: "One-stage",
-    phase: "1-Phase",
-    profitTarget: 10,
-    dailyLoss: 6,
-    maxLoss: 12,
-    price: 25,
-    maxAccountSize: 1000
-  }
-];
+// export const sampleFirmChallenges = [
+//   {
+//     id: 1,
+//     firmName: "Gilmer",
+//     buyUrl: "https://gilmer.com/ref/123/",
+//     logo: "/firms/gilmer.png",
+//     tier: "Two Step Path",
+//     phase: "2-Phase",
+//     profitTarget: 13,
+//     dailyLoss: 5,
+//     maxLoss: 10,
+//     price: 15,
+//     maxAccountSize: 2000,
+//   },
+//   {
+//     id: 2,
+//     firmName: "Alpha Trading Group",
+//     buyUrl: "https://alphafunded.com/ref/1491/",
+//     logo: "/firms/alpha-trading.png",
+//     tier: "King",
+//     phase: "1-Phase",
+//     profitTarget: 25,
+//     dailyLoss: 3,
+//     maxLoss: 5,
+//     price: 2000,
+//     maxAccountSize: 1000000,
+//   },
+//   {
+//     id: 3,
+//     firmName: "Alpha Trading Group",
+//     buyUrl: "https://alphafunded.com/ref/1491/",
+//     logo: "/firms/alpha-trading.png",
+//     tier: "Duke",
+//     phase: "2-Phase",
+//     profitTarget: 20,
+//     dailyLoss: 4,
+//     maxLoss: 6,
+//     price: 1500,
+//     maxAccountSize: 500000,
+//   },
+//   {
+//     id: 4,
+//     firmName: "Blue Guardian",
+//     buyUrl: "https://blueguardian.com/ref/456/",
+//     logo: "/firms/blue-guardian.png",
+//     tier: "Guardian",
+//     phase: "1-Phase",
+//     profitTarget: 15,
+//     dailyLoss: 4,
+//     maxLoss: 8,
+//     price: 99,
+//     maxAccountSize: 50000,
+//   },
+//   {
+//     id: 5,
+//     firmName: "Apex Trader Funding",
+//     buyUrl: "https://apextrader.com/ref/789/",
+//     logo: "/firms/apex-trader.png",
+//     tier: "Pro",
+//     phase: "Instant-Funding",
+//     profitTarget: 20,
+//     dailyLoss: 3,
+//     maxLoss: 6,
+//     price: 85,
+//     maxAccountSize: 25000,
+//   },
+//   {
+//     id: 6,
+//     firmName: "The 5%ers",
+//     buyUrl: "https://the5ers.com/ref/101/",
+//     logo: "/firms/5percenters.png",
+//     tier: "One-stage",
+//     phase: "Funded",
+//     profitTarget: 50,
+//     dailyLoss: 3,
+//     maxLoss: 5,
+//     price: 250,
+//     maxAccountSize: 6000,
+//   },
+//   {
+//     id: 7,
+//     firmName: "Funded Trading Plus",
+//     buyUrl: "https://fundedtradingplus.com/ref/202/",
+//     logo: "/firms/funded-trading-plus.png",
+//     tier: "1 Step",
+//     phase: "Instant-Funding",
+//     profitTarget: 80,
+//     dailyLoss: 3,
+//     maxLoss: 5,
+//     price: 299,
+//     maxAccountSize: 15000,
+//   },
+//   {
+//     id: 8,
+//     firmName: "Gilmer",
+//     buyUrl: "https://gilmer.com/ref/123/",
+//     logo: "/firms/gilmer.png",
+//     tier: "One-stage",
+//     phase: "1-Phase",
+//     profitTarget: 10,
+//     dailyLoss: 6,
+//     maxLoss: 12,
+//     price: 25,
+//     maxAccountSize: 1000,
+//   },
+// ];
 
 // Main Component
 const PropFirmsChallenges = () => {
+  const allFirms = cardData;
+  const [challengesDetails, setChallengesDetails] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFirm, setSelectedFirm] = useState("All");
   const [selectedPhase, setSelectedPhase] = useState("All");
@@ -145,16 +140,32 @@ const PropFirmsChallenges = () => {
   const [sortBy, setSortBy] = useState("maxAccountSize");
 
   const navigate = useNavigate();
-  
-  const allChallenges = sampleFirmChallenges;
+
+  useEffect(() => {
+    const allChallenges = allFirms
+      .filter((e) => e.challenges?.length > 0)
+      .flatMap((e) =>
+        e.challenges.map((ch) => ({
+          firmId: e.id,
+          firmName: e.name,
+          logo: e.logo,
+          ...ch,
+        }))
+      );
+
+    setChallengesDetails(allChallenges);
+  }, []);
 
   // Get unique values for filters
-  const firmNames = ["All", ...new Set(allChallenges?.map((challenge) => challenge?.firmName))];
+  const firmNames = [
+    "All",
+    ...new Set(challengesDetails?.map((challenge) => challenge?.firmName)),
+  ];
   const phaseTypes = [
     "All",
-    ...new Set(allChallenges?.map((challenge) => challenge?.phase)),
+    ...new Set(challengesDetails?.map((challenge) => challenge?.phase)),
   ];
-  
+
   const maxAccountOptions = [
     "All",
     "$1,000",
@@ -166,14 +177,16 @@ const PropFirmsChallenges = () => {
   ];
 
   // Filter challenges based on criteria
-  const filteredChallenges = allChallenges?.filter((challenge) => {
+  const filteredChallenges = challengesDetails?.filter((challenge) => {
     const matchesSearch =
       challenge?.firmName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       challenge?.tier.toLowerCase().includes(searchTerm.toLowerCase()) ||
       challenge?.phase.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesFirm = selectedFirm === "All" || challenge?.firmName === selectedFirm;
-    const matchesPhase = selectedPhase === "All" || challenge?.phase === selectedPhase;
+
+    const matchesFirm =
+      selectedFirm === "All" || challenge?.firmName === selectedFirm;
+    const matchesPhase =
+      selectedPhase === "All" || challenge?.phase === selectedPhase;
 
     // Handle max account filter
     let matchesMaxAccount = true;
@@ -249,289 +262,284 @@ const PropFirmsChallenges = () => {
   };
 
   return (
-    <Box sx={{ py: 1 }}>
-      <Container maxWidth="lg">
-        <Button
-          variant="contained"
-          color="secondary"
-          sx={{ mb: 2 }}
-          onClick={() => navigate(-1)}
-        >
-          Back
-        </Button>
-        
-        {/* Header */}
-        <Box
+    <Container maxWidth="lg" sx={{ py: 2 }}>
+      <Button
+        variant="contained"
+        color="secondary"
+        sx={{ mb: 2 }}
+        onClick={() => navigate(-1)}
+      >
+        Back
+      </Button>
+
+      {/* Header */}
+      <Box
+        sx={{
+          width: "100%",
+          textAlign: "center",
+          mb: 4,
+          bgcolor: "rgba(255,255,255,0.12)",
+          p: 3,
+          borderRadius: 2,
+          border: "1px solid #cecece",
+        }}
+      >
+        <Typography
+          variant="h3"
+          component="h1"
+          gutterBottom
           sx={{
-            width: "100%",
+            fontWeight: "bold",
             textAlign: "center",
-            mb: 4,
-            bgcolor: "rgba(255,255,255,0.12)",
-            p: 3,
-            borderRadius: 2,
-            border: "1px solid #cecece",
+            mb: 2,
+            color: "#ffffff",
           }}
         >
-          <Typography
-            variant="h3"
-            component="h1"
-            gutterBottom
-            sx={{
-              fontWeight: "bold",
-              textAlign: "center",
-              mb: 2,
-              color: "#ffffff",
-            }}
-          >
-            Trading Post Challenges
-          </Typography>
+          Trading Post Challenges
+        </Typography>
 
-          <Typography
-            variant="h6"
-            sx={{
-              textAlign: "center",
-              mb: 2,
-              maxWidth: "600px",
-              mx: "auto",
-              color: "#cecece",
-            }}
-          >
-            Find the perfect prop firm challenge that matches your trading style
-            and goals
-          </Typography>
-        </Box>
-
-        {/* Filter Controls */}
-        <Paper
+        <Typography
+          variant="h6"
           sx={{
-            width: "100%",
-            p: 3,
-            mb: 4,
-            borderRadius: 2,
-            backgroundColor: "#000000a9",
-            color: "#FFFFFF",
+            textAlign: "center",
+            mb: 2,
+            maxWidth: "600px",
+            mx: "auto",
+            color: "#cecece",
           }}
         >
-          <Grid container spacing={3}>
-            {/* Search Input */}
-            <Grid size={{xs:12, md: 6, lg:3}}>
-              <TextField
-                fullWidth
-                placeholder="Search firms, tiers or phases..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-                InputProps={{
-                  startAdornment: (
-                    <InputAdornment position="start">
-                      <SearchIcon sx={{ color: "white" }} />
-                    </InputAdornment>
-                  ),
-                }}
-                sx={{
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                    backgroundColor: "#1A1A1A",
-                    "& fieldset": {
-                      borderColor: "#333333",
-                    },
-                    "&:hover fieldset": {
-                      borderColor: "#666666",
-                    },
-                    "&.Mui-focused fieldset": {
-                      borderColor: "#FFFFFF",
-                    },
-                  },
-                  "& .MuiInputBase-input": {
-                    color: "#FFFFFF",
-                  },
-                  "& .MuiInputLabel-root": {
-                    color: "#FFFFFF",
-                  },
-                }}
-              />
-            </Grid>
+          Find the perfect prop firm challenge that matches your trading style
+          and goals
+        </Typography>
+      </Box>
 
-            {/* Firm Name Select */}
-            <Grid size={{xs:12, md: 6, lg:2}}>
-              <TextField
-                select
-                fullWidth
-                label="Firm Name"
-                value={selectedFirm}
-                onChange={handleFirmChange}
-                sx={filterTextFieldStyles}
-                SelectProps={{
-                  MenuProps: {
-                    PaperProps: {
-                      sx: {
-                        backgroundColor: "#1A1A1A",
-                        color: "white",
-                        "& .MuiMenuItem-root": {
-                          "&:hover": {
-                            backgroundColor: "#333333",
-                          },
-                        },
-                      },
-                    },
-                  },
-                }}
-              >
-                {firmNames.map((firm) => (
-                  <MenuItem key={firm} value={firm} sx={{ color: "#FFFFFF" }}>
-                    {firm}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-
-            {/* Phase Type Select */}
-            <Grid size={{xs:12, md: 6, lg:2}}>
-              <TextField
-                select
-                fullWidth
-                label="Phase Type"
-                value={selectedPhase}
-                onChange={handlePhaseChange}
-                sx={filterTextFieldStyles}
-                SelectProps={{
-                  MenuProps: {
-                    PaperProps: {
-                      sx: {
-                        backgroundColor: "#1A1A1A",
-                        color: "white",
-                        "& .MuiMenuItem-root": {
-                          "&:hover": {
-                            backgroundColor: "#333333",
-                          },
-                        },
-                      },
-                    },
-                  },
-                }}
-              >
-                {phaseTypes.map((phase) => (
-                  <MenuItem key={phase} value={phase} sx={{ color: "#FFFFFF" }}>
-                    {phase}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-
-            {/* Max Account Filter */}
-            <Grid size={{xs:12, md: 6, lg:2}}>
-              <TextField
-                select
-                fullWidth
-                label="Max Account Size"
-                value={maxAccountFilter}
-                onChange={handleMaxAccountChange}
-                sx={filterTextFieldStyles}
-                SelectProps={{
-                  MenuProps: {
-                    PaperProps: {
-                      sx: {
-                        backgroundColor: "#1A1A1A",
-                        color: "white",
-                        "& .MuiMenuItem-root": {
-                          "&:hover": {
-                            backgroundColor: "#333333",
-                          },
-                        },
-                      },
-                    },
-                  },
-                }}
-              >
-                {maxAccountOptions.map((option) => (
-                  <MenuItem
-                    key={option}
-                    value={option}
-                    sx={{ color: "#FFFFFF" }}
-                  >
-                    {option}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-
-            {/* Sort By */}
-            <Grid size={{xs:12, md: 6, lg:3}}>
-              <TextField
-                select
-                fullWidth
-                label="Sort By"
-                value={sortBy}
-                onChange={handleSortChange}
-                sx={filterTextFieldStyles}
-                SelectProps={{
-                  MenuProps: {
-                    PaperProps: {
-                      sx: {
-                        backgroundColor: "#1A1A1A",
-                        color: "white",
-                        "& .MuiMenuItem-root": {
-                          "&:hover": {
-                            backgroundColor: "#333333",
-                          },
-                        },
-                      },
-                    },
-                  },
-                }}
-              >
-                <MenuItem value="maxAccountSize" sx={{ color: "#FFFFFF" }}>
-                  Max Account Size (High to Low)
-                </MenuItem>
-                <MenuItem value="price" sx={{ color: "#FFFFFF" }}>
-                  Price (Low to High)
-                </MenuItem>
-                <MenuItem value="profitTarget" sx={{ color: "#FFFFFF" }}>
-                  Profit Target (High to Low)
-                </MenuItem>
-              </TextField>
-            </Grid>
-          </Grid>
-
-          {/* Results Count */}
-          <Box
-            sx={{
-              mt: 2,
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Typography variant="body2" sx={{ color: "#FFFFFF" }}>
-              Showing {sortedChallenges?.length} of {allChallenges?.length} challenges
-            </Typography>
-            <Button
-              variant="outlined"
-              size="small"
-              onClick={() => {
-                setSearchTerm("");
-                setSelectedFirm("All");
-                setSelectedPhase("All");
-                setMaxAccountFilter("All");
-                setSortBy("maxAccountSize");
+      {/* Filter Controls */}
+      <Paper
+        sx={{
+          width: "100%",
+          p: 3,
+          mb: 4,
+          borderRadius: 2,
+          backgroundColor: "#000000a9",
+          color: "#FFFFFF",
+        }}
+      >
+        <Grid container spacing={3}>
+          {/* Search Input */}
+          <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+            <TextField
+              fullWidth
+              placeholder="Search firms, tiers or phases..."
+              value={searchTerm}
+              onChange={handleSearchChange}
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: "white" }} />
+                  </InputAdornment>
+                ),
               }}
               sx={{
-                color: "#FFFFFF",
-                borderColor: "#FFFFFF",
-                "&:hover": {
-                  borderColor: "#FFFFFF",
-                  backgroundColor: "rgba(255, 255, 255, 0.1)",
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  backgroundColor: "#1A1A1A",
+                  "& fieldset": {
+                    borderColor: "#333333",
+                  },
+                  "&:hover fieldset": {
+                    borderColor: "#666666",
+                  },
+                  "&.Mui-focused fieldset": {
+                    borderColor: "#FFFFFF",
+                  },
+                },
+                "& .MuiInputBase-input": {
+                  color: "#FFFFFF",
+                },
+                "& .MuiInputLabel-root": {
+                  color: "#FFFFFF",
+                },
+              }}
+            />
+          </Grid>
+
+          {/* Firm Name Select */}
+          <Grid size={{ xs: 12, md: 6, lg: 2 }}>
+            <TextField
+              select
+              fullWidth
+              label="Firm Name"
+              value={selectedFirm}
+              onChange={handleFirmChange}
+              sx={filterTextFieldStyles}
+              SelectProps={{
+                MenuProps: {
+                  PaperProps: {
+                    sx: {
+                      backgroundColor: "#1A1A1A",
+                      color: "white",
+                      "& .MuiMenuItem-root": {
+                        "&:hover": {
+                          backgroundColor: "#333333",
+                        },
+                      },
+                    },
+                  },
                 },
               }}
             >
-              Clear Filters
-            </Button>
-          </Box>
-        </Paper>
+              {firmNames.map((firm) => (
+                <MenuItem key={firm} value={firm} sx={{ color: "#FFFFFF" }}>
+                  {firm}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
 
-        {/* Challenges Grid */}
-        <ChallengesGridView challenges={sortedChallenges} />
-      </Container>
-    </Box>
+          {/* Phase Type Select */}
+          <Grid size={{ xs: 12, md: 6, lg: 2 }}>
+            <TextField
+              select
+              fullWidth
+              label="Phase Type"
+              value={selectedPhase}
+              onChange={handlePhaseChange}
+              sx={filterTextFieldStyles}
+              SelectProps={{
+                MenuProps: {
+                  PaperProps: {
+                    sx: {
+                      backgroundColor: "#1A1A1A",
+                      color: "white",
+                      "& .MuiMenuItem-root": {
+                        "&:hover": {
+                          backgroundColor: "#333333",
+                        },
+                      },
+                    },
+                  },
+                },
+              }}
+            >
+              {phaseTypes.map((phase) => (
+                <MenuItem key={phase} value={phase} sx={{ color: "#FFFFFF" }}>
+                  {phase}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          {/* Max Account Filter */}
+          <Grid size={{ xs: 12, md: 6, lg: 2 }}>
+            <TextField
+              select
+              fullWidth
+              label="Max Account Size"
+              value={maxAccountFilter}
+              onChange={handleMaxAccountChange}
+              sx={filterTextFieldStyles}
+              SelectProps={{
+                MenuProps: {
+                  PaperProps: {
+                    sx: {
+                      backgroundColor: "#1A1A1A",
+                      color: "white",
+                      "& .MuiMenuItem-root": {
+                        "&:hover": {
+                          backgroundColor: "#333333",
+                        },
+                      },
+                    },
+                  },
+                },
+              }}
+            >
+              {maxAccountOptions.map((option) => (
+                <MenuItem key={option} value={option} sx={{ color: "#FFFFFF" }}>
+                  {option}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          {/* Sort By */}
+          <Grid size={{ xs: 12, md: 6, lg: 3 }}>
+            <TextField
+              select
+              fullWidth
+              label="Sort By"
+              value={sortBy}
+              onChange={handleSortChange}
+              sx={filterTextFieldStyles}
+              SelectProps={{
+                MenuProps: {
+                  PaperProps: {
+                    sx: {
+                      backgroundColor: "#1A1A1A",
+                      color: "white",
+                      "& .MuiMenuItem-root": {
+                        "&:hover": {
+                          backgroundColor: "#333333",
+                        },
+                      },
+                    },
+                  },
+                },
+              }}
+            >
+              <MenuItem value="maxAccountSize" sx={{ color: "#FFFFFF" }}>
+                Max Account Size (High to Low)
+              </MenuItem>
+              <MenuItem value="price" sx={{ color: "#FFFFFF" }}>
+                Price (Low to High)
+              </MenuItem>
+              <MenuItem value="profitTarget" sx={{ color: "#FFFFFF" }}>
+                Profit Target (High to Low)
+              </MenuItem>
+            </TextField>
+          </Grid>
+        </Grid>
+
+        {/* Results Count */}
+        <Box
+          sx={{
+            mt: 2,
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+          }}
+        >
+          <Typography variant="body2" sx={{ color: "#FFFFFF" }}>
+            Showing {sortedChallenges?.length} of {challengesDetails?.length}{" "}
+            challenges
+          </Typography>
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => {
+              setSearchTerm("");
+              setSelectedFirm("All");
+              setSelectedPhase("All");
+              setMaxAccountFilter("All");
+              setSortBy("maxAccountSize");
+            }}
+            sx={{
+              color: "#FFFFFF",
+              borderColor: "#FFFFFF",
+              "&:hover": {
+                borderColor: "#FFFFFF",
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+              },
+            }}
+          >
+            Clear Filters
+          </Button>
+        </Box>
+      </Paper>
+
+      {/* Challenges Grid */}
+      <ChallengesGridView challenges={sortedChallenges} />
+    </Container>
   );
 };
 
@@ -561,7 +569,7 @@ const ChallengesGridView = ({ challenges }) => {
   return (
     <Grid container spacing={3}>
       {challenges.map((challenge) => (
-        <Grid size={{xs: 12}} key={challenge?.id}>
+        <Grid size={{ xs: 12 }} key={challenge?.id}>
           <ChallengeCard challenge={challenge} />
         </Grid>
       ))}
@@ -604,12 +612,12 @@ const ChallengeCard = ({ challenge }) => {
       >
         <Avatar
           src={challenge?.logo}
-          sx={{ 
-            width: 60, 
-            height: 60, 
+          sx={{
+            width: 60,
+            height: 60,
             bgcolor: "#4b0082",
-            fontSize: '1.5rem',
-            fontWeight: 'bold'
+            fontSize: "1.5rem",
+            fontWeight: "bold",
           }}
           variant="rounded"
         >
@@ -618,26 +626,25 @@ const ChallengeCard = ({ challenge }) => {
       </Box>
 
       {/* Middle Section - Challenge Details */}
-      <Box sx={{ 
-        display: "flex", 
-        flexDirection: "column", 
-        flexGrow: 1,
-        p: 3 
-      }}>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          flexGrow: 1,
+          p: 3,
+        }}
+      >
         {/* Firm Name and Tier */}
         <Box sx={{ mb: 2 }}>
-          <Typography 
-            variant="h5" 
-            component="h2" 
+          <Typography
+            variant="h5"
+            component="h2"
             gutterBottom
             sx={{ fontWeight: "bold", color: "#4b0082" }}
           >
             {challenge?.firmName}
           </Typography>
-          <Typography 
-            variant="h6" 
-            sx={{ fontWeight: "bold", mb: 1 }}
-          >
+          <Typography variant="h6" sx={{ fontWeight: "bold", mb: 1 }}>
             {challenge?.tier}
           </Typography>
           <Chip
@@ -645,40 +652,40 @@ const ChallengeCard = ({ challenge }) => {
             size="small"
             color="primary"
             variant="outlined"
-            sx={{ 
+            sx={{
               fontWeight: "bold",
               borderColor: "#4b0082",
-              color: "#4b0082"
+              color: "#4b0082",
             }}
           />
         </Box>
 
         {/* Trading Metrics */}
-        <Box sx={{ display: "flex", gap: 4, flexWrap: 'wrap' }}>
+        <Box sx={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
           <Box>
             <Typography variant="body2" color="text.secondary">
               Profit Target:
             </Typography>
             <Typography variant="body1" fontWeight="bold">
-              {challenge?.profitTarget}%
+              {challenge?.profitTargetPct}%
             </Typography>
           </Box>
-          
+
           <Box>
             <Typography variant="body2" color="text.secondary">
               Daily Loss Limit:
             </Typography>
             <Typography variant="body1" fontWeight="bold" color="error.main">
-              {challenge?.dailyLoss}%
+              {challenge?.dailyLossPct}%
             </Typography>
           </Box>
-          
+
           <Box>
             <Typography variant="body2" color="text.secondary">
               Max Loss Limit:
             </Typography>
             <Typography variant="body1" fontWeight="bold" color="error.main">
-              {challenge?.maxLoss}%
+              {challenge?.maxLossPct}%
             </Typography>
           </Box>
         </Box>
@@ -701,10 +708,10 @@ const ChallengeCard = ({ challenge }) => {
         {/* Account Size and Price */}
         <Box sx={{ textAlign: "right", mb: 2 }}>
           <Typography variant="h6" fontWeight="bold">
-            ${foreignNumberSystem(challenge?.maxAccountSize)}
+            ${foreignNumberSystem(challenge?.accountSizeUsd)}
           </Typography>
           <Typography variant="body1">
-            Price: <strong>${challenge?.price}</strong>
+            Price: <strong>${challenge?.price.amount}</strong>
           </Typography>
         </Box>
 
@@ -721,7 +728,7 @@ const ChallengeCard = ({ challenge }) => {
               bgcolor: "#5a1a8c",
             },
           }}
-          onClick={() => window.open(challenge?.firmPageURL, '_blank')}
+          onClick={() => window.open(challenge?.buyUrl, "_blank")}
         >
           Buy Now
         </Button>
@@ -735,7 +742,7 @@ ChallengeCard.propTypes = {
   challenge: PropTypes.shape({
     id: PropTypes.number.isRequired,
     firmName: PropTypes.string.isRequired,
-    firmPageURL: PropTypes.string.isRequired,
+    buyUrl: PropTypes.string.isRequired,
     logo: PropTypes.string.isRequired,
     tier: PropTypes.string.isRequired,
     phase: PropTypes.string.isRequired,

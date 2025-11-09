@@ -21,7 +21,7 @@ const FeatureFirmsPage = () => {
   return isLoading ? (
     <LoadingScreen />
   ) : (
-    <Box>
+    <Box sx={{width:'100%'}}>
       <PromotionalCardsSection />
       <Card
         sx={{

@@ -230,13 +230,14 @@ export const getBadgeStyles = (firmType) => {
 
 // Trading Card Component
 const TradingCard = ({
-  title,
+  name,
   profitSplit,
   account,
   code,
   onCopyCode,
   logo,
   firmType = "partner",
+  firmPageURL = "#",
   //badgeLabel,
 }) => {
   const badgeStyles = getBadgeStyles(firmType);
@@ -264,12 +265,12 @@ const TradingCard = ({
       </BadgeContainer>
 
       <CardHeader>
-        <CardLogo src={logo} alt={`${title} logo`} />
+        <CardLogo src={logo} alt={`${name} logo`} />
         <Typography
           variant="h5"
           sx={{ fontSize: "20px", fontWeight: "700", color: "#333333" }}
         >
-          {title}
+          {name}
         </Typography>
       </CardHeader>
 
@@ -294,7 +295,7 @@ const TradingCard = ({
       </CardBody>
 
       <CardFooter>
-        <FundButton variant="contained" size="large">
+        <FundButton component='a' href={firmPageURL} target="blank" variant="contained" size="large">
           Get Funded
         </FundButton>
       </CardFooter>
@@ -400,13 +401,13 @@ const TradingCards = () => {
             {cardData?.map((card, index) => (
               <Box key={index} sx={{ padding: "10px" }}>
                 <TradingCard
-                  title={card.title}
-                  profitSplit={card.profitSplit}
-                  account={foreignNumberSystem(card.account)}
-                  code={card.code}
+                  name={card.name}
+                  profitSplit={card.tradingConditions.profitSplitPct}
+                  account={foreignNumberSystem(card.tradingConditions.maximumAccountSizeUsd)}
+                  code={card.tradingConditions.discountCode}
                   logo={card.logo}
                   firmType={card.firmType}
-                  //badgeLabel={card.badgeLabel}
+                  firmPageURL={card.firmPageURL}
                   onCopyCode={handleCopyCode}
                 />
               </Box>

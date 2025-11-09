@@ -12,10 +12,8 @@ import {
 } from "@mui/material";
 import { Search as SearchIcon } from "@mui/icons-material";
 import ClearIcon from "@mui/icons-material/Clear";
-import { cardData } from "../../../CardsData";
-import { set } from "react-hook-form";
 
-const FirmsFilterSection = ({ setCardDetails, setPage }) => {
+const FirmsFilterSection = ({ setFilteredFirms, setPage, setValue, allFirms }) => {
   const [rating, setRating] = useState("all");
   const [query, setQuery] = useState("");
 
@@ -23,29 +21,33 @@ const FirmsFilterSection = ({ setCardDetails, setPage }) => {
     const value = e.target.value;
     setQuery(value);
     if (value.length >= 1) {
-      const results = cardData?.filter((item) =>
-        item?.title.toLowerCase().includes(value.toLowerCase())
-      );
-      setCardDetails(results);
+      const results = allFirms?.filter((item) =>item?.name.toLowerCase().includes(value.toLowerCase()));
+      setFilteredFirms(results);
       setRating("");
     }else{
-      setCardDetails(cardData);
+      setFilteredFirms(allFirms);
     }
     setPage(1);
+    setValue(0);
   });
 
   const handleRatingSelect = (e) => {
     const value = e.target.value;
     setRating(value);
-    const results = cardData?.filter((item) => item?.rating === value);
-    setCardDetails(value === "all" ? cardData : results);
+    const results = allFirms?.filter((item) => item?.rating === value);
+    setFilteredFirms(value === "all" ? allFirms : results);
     setQuery("");
     setPage(1);
+    setValue(0);
   };
+
+  const handleTrustedOnly=()=>{
+    setFilteredFirms((firms)=>firms.filter((e)=> e.firmType=="premium" || e.firmType=="trusted"))
+  }
 
   const handleClear = useCallback(() => {
     setQuery("");
-    setCardDetails(cardData);
+    setFilteredFirms(allFirms);
   });
 
   return (
@@ -120,6 +122,7 @@ const FirmsFilterSection = ({ setCardDetails, setPage }) => {
 
         {/* Trusted Only Button */}
         <Button
+        onClick={handleTrustedOnly}
           variant="contained"
           sx={{
             width: 280,
