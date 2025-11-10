@@ -34,7 +34,7 @@ import { cardData } from "../../../CardsData";
 //     dailyLoss: 5,
 //     maxLoss: 10,
 //     price: 15,
-//     maxAccountSize: 2000,
+//     accountSizeUsd: 2000,
 //   },
 //   {
 //     id: 2,
@@ -47,7 +47,7 @@ import { cardData } from "../../../CardsData";
 //     dailyLoss: 3,
 //     maxLoss: 5,
 //     price: 2000,
-//     maxAccountSize: 1000000,
+//     accountSizeUsd: 1000000,
 //   },
 //   {
 //     id: 3,
@@ -60,7 +60,7 @@ import { cardData } from "../../../CardsData";
 //     dailyLoss: 4,
 //     maxLoss: 6,
 //     price: 1500,
-//     maxAccountSize: 500000,
+//     accountSizeUsd: 500000,
 //   },
 //   {
 //     id: 4,
@@ -73,7 +73,7 @@ import { cardData } from "../../../CardsData";
 //     dailyLoss: 4,
 //     maxLoss: 8,
 //     price: 99,
-//     maxAccountSize: 50000,
+//     accountSizeUsd: 50000,
 //   },
 //   {
 //     id: 5,
@@ -86,7 +86,7 @@ import { cardData } from "../../../CardsData";
 //     dailyLoss: 3,
 //     maxLoss: 6,
 //     price: 85,
-//     maxAccountSize: 25000,
+//     accountSizeUsd: 25000,
 //   },
 //   {
 //     id: 6,
@@ -99,7 +99,7 @@ import { cardData } from "../../../CardsData";
 //     dailyLoss: 3,
 //     maxLoss: 5,
 //     price: 250,
-//     maxAccountSize: 6000,
+//     accountSizeUsd: 6000,
 //   },
 //   {
 //     id: 7,
@@ -112,7 +112,7 @@ import { cardData } from "../../../CardsData";
 //     dailyLoss: 3,
 //     maxLoss: 5,
 //     price: 299,
-//     maxAccountSize: 15000,
+//     accountSizeUsd: 15000,
 //   },
 //   {
 //     id: 8,
@@ -125,7 +125,7 @@ import { cardData } from "../../../CardsData";
 //     dailyLoss: 6,
 //     maxLoss: 12,
 //     price: 25,
-//     maxAccountSize: 1000,
+//     accountSizeUsd: 1000,
 //   },
 // ];
 
@@ -168,12 +168,12 @@ const PropFirmsChallenges = () => {
 
   const maxAccountOptions = [
     "All",
-    "$1,000",
-    "$2,000",
+    "$5,000",
     "$10,000",
     "$25,000",
     "$50,000",
-    "$100,000+",
+    "$100,000",
+    "$500,000+",
   ];
 
   // Filter challenges based on criteria
@@ -193,9 +193,9 @@ const PropFirmsChallenges = () => {
     if (maxAccountFilter !== "All") {
       const maxAmount = parseInt(maxAccountFilter.replace(/[$,+]/g, ""));
       if (maxAccountFilter.includes("+")) {
-        matchesMaxAccount = challenge?.maxAccountSize >= maxAmount;
+        matchesMaxAccount = challenge?.accountSizeUsd >= maxAmount;
       } else {
-        matchesMaxAccount = challenge?.maxAccountSize <= maxAmount;
+        matchesMaxAccount = challenge?.accountSizeUsd <= maxAmount;
       }
     }
 
@@ -206,11 +206,15 @@ const PropFirmsChallenges = () => {
   const sortedChallenges = [...filteredChallenges].sort((a, b) => {
     switch (sortBy) {
       case "maxAccountSize":
-        return b.maxAccountSize - a.maxAccountSize;
-      case "price":
-        return a.price - b.price;
+        return b.accountSizeUsd - a.accountSizeUsd;
+      case "minAccountSize":
+        return a.accountSizeUsd - b.accountSizeUsd;
+      case "priceLow":
+        return a.price.amount - b.price.amount;
+      case "priceHigh":
+        return b.price.amount - a.price.amount;
       case "profitTarget":
-        return b.profitTarget - a.profitTarget;
+        return b.profitTargetPct - a.profitTargetPct;
       default:
         return 0;
     }
@@ -490,7 +494,13 @@ const PropFirmsChallenges = () => {
               <MenuItem value="maxAccountSize" sx={{ color: "#FFFFFF" }}>
                 Max Account Size (High to Low)
               </MenuItem>
-              <MenuItem value="price" sx={{ color: "#FFFFFF" }}>
+              <MenuItem value="minAccountSize" sx={{ color: "#FFFFFF" }}>
+                Min Account Size (Low to High)
+              </MenuItem>
+              <MenuItem value="priceHigh" sx={{ color: "#FFFFFF" }}>
+                Price (High to Low)
+              </MenuItem>
+              <MenuItem value="priceLow" sx={{ color: "#FFFFFF" }}>
                 Price (Low to High)
               </MenuItem>
               <MenuItem value="profitTarget" sx={{ color: "#FFFFFF" }}>
@@ -750,7 +760,7 @@ ChallengeCard.propTypes = {
     dailyLoss: PropTypes.number.isRequired,
     maxLoss: PropTypes.number.isRequired,
     price: PropTypes.number.isRequired,
-    maxAccountSize: PropTypes.number.isRequired,
+    accountSizeUsd: PropTypes.number.isRequired,
   }).isRequired,
 };
 
