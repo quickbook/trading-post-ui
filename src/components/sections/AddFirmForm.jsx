@@ -23,7 +23,14 @@ import {
   IconButton,
   Avatar,
 } from "@mui/material";
-import { Save, Cancel, Delete, Add, CloudUpload } from "@mui/icons-material";
+import { Save, Cancel } from "@mui/icons-material";
+import {  
+  selectCountryOptions,
+  selectCountriesStatus,
+  selectCountriesError,
+} from "../../features/domain/domainDataSlice"; // adjust path
+
+import {  useSelector } from "react-redux";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -57,7 +64,10 @@ const tierOptions = ["King", "Queen", "Prince", "Knight"];
 const phaseOptions = ["1-Step Challenge", "2-Step Challenge", "Evaluation"];
 const firmTypeOptions = ["premium", "trusted", "partner"];
 
+
+
 const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
+
   const [formData, setFormData] = useState({
     name: "",
     slug: "",
@@ -85,6 +95,11 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
     },
     challenges: [],
   });
+ 
+const countryOptions = useSelector(selectCountryOptions);   // [{value, label}]
+const countriesStatus = useSelector(selectCountriesStatus); // idle|loading|succeeded|failed
+const countriesError = useSelector(selectCountriesError);
+
 
   const [newChallenge, setNewChallenge] = useState({
     tier: "King",
@@ -375,14 +390,51 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
           <Grid size={{ xs: 12 }}>
             <TextField
               fullWidth
-              multiline
-              rows={3}
-              label="Description"
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="Enter firm description..."
+              type="number"
+              label="Total Ratings"
+              name="allRatings"
+              value={formData.allRatings}
+              onChange={handleNumberChange}
             />
+          </Grid> 
+          <Grid size={{ xs: 12, md: 4 }}>
+            <FormControl
+  fullWidth
+  required         // if you track field errors
+  disabled={countriesStatus === "loading"}
+>
+  <InputLabel id="country-label">Country</InputLabel>
+  <Select
+    labelId="country-label"
+    name="country"
+    value={formData.country ?? ""}             // keep controlled
+    label="Country"
+    onChange={handleChange}                    // expects e.target.name/value
+    displayEmpty
+  >
+    <MenuItem value="">
+      <em>Select country</em>                  {/* placeholder (instead of "USA") */}
+    </MenuItem>
+
+    {countryOptions.map((opt) => (
+      <MenuItem key={opt.value} value={opt.value}>
+        {opt.label}
+      </MenuItem>
+    ))}
+  </Select>
+
+  {/* helper text states */}
+  {countriesStatus === "loading" && (
+    <FormHelperText>Loading countries…</FormHelperText>
+  )}
+  {countriesStatus === "failed" && (
+    <FormHelperText error>
+      {String(countriesError) || "Failed to load countries"}
+    </FormHelperText>
+  )}
+   
+</FormControl>
+
           </Grid>
         </Grid>
 

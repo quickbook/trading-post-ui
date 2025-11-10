@@ -1,13 +1,43 @@
-import React, { useEffect, useState } from "react";
-import { Box, TextField, Button, Typography, Paper, Grid } from "@mui/material";
+import React from "react";
+import {
+  Box,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  MenuItem,
+  IconButton,
+  InputAdornment,
+  FormControlLabel,
+  Checkbox,
+  Grid,
+} from "@mui/material";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { MainContext } from "../../App";
 import { LoadingScreen } from "./HomePage";
-import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../../features/auth/registrationSlice";
+
+const COUNTRIES = [
+  { code: "IN", name: "India" },
+  { code: "US", name: "United States" },
+  { code: "GB", name: "United Kingdom" },
+  { code: "CA", name: "Canada" },
+  { code: "AU", name: "Australia" },
+  { code: "SG", name: "Singapore" },
+  { code: "AE", name: "United Arab Emirates" },
+  { code: "DE", name: "Germany" },
+  { code: "FR", name: "France" },
+  { code: "JP", name: "Japan" },
+];
+
+const PASSWORD_REGEX =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,12}$/;
 
 const RegisterPage = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const {
     setSnackbarMessage,
     setSnackbarOpen,
@@ -16,160 +46,131 @@ const RegisterPage = () => {
     setIsLoading,
   } = React.useContext(MainContext);
 
-  const navigate = useNavigate();
-
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = React.useState({
+    gmail: "",
     userName: "",
+    password: "",
+    confirmPassword: "",
     firstName: "",
     middleName: "",
     lastName: "",
     contactNumber: "",
-    gmail: "",
-    password: "",
     address: "",
     city: "",
+    stateCode: "",
     pinCode: "",
     countryCode: "",
-    stateCode: "",
+    acceptTerms: false,
   });
 
-  const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
+  const [errors, setErrors] = React.useState({});
+  const [touched, setTouched] = React.useState({});
+  const [showPwd, setShowPwd] = React.useState(false);
+  const [showPwd2, setShowPwd2] = React.useState(false);
 
-  // ✅ Password validation pattern - moved outside function for reuse
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,12}$/;
-
-  // ✅ Field validation logic
   const validateField = (name, value) => {
     let error = "";
-
     switch (name) {
+      case "gmail":
+        if (!value.trim()) error = "Email is required";
+        else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value))
+          error = "Enter a valid email";
+        break;
       case "userName":
         if (!value.trim()) error = "Username is required";
-        else if (value.length < 3) error = "At least 3 characters required";
-        else if (value.length > 50) error = "Must not exceed 50 characters";
+        else if (value.length < 3) error = "At least 3 characters";
+        else if (value.length > 50) error = "Max 50 characters";
         break;
-
+      case "password":
+        if (!value.trim()) error = "Password is required";
+        else if (!PASSWORD_REGEX.test(value))
+          error = "8–12 chars with upper, lower, number & symbol";
+        break;
+      case "confirmPassword":
+        if (!value.trim()) error = "Confirm your password";
+        else if (value !== formData.password) error = "Passwords do not match";
+        break;
       case "firstName":
         if (!value.trim()) error = "First name is required";
         break;
-
       case "lastName":
         if (!value.trim()) error = "Last name is required";
         break;
-
       case "contactNumber":
-        if (!value.trim()) error = "Contact number is required";
+        if (!value.trim()) error = "Mobile number is required";
         else if (!/^[0-9]{10}$/.test(value))
-          error = "Enter a valid number (10 digits)";
+          error = "Enter a valid 10-digit number";
         break;
-
-      case "gmail":
-        if (!value.trim()) error = "Email is required";
-        else if (
-          !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(value)
-        )
-          error = "Enter a valid email address";
-        break;
-
-      case "password":
-        if (!value.trim()) error = "Password is required";
-        else if (!passwordRegex.test(value))
-          error =
-            "Password must be 8 to 12 letters, include at least one uppercase, lowercase, number & symbol";
-        break;
-
       case "address":
         if (!value.trim()) error = "Address is required";
         break;
-
       case "city":
         if (!value.trim()) error = "City is required";
         break;
-
-      case "pinCode":
-        if (!value.trim()) error = "Zip code is required";
-        else if (!/^[0-9]{4,10}$/.test(value))
-          error = "Enter a valid zip code (4–10 digits)";
+      case "stateCode":
+        if (value && !/^[A-Za-z0-9\- ]{2,8}$/.test(value))
+          error = "Invalid state/region";
         break;
-
+      case "pinCode":
+        if (!value.trim()) error = "Pin/Zip is required";
+        else if (!/^[0-9]{4,10}$/.test(value)) error = "Enter 4–10 digits";
+        break;
       case "countryCode":
         if (!value.trim()) error = "Country is required";
-        else if (!/^[A-Z]{2,3}$/.test(value))
-          error = "Use valid code (e.g. IN, USA)";
         break;
-
-      case "stateCode":
-        if (value && !/^[A-Z]{2,3}$/.test(value))
-          error = "Use valid code (e.g. KA, NY)";
+      case "acceptTerms":
+        if (!value) error = "You must accept Terms";
         break;
-
       default:
         break;
     }
-
     return error;
   };
 
-  // ✅ Handle field blur
   const handleBlur = (e) => {
     const { name } = e.target;
-    setTouched({ ...touched, [name]: true });
-    const error = validateField(name, formData[name]);
-    setErrors((prev) => ({ ...prev, [name]: error }));
+    setTouched((t) => ({ ...t, [name]: true }));
+    setErrors((prev) => ({ ...prev, [name]: validateField(name, formData[name]) }));
   };
 
-  // ✅ Common onChange handler
   const handleChange = (e) => {
-    const { name, value } = e.target;
-
-    // Convert to uppercase for countryCode and stateCode
-    const processedValue =
-      name === "countryCode" || name === "stateCode"
-        ? value.toUpperCase()
-        : value;
-
-    setFormData((prev) => ({ ...prev, [name]: processedValue }));
-
-    // Only validate if field has been touched
+    const { name, value, type, checked } = e.target;
+    const v = type === "checkbox" ? checked : value;
+    setFormData((prev) => ({ ...prev, [name]: v }));
     if (touched[name]) {
-      const error = validateField(name, processedValue);
-      setErrors((prev) => ({ ...prev, [name]: error }));
+      setErrors((prev) => ({ ...prev, [name]: validateField(name, v) }));
     }
   };
 
-  // ✅ Validate all before submit
   const validateAll = () => {
-    const newErrors = {};
-    const newTouched = {};
-
+    const nextErrors = {};
+    const nextTouched = {};
     Object.keys(formData).forEach((field) => {
-      newTouched[field] = true;
-      newErrors[field] = validateField(field, formData[field]);
+      nextTouched[field] = true;
+      nextErrors[field] = validateField(field, formData[field]);
     });
-
-    setTouched(newTouched);
-    setErrors(newErrors);
-
-    return Object.values(newErrors).every((err) => !err);
+    setTouched(nextTouched);
+    setErrors(nextErrors);
+    return Object.values(nextErrors).every((v) => !v);
   };
 
-  // ✅ Submit handler with API call (register only, no auto-login)
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateAll()) {
-      // setSnackbarMessage("Please fix the errors before submitting");
-      // setSnackbarSeverity("error");
-      // setSnackbarOpen(true);
-      setIsLoading(false);
-      return;
-    }
+    if (!validateAll()) return;
+
+    const payload = { ...formData };
+    delete payload.confirmPassword;
+    delete payload.acceptTerms;
+
     setIsLoading(true);
     try {
-      dispatch(registerUser(formData))
+      await dispatch(registerUser(payload)).unwrap?.();
+      setSnackbarMessage("Registration successful. Please log in.");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+      navigate("/login");
     } catch (error) {
-      setSnackbarMessage(error.message || "Registration failed");
+      setSnackbarMessage(error?.message || "Registration failed");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {
@@ -177,50 +178,54 @@ const RegisterPage = () => {
     }
   };
 
-  // ✅ Auto-redirect if already logged in
-  useEffect(() => {
-    const token = sessionStorage.getItem("adminToken");
-    if (token) navigate("/admin");
-  }, [navigate]);
-
   return isLoading ? (
     <LoadingScreen />
   ) : (
     <Box
       sx={{
-        minHeight: { xs: "60vh", md: "80vh" },
+        minHeight: "85vh",
         display: "flex",
-        justifyContent: "center",
         alignItems: "center",
-        py: 4,
+        justifyContent: "center",
+        px: 2,
+        transform: { xs: "translateY(-2vh)", md: "translateY(-4vh)" },
+        bgcolor: "transparent",
       }}
     >
       <Paper
-        elevation={6}
+        elevation={10}
         sx={{
-          p: { xs: 3, sm: 6 },
+          width: "100%",
+          maxWidth: 960,               // ⬅️ wider form
           borderRadius: 4,
-          width: { xs: "90vw", sm: 600 },
-          bgcolor: "rgba(235, 215, 255, 1)",
-          backdropFilter: "blur(10px)",
+          p: { xs: 3, sm: 4 },         // compact padding -> shorter height
+          backgroundColor: "#fff",
         }}
       >
-        <Typography
-          variant="h6"
-          sx={{
-            fontWeight: "bold",
-            mb: 4,
-            textAlign: "center",
-            color: "black",
-          }}
-        >
-          USER REGISTRATION
+        <Typography variant="h5" fontWeight={700} align="center" sx={{ mb: 3 }}>
+          Create your account
         </Typography>
 
-        <Box component="form" onSubmit={handleSubmit}>
-          <Grid container spacing={2}>
-            {/* Username */}
-            <Grid size={{ xs: 12}}>
+        <Box component="form" noValidate onSubmit={handleSubmit}>
+          {/* Account */}
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+            Account details
+          </Typography>
+          <Grid container spacing={1.5} sx={{ mb: 3 }}>
+            <Grid item xs={12} md={6}>
+              <TextField
+                required
+                name="gmail"
+                label="Email"
+                fullWidth
+                value={formData.gmail}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={!!errors.gmail && touched.gmail}
+                helperText={touched.gmail ? errors.gmail : " "}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
               <TextField
                 required
                 name="userName"
@@ -230,29 +235,81 @@ const RegisterPage = () => {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 error={!!errors.userName && touched.userName}
-                helperText={touched.userName ? errors.userName : ""}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
+                helperText={touched.userName ? errors.userName : " "}
               />
             </Grid>
+          </Grid>
 
-            {/* First Name */}
-            <Grid size={{ xs: 12, md: 6 }}>
+          <Grid container spacing={1.5} sx={{ mb: 3 }}>
+            <Grid item xs={12} md={6}>
               <TextField
-                name="firstName"
                 required
+                name="password"
+                label="Password"
+                type={showPwd ? "text" : "password"}
+                fullWidth
+                value={formData.password}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={!!errors.password && touched.password}
+                helperText={
+                    touched.password ? errors.password : "8–12 chars, upper/lower/number/symbol"
+                  }
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton edge="end" onClick={() => setShowPwd((s) => !s)}>
+                        {showPwd ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <TextField
+                required
+                name="confirmPassword"
+                label="Confirm Password"
+                type={showPwd2 ? "text" : "password"}
+                fullWidth
+                value={formData.confirmPassword}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={!!errors.confirmPassword && touched.confirmPassword}
+                helperText={touched.confirmPassword ? errors.confirmPassword : " "}
+                InputProps={{
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton edge="end" onClick={() => setShowPwd2((s) => !s)}>
+                        {showPwd2 ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            </Grid>
+          </Grid>
+
+          {/* Row: First / Middle / Last */}
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+            Personal information
+          </Typography>
+          <Grid container spacing={1.5} sx={{ mb: 2 }}>
+            <Grid item xs={12} md={4}>
+              <TextField
+                required
+                name="firstName"
                 label="First Name"
                 fullWidth
                 value={formData.firstName}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 error={!!errors.firstName && touched.firstName}
-                helperText={touched.firstName ? errors.firstName : ""}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
+                helperText={touched.firstName ? errors.firstName : " "}
               />
             </Grid>
-
-            {/* Middle Name */}
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid item xs={12} md={4}>
               <TextField
                 name="middleName"
                 label="Middle Name (Optional)"
@@ -260,184 +317,147 @@ const RegisterPage = () => {
                 value={formData.middleName}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
+                helperText=" "
               />
             </Grid>
-
-            {/* Last Name */}
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid item xs={12} md={4}>
               <TextField
-                name="lastName"
                 required
+                name="lastName"
                 label="Last Name"
                 fullWidth
                 value={formData.lastName}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 error={!!errors.lastName && touched.lastName}
-                helperText={touched.lastName ? errors.lastName : ""}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
+                helperText={touched.lastName ? errors.lastName : " "}
               />
             </Grid>
+          </Grid>
 
-            {/* Contact Number */}
-            <Grid size={{ xs: 12, md: 6 }}>
+          {/* Row: Mobile / City / Address */}
+          <Grid container spacing={1.5} sx={{ mb: 2 }}>
+            <Grid item xs={12} md={4}>
               <TextField
-                name="contactNumber"
                 required
-                label="Contact Number"
+                name="contactNumber"
+                label="Mobile Number"
                 fullWidth
                 value={formData.contactNumber}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 error={!!errors.contactNumber && touched.contactNumber}
-                helperText={touched.contactNumber ? errors.contactNumber : ""}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
+                helperText={touched.contactNumber ? errors.contactNumber : " "}
               />
             </Grid>
-
-            {/* Gmail */}
-            <Grid size={{ xs: 12}}>
+            <Grid item xs={12} md={4}>
               <TextField
-                name="gmail"
                 required
-                label="Email"
-                fullWidth
-                value={formData.gmail}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                error={!!errors.gmail && touched.gmail}
-                helperText={touched.gmail ? errors.gmail : ""}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
-              />
-            </Grid>
-
-            {/* Password */}
-            <Grid size={{ xs: 12}}>
-              <TextField
-                name="password"
-                required
-                label="Password"
-                type="password"
-                fullWidth
-                value={formData.password}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                error={!!errors.password && touched.password}
-                helperText={touched.password ? errors.password : ""}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
-              />
-            </Grid>
-
-            {/* Address */}
-            <Grid size={{ xs: 12}}>
-              <TextField
-                name="address"
-                required
-                label="Address"
-                fullWidth
-                multiline
-                value={formData.address}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                error={!!errors.address && touched.address}
-                helperText={touched.address ? errors.address : ""}
-                rows={2}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
-              />
-            </Grid>
-
-            {/* City */}
-            <Grid size={{ xs: 12, md: 6 }}>
-              <TextField
                 name="city"
-                required
                 label="City"
                 fullWidth
                 value={formData.city}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 error={!!errors.city && touched.city}
-                helperText={touched.city ? errors.city : ""}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
+                helperText={touched.city ? errors.city : " "}
               />
             </Grid>
-
-            {/* Pin Code */}
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid item xs={12} md={4}>
               <TextField
-                name="pinCode"
                 required
-                label="Pin Code"
+                name="address"
+                label="Street Address"
                 fullWidth
-                value={formData.pinCode}
+                value={formData.address}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                error={!!errors.pinCode && touched.pinCode}
-                helperText={touched.pinCode ? errors.pinCode : ""}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
+                error={!!errors.address && touched.address}
+                helperText={touched.address ? errors.address : " "}
               />
             </Grid>
+          </Grid>
 
-            {/* Country Code */}
-            <Grid size={{ xs: 12, md: 6 }}>
+          {/* Row: Country / State / City (as requested)… but to avoid duplicate City, we keep Pin here instead */}
+          <Grid container spacing={1.5} sx={{ mb: 2 }}>
+            <Grid item xs={12} md={4}>
               <TextField
-                name="countryCode"
+                select
                 required
-                label="Country Code"
+                name="countryCode"
+                label="Country"
                 fullWidth
+                SelectProps={{
+                  MenuProps: { PaperProps: { style: { maxHeight: 260, width: 320 } } },
+                }}
                 value={formData.countryCode}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 error={!!errors.countryCode && touched.countryCode}
-                helperText={touched.countryCode ? errors.countryCode : ""}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
-              />
+                helperText={touched.countryCode ? errors.countryCode : "Select your country"}
+              >
+                {COUNTRIES.map((c) => (
+                  <MenuItem key={c.code} value={c.code}>
+                    {c.name}
+                  </MenuItem>
+                ))}
+              </TextField>
             </Grid>
-
-            {/* State Code */}
-            <Grid size={{ xs: 12, md: 6 }}>
+            <Grid item xs={12} md={4}>
               <TextField
                 name="stateCode"
-                label="State Code (Optional)"
+                label="State / Region"
                 fullWidth
                 value={formData.stateCode}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 error={!!errors.stateCode && touched.stateCode}
-                helperText={touched.stateCode ? errors.stateCode : ""}
-                sx={{ "& .MuiOutlinedInput-root": { borderRadius: "10px" } }}
+                helperText={touched.stateCode ? errors.stateCode : " "}
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                required
+                name="pinCode"
+                label="Pin / ZIP"
+                fullWidth
+                value={formData.pinCode}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                error={!!errors.pinCode && touched.pinCode}
+                helperText={touched.pinCode ? errors.pinCode : " "}
               />
             </Grid>
           </Grid>
 
-          {/* Submit Button */}
+          <FormControlLabel
+            sx={{ mt: 1 }}
+            control={
+              <Checkbox
+                name="acceptTerms"
+                checked={formData.acceptTerms}
+                onChange={handleChange}
+                onBlur={handleBlur}
+              />
+            }
+            label="I agree to the Terms and Privacy Policy"
+          />
+          {touched.acceptTerms && errors.acceptTerms && (
+            <Typography variant="caption" color="error" sx={{ display: "block", mt: 0.5 }}>
+              {errors.acceptTerms}
+            </Typography>
+          )}
+
           <Button
             variant="contained"
             type="submit"
             fullWidth
-            sx={{
-              mt: 4,
-              bgcolor: "black",
-              color: "white",
-              borderRadius: "10px",
-              py: 1.2,
-              "&:hover": { bgcolor: "#333" },
-            }}
+            sx={{ mt: 2, py: 1, borderRadius: 2, textTransform: "none", fontWeight: 700 }}
           >
-            Register
+            Create account
           </Button>
 
-          <Button
-            onClick={() => navigate("/login")}
-            disabled={errors.length > 0}
-            fullWidth
-            sx={{
-              mt: 2,
-              color: "purple",
-              textTransform: "none",
-            }}
-          >
+          <Button onClick={() => navigate("/login")} fullWidth sx={{ mt: 1, textTransform: "none" }}>
             Back to Login
           </Button>
         </Box>

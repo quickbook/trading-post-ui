@@ -1,16 +1,33 @@
-import React, { useState } from "react";
-import { Box, TextField, Button, Typography, Link, Paper } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import React from "react";
+import {
+  Box,
+  Paper,
+  Typography,
+  TextField,
+  Button,
+  Link as MuiLink,
+  IconButton,
+  InputAdornment,
+  Checkbox,
+  FormControlLabel,
+  CircularProgress,
+} from "@mui/material";
+import { Visibility, VisibilityOff, LockOutlined } from "@mui/icons-material";
+import { useNavigate, Link as RouterLink } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { useForm, Controller } from "react-hook-form";
+import { motion } from "framer-motion";
+
 import { MainContext } from "../../App";
 import { LoadingScreen } from "./HomePage";
-import { useDispatch, useSelector } from "react-redux";
-import { login, selectIsLoginSuccess, selectUser, selectRole } from "../../features/auth/loginSlice";
+import { login } from "../../features/auth/loginSlice";
+
+// Strong password rule: 8–12 chars with upper, lower, number & symbol
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,12}$/;
 
 const LoginPage = () => {
   const dispatch = useDispatch();
-  const user = useSelector(selectUser);
-  const role = useSelector(selectRole);
-  const isLoginSuccess = useSelector(selectIsLoginSuccess)
+  const navigate = useNavigate();
   const {
     setAdminLoggedIn,
     setSnackbarMessage,
@@ -19,212 +36,236 @@ const LoginPage = () => {
     isLoading,
     setIsLoading,
   } = React.useContext(MainContext);
-  const [formData, setFormData] = useState({ email: "", password: "" });
-  const [errors, setErrors] = useState({ email: "", password: "" });
-  const navigate = useNavigate();
 
-  // Password validation pattern
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,12}$/;
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [capsOn, setCapsOn] = React.useState(false);
 
-  const validate = () => {
-    let isValid = true;
-    const newErrors = { email: "", password: "" };
+  const savedIdentifier = React.useMemo(
+    () => localStorage.getItem("tpui_saved_identifier") || "",
+    []
+  );
 
-    // email validation
-    if (!formData.email.trim()) {
-      newErrors.email = "Email is required";
-      isValid = false;
-    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(formData.email.trim())) {
-      newErrors.email = "Email must be valid";
-      isValid = false;
-    }
+  const {
+    control,
+    handleSubmit,
+    formState: { errors, isValid },
+  } = useForm({
+    mode: "onChange",
+    defaultValues: {
+      identifier: savedIdentifier,
+      password: "",
+      remember: Boolean(savedIdentifier),
+    },
+  });
 
-    // Password validation
-    if (!formData.password.trim()) {
-      newErrors.password = "Password is required";
-      isValid = false;
-    } else if (!passwordRegex.test(formData.password)) {
-      newErrors.password =
-        "Password must be 8 to 12 letters, include at least one uppercase, lowercase, number & symbol";
-      isValid = false;
-    }
-
-    setErrors(newErrors);
-    return isValid;
+  const handleKeyUp = (e) => {
+    const caps =
+      typeof e.getModifierState === "function" && e.getModifierState("CapsLock");
+    setCapsOn(Boolean(caps));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!validate()) return;
-
+  const onSubmit = async (data) => {
     setIsLoading(true);
     try {
-      dispatch(login(formData))
+      // Send identifier (email or username) + password to the backend
+      const user = await dispatch(
+        login({ identifier: data.identifier, password: data.password })
+      ).unwrap();
 
-      const user = await dispatch(login(formData)).unwrap();
-
-      // ✅ Check if login succeeded (status set in slice)
       if (user && user.role) {
-        // ✅ Role-based context logic
-        if (user.role === "ADMIN") {
-          setAdminLoggedIn(true);
+        setAdminLoggedIn(user.role === "ADMIN");
+
+        if (data.remember) {
+          localStorage.setItem("tpui_saved_identifier", data.identifier);
         } else {
-          setAdminLoggedIn(false);
+          localStorage.removeItem("tpui_saved_identifier");
         }
 
-        // ✅ Success UI feedback
-        setSnackbarMessage(`Login successful! Welcome back, ${user.name || "User"}.`);
+        setSnackbarMessage(
+          `Login successful! Welcome back${user.name ? ", " + user.name : ""}.`
+        );
         setSnackbarSeverity("success");
         setSnackbarOpen(true);
         navigate("/");
-
       } else {
-        if (user?.errorDetails?.errorMessage) {
-          const errMsg = user.errorDetails.errorMessage;
-          setSnackbarMessage(user.message + ":" + errMsg || "Login failed. Try again.");
-        } else {
-          setSnackbarMessage(user.message || "Login failed. Try again.");
-        }
-
+        const errMsg =
+          user?.errorDetails?.errorMessage ||
+          user?.message ||
+          "Login failed. Try again.";
+        setSnackbarMessage(errMsg);
         setSnackbarSeverity("error");
         setSnackbarOpen(true);
       }
-      // Update context
-
-
-      // Snackbar success
-
-      // Redirect
-
     } catch (err) {
-      console.error("error", err);
       if (err?.errorDetails?.fieldErrors) {
-        const fieldErrors = err.errorDetails.fieldErrors;       
-        const firstError = Object.values(fieldErrors)[0];
+        const firstError = Object.values(err.errorDetails.fieldErrors)[0];
         setSnackbarMessage(firstError || "Login failed. Try again.");
       } else if (err?.errorDetails?.errorMessage) {
-        const errMsg = err.errorDetails.errorMessage;
-        setSnackbarMessage(err.message + ":" + errMsg || "Login failed. Try again.");
+        const e = err.errorDetails.errorMessage;
+        setSnackbarMessage(err.message ? `${err.message}: ${e}` : e);
       } else {
-        // fallback
         setSnackbarMessage(err?.message || "Login failed. Try again.");
       }
-
       setSnackbarSeverity("error");
-      setSnackbarOpen(true);        
+      setSnackbarOpen(true);
     } finally {
       setIsLoading(false);
     }
   };
 
- 
-
   return isLoading ? (
     <LoadingScreen />
   ) : (
     <Box
+      component={motion.div}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
       sx={{
-        minHeight: { xs: "60vh", md: "80vh" },
-        //bgcolor: "linear-gradient(to bottom right, #7207beff, #9b5de5)",
+        height: "100vh", // full viewport height
         display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
+        alignItems: "center", // vertical center
+        justifyContent: "center", // horizontal center
+        px: 2,
+        // 👇 remove the pink gradient by using a solid/transparent background
+        bgcolor: "transparent", // or set a solid color like '#1e1b4b'
       }}
     >
       <Paper
-        elevation={6}
+        elevation={10}
         sx={{
-          p: { xs: 3, sm: 6 },
+          width: "100%",
+          maxWidth: 440,
           borderRadius: 4,
-          width: { xs: "90vw", sm: 400 },
-          textAlign: "center",
-          bgcolor: "rgba(235, 215, 255, 1)",
-          backdropFilter: "blur(10px)",
+          p: { xs: 3, sm: 5 },
+          backgroundColor: "#ffffff",
         }}
       >
-        <Typography
-          variant="h6"
-          sx={{ fontWeight: "bold", mb: 6, color: "black" }}
-        >
-          LOGIN
+        <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+          <LockOutlined fontSize="small" />
+          <Typography variant="overline" color="text.secondary" letterSpacing={1}>
+            SECURE LOGIN
+          </Typography>
+        </Box>
+
+        <Typography variant="h5" fontWeight={700} sx={{ mb: 3 }}>
+          Welcome back
         </Typography>
 
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
-          sx={{ display: "flex", flexDirection: "column", gap: 2 }}
-        >
-          <TextField
-            label="Email"
-            variant="outlined"
-            value={formData.email}
-            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-            error={!!errors.email}
-            helperText={errors.email}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "10px",
-              },
-            }}
+        <Box component="form" noValidate onSubmit={handleSubmit(onSubmit)}>
+          {/* Email or Username */}
+          <Controller
+            name="identifier"
+            control={control}
+            rules={{ required: "Email or Username is required" }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                label="Email or Username"
+                fullWidth
+                margin="normal"
+                autoComplete="username"
+                error={!!errors.identifier}
+                helperText={errors.identifier?.message}
+                InputProps={{ sx: { borderRadius: 2 } }}
+              />
+            )}
           />
 
-          <TextField
-            label="Password"
-            type="password"
-            variant="outlined"
-            value={formData.password}
-            onChange={(e) =>
-              setFormData({ ...formData, password: e.target.value })
-            }
-            error={!!errors.password}
-            helperText={errors.password}
-            sx={{
-              "& .MuiOutlinedInput-root": {
-                borderRadius: "10px",
+          {/* Password */}
+          <Controller
+            name="password"
+            control={control}
+            rules={{
+              required: "Password is required",
+              pattern: {
+                value: PASSWORD_REGEX,
+                message: "8-12 chars, upper, lower, number & symbol",
               },
             }}
+            render={({ field }) => (
+              <TextField
+                {...field}
+                onKeyUp={handleKeyUp}
+                label="Password"
+                type={showPassword ? "text" : "password"}
+                fullWidth
+                margin="normal"
+                autoComplete="current-password"
+                error={!!errors.password}
+                helperText={
+                  errors.password?.message || (capsOn ? "Caps Lock is ON" : " ")
+                }
+                InputProps={{
+                  sx: { borderRadius: 2 },
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        onClick={() => setShowPassword((s) => !s)}
+                        edge="end"
+                        size="small"
+                      >
+                        {showPassword ? <VisibilityOff /> : <Visibility />}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            )}
           />
 
-          <Link
-            href="#"
-            underline="hover"
-            sx={{
-              color: "blue",
-              fontSize: "0.85rem",
-              alignSelf: "center",
-              mt: 1,
-            }}
+          {/* Remember / Forgot */}
+          <Box
+            sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 0.5 }}
           >
-            forgot password
-          </Link>
+            <Controller
+              name="remember"
+              control={control}
+              render={({ field }) => (
+                <FormControlLabel
+                  control={<Checkbox {...field} checked={field.value} />}
+                  label="Remember me"
+                />
+              )}
+            />
+            <MuiLink component={RouterLink} to="#" underline="hover" sx={{ fontSize: 14 }}>
+              Forgot password?
+            </MuiLink>
+          </Box>
 
-          <Button
-            variant="contained"
-            type="submit"
-            sx={{
-              mt: 2,
-              bgcolor: "black",
-              color: "white",
-              borderRadius: "10px",
-              py: 1.2,
-              "&:hover": { bgcolor: "#333" },
-            }}
-          >
-            Login
-          </Button>
+          {/* Submit */}
+          <Box sx={{ position: "relative", mt: 3 }}>
+            <Button
+              type="submit"
+              variant="contained"
+              size="large"
+              fullWidth
+              disabled={!isValid || isLoading}
+              sx={{
+                py: 1.2,
+                borderRadius: 2,
+                textTransform: "none",
+                fontWeight: 700,
+                letterSpacing: 0.3,
+              }}
+            >
+              {isLoading ? "Signing in..." : "Login"}
+            </Button>
+            {isLoading && (
+              <CircularProgress
+                size={22}
+                sx={{ position: "absolute", top: "50%", left: "50%", mt: "-11px", ml: "-11px" }}
+              />
+            )}
+          </Box>
 
-          <Link
-            onClick={() => navigate("/register")}
-            underline="hover"
-            sx={{
-              color: "purple",
-              fontSize: "1rem",
-              mt: 2,
-              cursor: "pointer",
-            }}
-          >
-            Register
-          </Link>
+          <Typography variant="body2" sx={{ mt: 2, textAlign: "center" }}>
+            New here?{" "}
+            <MuiLink component={RouterLink} to="/register" underline="hover" sx={{ fontWeight: 600 }}>
+              Create an account
+            </MuiLink>
+          </Typography>
         </Box>
       </Paper>
     </Box>
