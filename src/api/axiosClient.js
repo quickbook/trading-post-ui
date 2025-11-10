@@ -68,24 +68,44 @@ const getTokenFromStore = () => {
   return token;
 };
 // Add a pre-request configuration
-axiosClient.defaults.transformRequest = [
-  (data, headers) => {
-    const currentUrl = headers.common?.url || '';    
-    const isAuthEndpoint = AUTH_PATHS.some(path => currentUrl.includes(path));
+const getHostUrl = (config) => {
+  const base = config.baseURL || '';
+  const url = config.url || '';
+  try {
+    return base ? new URL(url, base).toString() : url;
+  } catch {
+    return `${base}${url}`;
+  }
+};
+
+axiosClient.interceptors.request.use(
+  (config) => {
+    const fullUrl = getHostUrl(config);
+    const isAuthEndpoint = AUTH_PATHS.some((p) => fullUrl.includes(p));
+
+    console.debug('Request:', config.method?.toUpperCase(), fullUrl, '| isAuth:', isAuthEndpoint);
 
     if (!isAuthEndpoint) {
-      const token = getTokenFromStore();
+      const token = getTokenFromStore?.();
       if (token) {
-        headers.Authorization = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
-        console.debug('Request URL:', currentUrl);
-        console.debug('Authorization header set:', headers.Authorization ? 'yes' : 'no');
+        const bearer = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+        // Axios v1 headers can be AxiosHeaders or plain object
+        if (config.headers && typeof config.headers.set === 'function') {
+          config.headers.set('Authorization', bearer);
+        } else {
+          config.headers = config.headers || {};
+          config.headers['Authorization'] = bearer;
+        }
+        console.debug('Authorization header set: yes');
+      } else {
+        console.debug('Authorization header set: no (no token)');
       }
     }
-    
-    return data;
+
+    return config;
   },
-  ...axios.defaults.transformRequest
-];
+  (error) => Promise.reject(error)
+);
 
 // Error handling
 axiosClient.defaults.validateStatus = (status) => {

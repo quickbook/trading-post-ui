@@ -214,7 +214,7 @@ const RegisterPage = () => {
             color: "black",
           }}
         >
-          ADMIN REGISTRATION
+          USER REGISTRATION
         </Typography>
 
         <Box component="form" onSubmit={handleSubmit}>

@@ -4,12 +4,13 @@ import { useNavigate } from "react-router-dom";
 import { MainContext } from "../../App";
 import { LoadingScreen } from "./HomePage";
 import { useDispatch, useSelector } from "react-redux";
-import { login, logout, selectUser, selectRole } from "../../features/auth/loginSlice";
+import { login, selectIsLoginSuccess, selectUser, selectRole } from "../../features/auth/loginSlice";
 
 const LoginPage = () => {
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
   const role = useSelector(selectRole);
+  const isLoginSuccess = useSelector(selectIsLoginSuccess)
   const {
     setAdminLoggedIn,
     setSnackbarMessage,
@@ -33,7 +34,7 @@ const LoginPage = () => {
     if (!formData.email.trim()) {
       newErrors.email = "Email is required";
       isValid = false;
-    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(value)) {
+    } else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/.test(formData.email.trim())) {
       newErrors.email = "Email must be valid";
       isValid = false;
     }
@@ -60,32 +61,63 @@ const LoginPage = () => {
     try {
       dispatch(login(formData))
 
+      const user = await dispatch(login(formData)).unwrap();
+
+      // ✅ Check if login succeeded (status set in slice)
+      if (user && user.role) {
+        // ✅ Role-based context logic
+        if (user.role === "ADMIN") {
+          setAdminLoggedIn(true);
+        } else {
+          setAdminLoggedIn(false);
+        }
+
+        // ✅ Success UI feedback
+        setSnackbarMessage(`Login successful! Welcome back, ${user.name || "User"}.`);
+        setSnackbarSeverity("success");
+        setSnackbarOpen(true);
+        navigate("/");
+
+      } else {
+        if (user?.errorDetails?.errorMessage) {
+          const errMsg = user.errorDetails.errorMessage;
+          setSnackbarMessage(user.message + ":" + errMsg || "Login failed. Try again.");
+        } else {
+          setSnackbarMessage(user.message || "Login failed. Try again.");
+        }
+
+        setSnackbarSeverity("error");
+        setSnackbarOpen(true);
+      }
       // Update context
-      setAdminLoggedIn(true);
+
 
       // Snackbar success
-      setSnackbarMessage("Login successful! Welcome back.");
-      setSnackbarSeverity("success");
-      setSnackbarOpen(true);
 
       // Redirect
-      navigate("/");
+
     } catch (err) {
-      console.error(err);
-      setSnackbarMessage(err.message || "Login failed. Try again.");
+      console.error("error", err);
+      if (err?.errorDetails?.fieldErrors) {
+        const fieldErrors = err.errorDetails.fieldErrors;       
+        const firstError = Object.values(fieldErrors)[0];
+        setSnackbarMessage(firstError || "Login failed. Try again.");
+      } else if (err?.errorDetails?.errorMessage) {
+        const errMsg = err.errorDetails.errorMessage;
+        setSnackbarMessage(err.message + ":" + errMsg || "Login failed. Try again.");
+      } else {
+        // fallback
+        setSnackbarMessage(err?.message || "Login failed. Try again.");
+      }
+
       setSnackbarSeverity("error");
-      setSnackbarOpen(true);
+      setSnackbarOpen(true);        
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Logout helper (optional, can be used later)
-  // const handleLogout = () => {
-  //   localStorage.removeItem("adminToken");
-  //   localStorage.removeItem("adminUser");
-  //   setAdminLoggedIn(false);
-  // };
+ 
 
   return isLoading ? (
     <LoadingScreen />
@@ -114,7 +146,7 @@ const LoginPage = () => {
           variant="h6"
           sx={{ fontWeight: "bold", mb: 6, color: "black" }}
         >
-          ADMIN LOGIN
+          LOGIN
         </Typography>
 
         <Box

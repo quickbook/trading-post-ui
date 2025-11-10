@@ -112,7 +112,7 @@ const AdminMenu = () => {
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        {role === "admin" ? (
+        {role === "ADMIN" ? (
           <div>
             <MenuItem
               sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
@@ -128,7 +128,7 @@ const AdminMenu = () => {
               Logout
             </MenuItem>
           </div>
-        ) : role === "user" ? (
+        ) : role === "USER" ? (
           <MenuItem
             sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
             onClick={handleLogout}

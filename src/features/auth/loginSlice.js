@@ -1,13 +1,19 @@
 // src/features/auth/loginSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosClient from "../../api/axiosClient";
+import { API_ENDPOINTS, getFullUrl } from "../../config/apiEndpoints";
+const FETCH_LOGIN_ACTION = `login${API_ENDPOINTS.USERS.BASE}`;
 
 // POST /api/auth/login -> { id, name, role: "admin"|"user" }
 export const login = createAsyncThunk(
-  "login/login",
+  FETCH_LOGIN_ACTION,
   async (credentials, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.post("/api/auth/login", credentials);
+      let body = {
+        username: credentials.email,
+        password: credentials.password,
+      }
+      const res = await axiosClient.post(getFullUrl(API_ENDPOINTS.USERS.LOGIN), body);
       return res.data; // { id, name, role }
     } catch (err) {
       return rejectWithValue(err.response?.data || "Login failed");
@@ -36,9 +42,10 @@ const slice = createSlice({
   extraReducers: (b) => {
     b.addCase(login.pending, (s) => { s.status = "loading"; s.error = null; });
     b.addCase(login.fulfilled, (s, { payload }) => {
+      console.log(payload)
       s.status = "succeeded";
       s.user = payload;
-      try { localStorage.setItem("user", JSON.stringify(payload)); } catch {}
+      try { localStorage.setItem("user", JSON.stringify(payload)); } catch { /* empty */ }
     });
     b.addCase(login.rejected, (s, a) => { s.status = "failed"; s.error = a.payload; });
 
@@ -55,5 +62,6 @@ export const { setUserFromStorage } = slice.actions;
 export default slice.reducer;
 
 export const selectUser = (st) => st.login.user;
-export const selectRole = (st) => st.login.user?.role || "guest";
+export const selectRole = (st) => st.login.user?.role || null;
 export const selectUserId = (st) => st.login.user?.id || null;
+export const selectIsLoginSuccess = (st) => st.login.status === "succeeded";
