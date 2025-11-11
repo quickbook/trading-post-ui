@@ -225,7 +225,7 @@ const LoginPage = () => {
           <Box
             sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 0.5 }}
           >
-            <Controller
+            {/* <Controller
               name="remember"
               control={control}
               render={({ field }) => (
@@ -234,7 +234,7 @@ const LoginPage = () => {
                   label="Remember me"
                 />
               )}
-            />
+            /> */}
             <MuiLink component={RouterLink} to="/forgotpassword" underline="hover" sx={{ fontSize: 14 }}>
               Forgot password?
             </MuiLink>

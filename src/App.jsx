@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { initApp } from "./redux/initApp";
 import {
   selectFirms,
-  selectFirmsStatus, 
+  selectFirmsStatus,
   selectFirmsError,
 } from "./features/firms/firmsSelectors";
 import HomePage from "./components/pages/HomePage";
@@ -25,15 +25,16 @@ import LoginPage from "./components/pages/LoginPage";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import RegisterPage from "./components/pages/RegisterPage";
-import { initializeAuth } from './api/axiosClient';
+import { initializeAuth } from "./api/axiosClient";
 import { selectAccessToken } from "./features/auth/authSlice";
 import ForgotPasswordPage from "./components/pages/ForgotPasswordPage";
+import UserProfile from "./components/pages/UserProfile";
 
 export const MainContext = createContext();
 
 function App() {
   const dispatch = useDispatch();
-  const token = useSelector(selectAccessToken)
+  const token = useSelector(selectAccessToken);
   const firmsData = useSelector(selectFirms);
   const status = useSelector(selectFirmsStatus);
   const error = useSelector(selectFirmsError);
@@ -46,7 +47,7 @@ function App() {
   const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success' or 'error'
   const downRef = useRef(null);
   const upRef = useRef(null);
-    const hasInitialFetch = useRef(false);
+  const hasInitialFetch = useRef(false);
   const handleSnackbarClose = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -90,7 +91,7 @@ function App() {
     });
   };
 
-   useEffect(() => {
+  useEffect(() => {
     initializeAuth();
   }, []);
 
@@ -105,13 +106,13 @@ function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(()=>{
-   const timer = setTimeout(() => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
       setIsLoading(false);
     }, 2000); // Show loading for 1 second
 
-    return () => clearTimeout(timer); 
-  })
+    return () => clearTimeout(timer);
+  });
 
   const StyledContainer = styled(Box)(({ theme }) => ({
     display: "flex",
@@ -155,6 +156,7 @@ function App() {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/forgotpassword" element={<ForgotPasswordPage />} />
             <Route path="/register" element={<RegisterPage />} />
+            <Route path="/profile" element={<UserProfile />} />
             <Route
               path="/admin"
               element={adminLoggedIn ? <AdminPage /> : <Navigate to="/login" />}
