@@ -92,7 +92,7 @@ const AdminPage = () => {
     {
       text: "View All Firms",
       icon: <ViewListIcon />,
-      view: "view firms",
+      view: "view",
     }
   ];
 
@@ -210,7 +210,7 @@ const AdminPage = () => {
             onSubmit={handleAddFirm}
             onCancel={editingFirm ? handleCancelEdit : null}
           />
-        ) : activeView === "view firms" ? (
+        ) : activeView === "view" ? (
           <ViewAllFirms
             firms={firms}
             onEdit={handleEditFirm}

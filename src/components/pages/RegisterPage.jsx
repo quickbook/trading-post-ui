@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Box,
   Paper,
@@ -12,14 +12,14 @@ import {
   Checkbox,
   Grid,
 } from "@mui/material";
-import { Visibility, VisibilityOff } from "@mui/icons-material";
+import { ArrowBack, Visibility, VisibilityOff } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { MainContext } from "../../App";
 import { LoadingScreen } from "./HomePage";
 import { registerUser } from "../../features/auth/registrationSlice";
 
-const COUNTRIES = [
+export const COUNTRIES = [
   { code: "IN", name: "India" },
   { code: "US", name: "United States" },
   { code: "GB", name: "United Kingdom" },
@@ -32,8 +32,7 @@ const COUNTRIES = [
   { code: "JP", name: "Japan" },
 ];
 
-const PASSWORD_REGEX =
-  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,12}$/;
+const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,12}$/;
 
 const RegisterPage = () => {
   const dispatch = useDispatch();
@@ -73,7 +72,9 @@ const RegisterPage = () => {
     switch (name) {
       case "gmail":
         if (!value.trim()) error = "Email is required";
-        else if (!/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value))
+        else if (
+          !/^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)
+        )
           error = "Enter a valid email";
         break;
       case "userName":
@@ -130,7 +131,10 @@ const RegisterPage = () => {
   const handleBlur = (e) => {
     const { name } = e.target;
     setTouched((t) => ({ ...t, [name]: true }));
-    setErrors((prev) => ({ ...prev, [name]: validateField(name, formData[name]) }));
+    setErrors((prev) => ({
+      ...prev,
+      [name]: validateField(name, formData[name]),
+    }));
   };
 
   const handleChange = (e) => {
@@ -178,6 +182,10 @@ const RegisterPage = () => {
     }
   };
 
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
+
   return isLoading ? (
     <LoadingScreen />
   ) : (
@@ -188,6 +196,7 @@ const RegisterPage = () => {
         alignItems: "center",
         justifyContent: "center",
         px: 2,
+        py: 4,
         transform: { xs: "translateY(-2vh)", md: "translateY(-4vh)" },
         bgcolor: "transparent",
       }}
@@ -196,10 +205,10 @@ const RegisterPage = () => {
         elevation={10}
         sx={{
           width: "100%",
-          maxWidth: 960,               // ⬅️ wider form
+          maxWidth: 960, // ⬅️ wider form
           borderRadius: 4,
-          p: { xs: 3, sm: 4 },         // compact padding -> shorter height
-          backgroundColor: "#fff",
+          p: { xs: 3, sm: 4 }, // compact padding -> shorter height
+          background: "linear-gradient(135deg, #f4e5ffff 40%, #e5c1ffff 80%)",
         }}
       >
         <Typography variant="h5" fontWeight={700} align="center" sx={{ mb: 3 }}>
@@ -208,11 +217,11 @@ const RegisterPage = () => {
 
         <Box component="form" noValidate onSubmit={handleSubmit}>
           {/* Account */}
-          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
             Account details
           </Typography>
-          <Grid container spacing={1.5} sx={{ mb: 3 }}>
-            <Grid item xs={12} md={6}>
+          <Grid container spacing={1} sx={{ mb: 2 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 required
                 name="gmail"
@@ -225,7 +234,7 @@ const RegisterPage = () => {
                 helperText={touched.gmail ? errors.gmail : " "}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 required
                 name="userName"
@@ -240,8 +249,8 @@ const RegisterPage = () => {
             </Grid>
           </Grid>
 
-          <Grid container spacing={1.5} sx={{ mb: 3 }}>
-            <Grid item xs={12} md={6}>
+          <Grid container spacing={1} sx={{ mb: 2 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 required
                 name="password"
@@ -253,12 +262,17 @@ const RegisterPage = () => {
                 onBlur={handleBlur}
                 error={!!errors.password && touched.password}
                 helperText={
-                    touched.password ? errors.password : "8–12 chars, upper/lower/number/symbol"
-                  }
+                  touched.password
+                    ? errors.password
+                    : "8–12 chars, upper/lower/number/symbol"
+                }
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton edge="end" onClick={() => setShowPwd((s) => !s)}>
+                      <IconButton
+                        edge="end"
+                        onClick={() => setShowPwd((s) => !s)}
+                      >
                         {showPwd ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
@@ -266,7 +280,7 @@ const RegisterPage = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 required
                 name="confirmPassword"
@@ -277,11 +291,16 @@ const RegisterPage = () => {
                 onChange={handleChange}
                 onBlur={handleBlur}
                 error={!!errors.confirmPassword && touched.confirmPassword}
-                helperText={touched.confirmPassword ? errors.confirmPassword : " "}
+                helperText={
+                  touched.confirmPassword ? errors.confirmPassword : " "
+                }
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <IconButton edge="end" onClick={() => setShowPwd2((s) => !s)}>
+                      <IconButton
+                        edge="end"
+                        onClick={() => setShowPwd2((s) => !s)}
+                      >
                         {showPwd2 ? <VisibilityOff /> : <Visibility />}
                       </IconButton>
                     </InputAdornment>
@@ -292,11 +311,11 @@ const RegisterPage = () => {
           </Grid>
 
           {/* Row: First / Middle / Last */}
-          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1 }}>
+          <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 2 }}>
             Personal information
           </Typography>
           <Grid container spacing={1.5} sx={{ mb: 2 }}>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 required
                 name="firstName"
@@ -309,7 +328,7 @@ const RegisterPage = () => {
                 helperText={touched.firstName ? errors.firstName : " "}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 name="middleName"
                 label="Middle Name (Optional)"
@@ -320,7 +339,7 @@ const RegisterPage = () => {
                 helperText=" "
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 required
                 name="lastName"
@@ -337,7 +356,7 @@ const RegisterPage = () => {
 
           {/* Row: Mobile / City / Address */}
           <Grid container spacing={1.5} sx={{ mb: 2 }}>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 required
                 name="contactNumber"
@@ -350,7 +369,7 @@ const RegisterPage = () => {
                 helperText={touched.contactNumber ? errors.contactNumber : " "}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 required
                 name="city"
@@ -363,7 +382,7 @@ const RegisterPage = () => {
                 helperText={touched.city ? errors.city : " "}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 required
                 name="address"
@@ -380,7 +399,7 @@ const RegisterPage = () => {
 
           {/* Row: Country / State / City (as requested)… but to avoid duplicate City, we keep Pin here instead */}
           <Grid container spacing={1.5} sx={{ mb: 2 }}>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 select
                 required
@@ -388,13 +407,19 @@ const RegisterPage = () => {
                 label="Country"
                 fullWidth
                 SelectProps={{
-                  MenuProps: { PaperProps: { style: { maxHeight: 260, width: 320 } } },
+                  MenuProps: {
+                    PaperProps: { style: { maxHeight: 260, width: 320 } },
+                  },
                 }}
                 value={formData.countryCode}
                 onChange={handleChange}
                 onBlur={handleBlur}
                 error={!!errors.countryCode && touched.countryCode}
-                helperText={touched.countryCode ? errors.countryCode : "Select your country"}
+                helperText={
+                  touched.countryCode
+                    ? errors.countryCode
+                    : "Select your country"
+                }
               >
                 {COUNTRIES.map((c) => (
                   <MenuItem key={c.code} value={c.code}>
@@ -403,7 +428,7 @@ const RegisterPage = () => {
                 ))}
               </TextField>
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 name="stateCode"
                 label="State / Region"
@@ -415,7 +440,7 @@ const RegisterPage = () => {
                 helperText={touched.stateCode ? errors.stateCode : " "}
               />
             </Grid>
-            <Grid item xs={12} md={4}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 required
                 name="pinCode"
@@ -443,7 +468,11 @@ const RegisterPage = () => {
             label="I agree to the Terms and Privacy Policy"
           />
           {touched.acceptTerms && errors.acceptTerms && (
-            <Typography variant="caption" color="error" sx={{ display: "block", mt: 0.5 }}>
+            <Typography
+              variant="caption"
+              color="error"
+              sx={{ display: "block", mt: 0.5 }}
+            >
               {errors.acceptTerms}
             </Typography>
           )}
@@ -452,12 +481,25 @@ const RegisterPage = () => {
             variant="contained"
             type="submit"
             fullWidth
-            sx={{ mt: 2, py: 1, borderRadius: 2, textTransform: "none", fontWeight: 700 }}
+            sx={{
+              mt: 2,
+              py: 1,
+              borderRadius: 2,
+              textTransform: "none",
+              fontWeight: 700,
+              bgcolor: "#4b0082",
+              "&:hover": { bgcolor: "#4c0082e1" },
+            }}
           >
             Create account
           </Button>
 
-          <Button onClick={() => navigate("/login")} fullWidth sx={{ mt: 1, textTransform: "none" }}>
+          <Button
+            onClick={() => navigate("/login")}
+            fullWidth
+            sx={{ mt: 1, textTransform: "none", fontWeight: 600 }}
+          >
+            <ArrowBack sx={{ fontSize: 18, mr: 0.5 }} />
             Back to Login
           </Button>
         </Box>

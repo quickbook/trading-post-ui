@@ -33,7 +33,7 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
 
   // Get unique firm names for filter
   const firmNames = useMemo(() => {
-    return [...new Set(firms.map(firm => firm.title))].sort();
+    return [...new Set(firms.map(firm => firm.name))].sort();
   }, [firms]);
 
   // Get unique ratings for filter
@@ -45,12 +45,12 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
   const filteredFirms = useMemo(() => {
     return firms.filter(firm => {
       const matchesSearch = searchTerm === "" || 
-        firm.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        firm.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         firm.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        firm.code.toLowerCase().includes(searchTerm.toLowerCase());
+        (firm.tradingConditions?.discountCode && firm.tradingConditions.discountCode.toLowerCase().includes(searchTerm.toLowerCase()));
 
       const matchesRating = ratingFilter === "" || firm.rating === ratingFilter;
-      const matchesFirmName = firmNameFilter === "" || firm.title === firmNameFilter;
+      const matchesFirmName = firmNameFilter === "" || firm.name === firmNameFilter;
 
       return matchesSearch && matchesRating && matchesFirmName;
     });
@@ -131,7 +131,7 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
                   </InputAdornment>
                 ),
               }}
-              placeholder="Search by name, description, or code..."
+              placeholder="Search by name, description, or discount code..."
             />
 
             {/* Firm Name Filter */}
@@ -274,11 +274,12 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
                 )}
 
                 <CardContent>
+                  {/* Name with Logo */}
                   <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
                     {firm.logo && (
                       <img
                         src={firm.logo}
-                        alt={firm.title}
+                        alt={firm.name}
                         style={{
                           width: 40,
                           height: 40,
@@ -290,68 +291,46 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
                       />
                     )}
                     <Typography variant="h6" component="div">
-                      {firm.title}
+                      {firm.name}
                     </Typography>
                   </Box>
 
+                  {/* Profit Split and Account Size */}
                   <Typography color="textSecondary" gutterBottom>
-                    {firm.profitSplit}% Profit Split | $
-                    {firm.account.toLocaleString()} Account
+                    {firm.tradingConditions?.profitSplitPct}% Profit Split | $
+                    {firm.tradingConditions?.maximumAccountSizeUsd?.toLocaleString()} Account
                   </Typography>
 
+                  {/* Rating */}
                   <Typography variant="body2" gutterBottom>
-                    <strong>Code:</strong> {firm.code}
+                    <strong>Rating:</strong> {firm.rating}
                   </Typography>
 
-                  <Typography variant="body2" gutterBottom>
-                    <strong>Rating:</strong> {firm.rating} ({firm.allRatings}{" "}
-                    ratings)
-                  </Typography>
-
+                  {/* Country */}
                   <Typography variant="body2" gutterBottom>
                     <strong>Country:</strong> {firm.country}
                   </Typography>
 
-                  {/* Description (new field) */}
-                  {/* {firm.description && (
-                    <Typography 
-                      variant="body2" 
-                      sx={{ 
-                        mb: 2,
-                        display: '-webkit-box',
-                        WebkitLineClamp: 3,
-                        WebkitBoxOrient: 'vertical',
-                        overflow: 'hidden'
-                      }}
-                    >
-                      {firm.description}
-                    </Typography>
-                  )} */}
-
-                  <Box sx={{ mb: 2 }}>
+                  {/* Discount Code */}
+                  {firm.tradingConditions?.discountCode && (
                     <Typography variant="body2" gutterBottom>
-                      <strong>Assets:</strong>
+                      <strong>Discount Code:</strong> {firm.tradingConditions.discountCode}
                     </Typography>
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                      {firm.assets?.map((asset) => (
-                        <Chip
-                          key={asset}
-                          label={asset}
-                          size="small"
-                          variant="outlined"
-                        />
-                      ))}
-                    </Box>
-                  </Box>
+                  )}
 
-                  {/* Platforms (new field) */}
-                  {firm.platforms && (
+                  {/* Challenges Count */}
+                  <Typography variant="body2" gutterBottom>
+                    <strong>Challenges:</strong> {firm.challenges?.length || 0} available
+                  </Typography>
+
+                  {/* Trading Platforms */}
+                  {firm.tradingConditions?.tradingPlatforms && (
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" gutterBottom>
                         <strong>Platforms:</strong>
                       </Typography>
                       <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                        {firm.platforms?.map((platform) => (
+                        {firm.tradingConditions.tradingPlatforms?.map((platform) => (
                           <Chip
                             key={platform}
                             label={platform}
@@ -364,6 +343,26 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
                     </Box>
                   )}
 
+                  {/* Available Assets */}
+                  {firm.tradingConditions?.availableAssets && (
+                    <Box sx={{ mb: 2 }}>
+                      <Typography variant="body2" gutterBottom>
+                        <strong>Assets:</strong>
+                      </Typography>
+                      <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+                        {firm.tradingConditions.availableAssets?.map((asset) => (
+                          <Chip
+                            key={asset}
+                            label={asset}
+                            size="small"
+                            variant="outlined"
+                          />
+                        ))}
+                      </Box>
+                    </Box>
+                  )}
+
+                  {/* Action Buttons and Status */}
                   <Box
                     sx={{
                       display: "flex",
@@ -390,8 +389,8 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
                     </Box>
 
                     <Chip
-                      label={firm.isActive ? "Active" : "Inactive"}
-                      color={firm.isActive ? "success" : "default"}
+                      label={firm.about?.firmStatus === "Active" ? "Active" : "Inactive"}
+                      color={firm.about?.firmStatus === "Active" ? "success" : "default"}
                       size="small"
                     />
                   </Box>

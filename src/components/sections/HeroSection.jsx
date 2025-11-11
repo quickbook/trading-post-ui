@@ -29,8 +29,21 @@ import SocialMediaMenu from "./SocialMediaMenu";
 import { MainContext } from "../../App";
 import { useDispatch, useSelector } from "react-redux";
 import { logout, selectUser, selectRole } from "../../features/auth/loginSlice";
+import { div } from "framer-motion/client";
 
-const AdminMenu = () => {
+export const SampleUser = {
+  id: 123,
+  name: 'A User',
+  role: 'USER',
+}
+
+export const SampleAdmin = {
+  id: 123,
+  name: 'An Admin',
+  role: 'ADMIN',
+}
+
+const UserMenu = () => {
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
   const role = useSelector(selectRole);
@@ -45,6 +58,8 @@ const AdminMenu = () => {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
   const navigate = useNavigate();
+
+  const menuItemStyle = { "&:hover": { color: "#fff", bgcolor: "#4b0082" } };
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -94,10 +109,10 @@ const AdminMenu = () => {
       >
         {adminLoggedIn ? (
           <Avatar
-          title={user?.name|| 'A'}
+            title={user?.name || "A"}
             sx={{ bgcolor: "#4b0082", fontSize: 18, width: 32, height: 32 }}
           >
-            {user?.name.charAt(0).toUppercase() || 'A'}
+            {user?.name.charAt(0).toUppercase() || "A"}
           </Avatar>
         ) : (
           <AccountCircleIcon sx={{ color: "#4b0082", fontSize: 32 }} />
@@ -114,40 +129,33 @@ const AdminMenu = () => {
       >
         {role === "ADMIN" ? (
           <div>
-            <MenuItem
-              sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
-              onClick={handleAdminOption}
-            >
+            <MenuItem sx={menuItemStyle} onClick={handleAdminOption}>
               Admin Dashboard
             </MenuItem>
             <Divider />
-            <MenuItem
-              sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
-              onClick={handleLogout}
-            >
+            <MenuItem sx={menuItemStyle} onClick={handleLogout}>
               Logout
             </MenuItem>
           </div>
         ) : role === "USER" ? (
-          <MenuItem
-            sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
-            onClick={handleLogout}
-          >
-            Logout
-          </MenuItem>
-        ) : (
           <div>
             <MenuItem
-              sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
-              onClick={handleLogin}
+              sx={menuItemStyle}
+              //onClick={}
             >
+              Profile
+            </MenuItem>
+            <MenuItem sx={menuItemStyle} onClick={handleLogout}>
+              Logout
+            </MenuItem>
+          </div>
+        ) : (
+          <div>
+            <MenuItem sx={menuItemStyle} onClick={handleLogin}>
               Login
             </MenuItem>
             <Divider />
-            <MenuItem
-              sx={{ "&:hover": { color: "#fff", bgcolor: "#4b0082" } }}
-              onClick={handleRegister}
-            >
+            <MenuItem sx={menuItemStyle} onClick={handleRegister}>
               Register
             </MenuItem>
           </div>
@@ -355,11 +363,11 @@ const HeroSection = () => {
       {/* Call Button */}
       <Box
         sx={{
-          display: { xs: "none", md: "flex" },
+          display: "flex",
           //width: 150,
           alignItems: "center",
           justifyContent: "flex-end",
-          gap: 3,
+          gap: 1,
         }}
       >
         <Button
@@ -368,6 +376,7 @@ const HeroSection = () => {
             handleOpenForm(true);
           }}
           sx={{
+            display: { xs: "none", md: "flex" },
             p: 1.5,
             borderRadius: "8px",
             overflow: "hidden",
@@ -388,40 +397,39 @@ const HeroSection = () => {
         >
           Book a Call
         </Button>
-        <AdminMenu />
+        <Box
+          sx={{
+            display: { xs: "flex", md: "none" },
+            alignItems: "center",
+            justifyContent: "flex-end",
+          }}
+        >
+          <IconButton
+            sx={{
+              border: "1px solid #cecece",
+              backgroundColor: "#000000",
+              "&:hover": { bgcolor: "#000", opacity: 0.7 },
+              p: "6px",
+            }}
+            onClick={toggleDrawer(true)}
+          >
+            <Box
+              component="img"
+              src="/crown.png"
+              alt="Menu Icon"
+              sx={{
+                height: "22px",
+                width: "24px",
+                objectFit: "cover",
+              }}
+            />
+          </IconButton>
+        </Box>
+        <UserMenu />
       </Box>
 
       {/* Menu for Mobile view */}
-      <Box
-        sx={{
-          display: { xs: "flex", md: "none" },
-          //width: 150,
-          alignItems: "center",
-          justifyContent: "flex-end",
-          gap: 3,
-        }}
-      >
-        <IconButton
-          sx={{
-            border: "1px solid #cecece",
-            backgroundColor: "#000",
-            "&:hover": { bgcolor: "#000", opacity: 0.8 },
-            p: 1,
-          }}
-          onClick={toggleDrawer(true)}
-        >
-          <Box
-            component="img"
-            src="/crown.png"
-            alt="Menu Icon"
-            sx={{
-              height: "24px",
-              width: "28px",
-              objectFit: "cover",
-            }}
-          />
-        </IconButton>
-      </Box>
+
       <Drawer
         anchor="top"
         open={open}

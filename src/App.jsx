@@ -27,6 +27,7 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import RegisterPage from "./components/pages/RegisterPage";
 import { initializeAuth } from './api/axiosClient';
 import { selectAccessToken } from "./features/auth/authSlice";
+import ForgotPasswordPage from "./components/pages/ForgotPasswordPage";
 
 export const MainContext = createContext();
 
@@ -107,7 +108,7 @@ function App() {
   useEffect(()=>{
    const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 1000); // Show loading for 1 second
+    }, 2000); // Show loading for 1 second
 
     return () => clearTimeout(timer); 
   })
@@ -152,6 +153,7 @@ function App() {
             <Route path="/reviews" element={<ReviewsPage />} />
             <Route path="/propfirm/:id" element={<PropFirmDetailsPage />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/forgotpassword" element={<ForgotPasswordPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route
               path="/admin"
