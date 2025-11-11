@@ -136,6 +136,7 @@ const Reviews = () => {
   const [newReview, setNewReview] = useState({
     id: null,
     product_id: "",
+    reviewer_id: userId, // added new
     reviewer_name: "",
     prop_name: "",
     rating: "",
@@ -263,7 +264,7 @@ const TRADING_FIRMS = React.useMemo(() => {
                   <Typography variant="body1" fontWeight="bold" sx={{ color: getGradeColor(review.rating) }}>{getGradeDisplay(review.rating)}</Typography>
                 </Box>
               </Box>
-              {adminLoggedIn && (
+              {(canModify) && (
                 <IconButton size="small" onClick={() => setActiveActionCard(review.id)} sx={{ ml: 1, alignSelf: "flex-start", visibility: isActive ? "hidden" : "visible", "&:hover": { backgroundColor: "rgba(0,0,0,0.2)" }, zIndex: 5 }}>
                   <MoreVertIcon />
                 </IconButton>
@@ -327,11 +328,11 @@ const TRADING_FIRMS = React.useMemo(() => {
         </Box>
 
         {/* Keep admin button in header if you want */}
-        {adminLoggedIn && (
+        {/* {adminLoggedIn && (
           <Button variant="contained" startIcon={<AddIcon />} onClick={handleOpenModal} sx={{ borderRadius: 2, textTransform: "capitalize", bgcolor: "#4b0082", px: 2, py: 1.5, border: "1px solid #fff", "&:hover": { bgcolor: "#4b0082b2", border: "1px solid #ffd700" } }}>
             Write a Review
           </Button>
-        )}
+        )} */}
       </Box>
 
       {/* Filters */}
@@ -396,7 +397,7 @@ const TRADING_FIRMS = React.useMemo(() => {
       {/* Reviews Grid (fixed to stable Grid API) */}
       <Grid container spacing={3} wrap="wrap">
         {displayedReviews.map((review) => (
-          <Grid item xs={12} sm={6} lg={4} key={review.id}>
+          <Grid size={{xs:12, md: 6, lg:4}} key={review.id}>
             <ReviewCard review={review} />
           </Grid>
         ))}

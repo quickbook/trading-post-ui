@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import {
   Box,
   Paper,
@@ -113,6 +113,10 @@ const LoginPage = () => {
     }
   };
 
+  useEffect(()=>{
+    window.scrollTo({top: 0, behavior:'smooth'});
+  },[])
+
   return isLoading ? (
     <LoadingScreen />
   ) : (
@@ -122,11 +126,12 @@ const LoginPage = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
       sx={{
-        height: "100vh", // full viewport height
+        height: {xs:'auto',md:"90vh"}, // full viewport height
         display: "flex",
         alignItems: "center", // vertical center
         justifyContent: "center", // horizontal center
         px: 2,
+        py:3,
         // 👇 remove the pink gradient by using a solid/transparent background
         bgcolor: "transparent", // or set a solid color like '#1e1b4b'
       }}
@@ -138,7 +143,8 @@ const LoginPage = () => {
           maxWidth: 440,
           borderRadius: 4,
           p: { xs: 3, sm: 5 },
-          backgroundColor: "#ffffff",
+          background:
+          "linear-gradient(135deg, #f4e5ffff 40%, #e5c1ffff 80%)",
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
@@ -229,7 +235,7 @@ const LoginPage = () => {
                 />
               )}
             />
-            <MuiLink component={RouterLink} to="#" underline="hover" sx={{ fontSize: 14 }}>
+            <MuiLink component={RouterLink} to="/forgotpassword" underline="hover" sx={{ fontSize: 14 }}>
               Forgot password?
             </MuiLink>
           </Box>
@@ -248,6 +254,10 @@ const LoginPage = () => {
                 textTransform: "none",
                 fontWeight: 700,
                 letterSpacing: 0.3,
+                bgcolor:"#4b0082",
+                '&:hover':{
+                  bgcolor:'#4b0082c1'
+                }
               }}
             >
               {isLoading ? "Signing in..." : "Login"}
