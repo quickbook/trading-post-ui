@@ -4,7 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { initApp } from "./redux/initApp";
 import {
   selectFirms,
-  selectFirmsStatus, 
+  selectFirmsStatus,
   selectFirmsError,
 } from "./features/firms/firmsSelectors";
 import HomePage from "./components/pages/HomePage";
@@ -25,28 +25,31 @@ import LoginPage from "./components/pages/LoginPage";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import RegisterPage from "./components/pages/RegisterPage";
-import { initializeAuth } from './api/axiosClient';
+import { initializeAuth } from "./api/axiosClient";
 import { selectAccessToken } from "./features/auth/authSlice";
 import ForgotPasswordPage from "./components/pages/ForgotPasswordPage";
+import UserProfile from "./components/pages/UserProfile";
+import { selectRole, selectUser } from "./features/auth/loginSlice";
 
 export const MainContext = createContext();
 
 function App() {
   const dispatch = useDispatch();
-  const token = useSelector(selectAccessToken)
+  const token = useSelector(selectAccessToken);
   const firmsData = useSelector(selectFirms);
   const status = useSelector(selectFirmsStatus);
   const error = useSelector(selectFirmsError);
+  const user = useSelector(selectUser);
+  const role = useSelector(selectRole);
   const [isLoading, setIsLoading] = useState(true);
   const [firmData, setFirmData] = useState([]);
-  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [openForm, setOpenForm] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
   const [snackbarSeverity, setSnackbarSeverity] = useState("success"); // 'success' or 'error'
   const downRef = useRef(null);
   const upRef = useRef(null);
-    const hasInitialFetch = useRef(false);
+  const hasInitialFetch = useRef(false);
   const handleSnackbarClose = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -90,7 +93,7 @@ function App() {
     });
   };
 
-   useEffect(() => {
+  useEffect(() => {
     initializeAuth();
   }, []);
 
@@ -105,13 +108,13 @@ function App() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  useEffect(()=>{
-   const timer = setTimeout(() => {
+  useEffect(() => {
+    const timer = setTimeout(() => {
       setIsLoading(false);
     }, 2000); // Show loading for 1 second
 
-    return () => clearTimeout(timer); 
-  })
+    return () => clearTimeout(timer);
+  });
 
   const StyledContainer = styled(Box)(({ theme }) => ({
     display: "flex",
@@ -132,8 +135,6 @@ function App() {
           handleOpenForm,
           isLoading,
           setIsLoading,
-          adminLoggedIn,
-          setAdminLoggedIn,
           setSnackbarOpen,
           setSnackbarMessage,
           setSnackbarSeverity,
@@ -144,7 +145,6 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/comparefirms" element={<CompareFirmsPage />} />
-            {/* <Route path="/comparefirms/challenges" element={<ChallengesTab />} /> */}
             <Route
               path="/comparefirms/challenges"
               element={<PropFirmsChallenges />}
@@ -152,19 +152,39 @@ function App() {
             <Route path="/featurefirms" element={<FeatureFirmsPage />} />
             <Route path="/reviews" element={<ReviewsPage />} />
             <Route path="/propfirm/:id" element={<PropFirmDetailsPage />} />
-            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/login"
+              element={!(user && user.id) ? <LoginPage /> : <Navigate to="/" />}
+            />
             <Route path="/forgotpassword" element={<ForgotPasswordPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/register"
+              element={
+                !(user && user.id) ? <RegisterPage /> : <Navigate to="/" />
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                user && (role == "ADMIN" || role == "USER") ? (
+                  <UserProfile />
+                ) : (
+                  <Navigate to="/" />
+                )
+              }
+            />
             <Route
               path="/admin"
-              element={adminLoggedIn ? <AdminPage /> : <Navigate to="/login" />}
+              element={
+                user && role == "ADMIN" ? <AdminPage /> : <Navigate to="/" />
+              }
             />
 
             <Route path="*" element={<ErrorPage />} />
           </Routes>
           <FooterSection />
           <BookACallSection />
-          {/* Login Snackbar */}
+          {/* Alert Snackbar */}
           <Snackbar
             open={snackbarOpen}
             autoHideDuration={2000}

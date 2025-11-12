@@ -69,6 +69,7 @@ const FirmsFilterSection = ({ setFilteredFirms, setPage, setValue, allFirms }) =
           display: "flex",
           flexDirection: { xs: "column", md: "row" },
           alignItems: "center",
+          justifyContent:'center',
           gap: 2,
           width: "100%",
           //maxWidth: 800,
@@ -83,7 +84,7 @@ const FirmsFilterSection = ({ setFilteredFirms, setPage, setValue, allFirms }) =
           onChange={handleSearchChange}
           size="small"
           sx={{
-            //maxWidth: 480,
+            maxWidth: 1080,
             "& .MuiOutlinedInput-root": {
               //height: "48px",
               borderRadius: "50px",

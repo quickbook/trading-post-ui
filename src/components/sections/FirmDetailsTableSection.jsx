@@ -237,8 +237,8 @@ const FirmDetailsTableSection = () => {
       sx={{
         display: "flex",
         flexDirection: "column",
-        width: { xs: "100%", xl: 1640 },
-        alignItems: "start",
+        width: "100%",
+        alignItems: "center",
         position: "relative",
         bgcolor: "#000",
         padding: "8px 24px",
@@ -250,7 +250,7 @@ const FirmDetailsTableSection = () => {
         allFirms={allFirms}
         setValue={setValue}
       />
-      <Box sx={{ width: "100%", mb: 4 }}>
+      <Box sx={{ width: "100%", mb: 4, maxWidth: 1640 }}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs
             value={value}
@@ -317,6 +317,7 @@ const FirmDetailsTableSection = () => {
           textAlign: "right",
           mb: 2,
           pr: 2,
+          maxWidth: 1640
         }}
       >
         Showing {start}–{end} of {filteredFirms.length} results
@@ -327,6 +328,7 @@ const FirmDetailsTableSection = () => {
           boxShadow: "none",
           backgroundColor: "transparent",
           border: "1px solid #4b0082",
+          maxWidth:1640
         }}
       >
         <StyledTable size="small">
@@ -665,6 +667,7 @@ const FirmDetailsTableSection = () => {
           bgcolor: "#ffffff20",
           borderRadius: "8px",
           border: "1px solid #4b0082",
+          maxWidth: 1640
         }}
       >
         <Typography

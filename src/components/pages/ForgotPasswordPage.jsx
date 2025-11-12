@@ -18,6 +18,7 @@ import {
 } from "@mui/icons-material";
 import { styled } from "@mui/material/styles";
 import { useNavigate } from "react-router-dom";
+import { forgotPassword } from "../../features/auth/loginSlice";
 
 // Styled components for better customization
 const StyledPaper = styled(Paper)(({ theme }) => ({
@@ -91,6 +92,9 @@ const ForgotPasswordPage = () => {
 
       // In a real application, you would make an API call here
       // await authAPI.forgotPassword(email);
+      //   if(forgotPassword(email)){
+
+      //   };
 
       setIsSubmitted(true);
     } catch (err) {

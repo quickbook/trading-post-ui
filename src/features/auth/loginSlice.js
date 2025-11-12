@@ -21,6 +21,23 @@ export const login = createAsyncThunk(
   }
 );
 
+// Async thunk for requesting password reset
+export const forgotPassword = createAsyncThunk(
+  "auth/forgotPassword",
+  async (email, { rejectWithValue }) => {
+    try {
+      const response = await axiosClient.post("/api/auth/forgot-password", {
+        email,
+      });
+      return response.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message || "Failed to send reset email"
+      );
+    }
+  }
+);
+
 export const logout = createAsyncThunk("login/logout", async () => {
   // optional: tell server; interceptors will carry token if needed
   await axiosClient.post("/api/auth/logout").catch(() => {});

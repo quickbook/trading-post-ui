@@ -23,20 +23,18 @@ import { LoadingScreen } from "./HomePage";
 import { login } from "../../features/auth/loginSlice";
 
 // Strong password rule: 8–12 chars with upper, lower, number & symbol
-const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,12}$/;
+//const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,12}$/;
 
 const LoginPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const {
-    setAdminLoggedIn,
     setSnackbarMessage,
     setSnackbarOpen,
     setSnackbarSeverity,
-    isLoading,
-    setIsLoading,
   } = React.useContext(MainContext);
 
+  const [isLoading, setIsLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
   const [capsOn, setCapsOn] = React.useState(false);
 
@@ -73,7 +71,6 @@ const LoginPage = () => {
       ).unwrap();
 
       if (user && user.role) {
-        setAdminLoggedIn(user.role === "ADMIN");
 
         if (data.remember) {
           localStorage.setItem("tpui_saved_identifier", data.identifier);
@@ -184,10 +181,6 @@ const LoginPage = () => {
             control={control}
             rules={{
               required: "Password is required",
-              pattern: {
-                value: PASSWORD_REGEX,
-                message: "8-12 chars, upper, lower, number & symbol",
-              },
             }}
             render={({ field }) => (
               <TextField
@@ -223,9 +216,9 @@ const LoginPage = () => {
 
           {/* Remember / Forgot */}
           <Box
-            sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 0.5 }}
+            sx={{ display: "flex", justifyContent: "center", alignItems: "center", mt: 0.5 }}
           >
-            <Controller
+            {/* <Controller
               name="remember"
               control={control}
               render={({ field }) => (
@@ -234,8 +227,8 @@ const LoginPage = () => {
                   label="Remember me"
                 />
               )}
-            />
-            <MuiLink component={RouterLink} to="/forgotpassword" underline="hover" sx={{ fontSize: 14 }}>
+            /> */}
+            <MuiLink component={RouterLink} to="/forgotpassword" underline="hover" sx={{ fontSize: 16 }}>
               Forgot password?
             </MuiLink>
           </Box>

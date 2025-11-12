@@ -30,9 +30,11 @@ import {
   getGradeDisplay,
 } from "../sections/Reviews";
 import { MainContext } from "../../App";
+import { useSelector } from "react-redux";
+import { selectUser } from "../../features/auth/loginSlice";
 
 export const PropFirmDetailsPage = () => {
-  const { adminLoggedIn } = useContext(MainContext);
+  const user = useSelector(selectUser);
   const params = useParams();
   const [firmDetails, setFirmDetails] = useState(null);
   const [copiedCode, setCopiedCode] = useState("");
@@ -213,7 +215,7 @@ export const PropFirmDetailsPage = () => {
 
           {/* Buttons */}
           <Box display="flex" gap={2}>
-            {adminLoggedIn && (
+            {user && (
               <Button
                 variant="outlined"
                 onClick={() => navigate("/reviews")}
