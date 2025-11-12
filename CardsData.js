@@ -10,7 +10,8 @@ export const cardData = [
     "allRatings": 36,
     "country": "United States",
     "countryCode":"US",
-    "description": "is a proprietary trading firm that started in 2022 and offers a variety of funding challenges for traders: Simulated evaluation challenges (one-step, two-step) Instant funding accounts High-tier 'Funded King' challenge up to $1M accounts Profit share up to 90%, with daily to bi-weekly payouts via Rise Pay They integrate their own TradeLocker platform alongside MT5 and MatchTrader for trading.",
+    "buyUrl": "https://alphafunded.com/ref/1491/",
+    "offerCode": "TPO",    
     "tradingConditions": {
       "maximumAccountSizeUsd": 1000000,
       "profitSplitPct": 80,
@@ -27,7 +28,9 @@ export const cardData = [
       "founders": null,
       "headquarters": "USA",
       "jurisdiction": "USA",
-      "firmStatus": "Active"
+      "firmStatus": "Active",
+      "foundYear": 2022,
+      "description": "is a proprietary trading firm that started in 2022 and offers a variety of funding challenges for traders: Simulated evaluation challenges (one-step, two-step) Instant funding accounts High-tier 'Funded King' challenge up to $1M accounts Profit share up to 90%, with daily to bi-weekly payouts via Rise Pay They integrate their own TradeLocker platform alongside MT5 and MatchTrader for trading.",
     },
     "challenges": [
       {

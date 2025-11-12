@@ -13,9 +13,9 @@ export const API_ENDPOINTS = {
   },
 
   DOMAIN_DATA: {
-    BASE: '/api/v1/domaindata',
-    COUNTRIES: '/api/v1/domaindata/countries',
-    ROLES: '/api/v1/domaindata/roles'
+    BASE: '/api/v1/domain',
+    COUNTRIES: '/api/v1/domain/countries',
+    ROLES: '/api/v1/domain/roles'
   },
 
   FIRMS: {

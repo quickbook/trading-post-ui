@@ -1,13 +1,13 @@
 // src/features/auth/registrationSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosClient from "../../api/axiosClient";
-
+import { API_ENDPOINTS, getFullUrl } from "../../config/apiEndpoints";
 // POST /api/auth/register -> { id, name, role }
 export const registerUser = createAsyncThunk(
   "registration/registerUser",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.post("/api/auth/register", payload);
+      const res = await axiosClient.post(getFullUrl(API_ENDPOINTS.USERS.REGISTER), payload);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || "Registration failed");

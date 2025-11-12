@@ -65,7 +65,7 @@ const RegisterPage = () => {
     address: "",
     city: "",
     stateCode: "",
-    pinCode: "",
+    zipCode: "",
     countryCode: "",
     acceptTerms: false,
   });
@@ -120,7 +120,7 @@ const RegisterPage = () => {
         if (value && !/^[A-Za-z0-9\- ]{2,8}$/.test(value))
           error = "Invalid state/region";
         break;
-      case "pinCode":
+      case "zipCode":
         if (!value.trim()) error = "Pin/Zip is required";
         else if (!/^[0-9]{4,10}$/.test(value)) error = "Enter 4–10 digits";
         break;
@@ -188,7 +188,7 @@ const RegisterPage = () => {
       setSnackbarOpen(true);
     } finally {
       setIsLoading(false);
-      dispatch(resetDomainData());
+     // dispatch(resetDomainData());
     }
   };
 
@@ -464,14 +464,14 @@ const RegisterPage = () => {
             <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 required
-                name="pinCode"
+                name="zipCode"
                 label="Pin / ZIP"
                 fullWidth
-                value={formData.pinCode}
+                value={formData.zipCode}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                error={!!errors.pinCode && touched.pinCode}
-                helperText={touched.pinCode ? errors.pinCode : " "}
+                error={!!errors.zipCode && touched.zipCode}
+                helperText={touched.zipCode ? errors.zipCode : " "}
               />
             </Grid>
           </Grid>

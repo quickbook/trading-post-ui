@@ -10,7 +10,7 @@ export const login = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       let body = {
-        username: credentials.email,
+        username: credentials.username,
         password: credentials.password,
       }
       const res = await axiosClient.post(getFullUrl(API_ENDPOINTS.USERS.LOGIN), body);
