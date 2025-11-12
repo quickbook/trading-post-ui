@@ -120,6 +120,7 @@ function App() {
     display: "flex",
     flexDirection: "column",
     width: "100%",
+    minHeight:"100vh",
     alignItems: "center",
     paddingTop: "90px",
     background:

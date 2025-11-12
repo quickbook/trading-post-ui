@@ -33,8 +33,8 @@ import {
   selectPagination,
 } from "../../features/firms/firmsSelectors";
 import { cardData } from "../../../CardsData";
-import Flag from "react-flagkit";
-import { a } from "framer-motion/client";
+//import Flag from "react-flagkit";
+import Flag from 'react-world-flags'
 
 export const platformSources = {
   MT: "/platforms/mt5.webp",
@@ -487,7 +487,7 @@ const FirmDetailsTableSection = () => {
                         height: "100%",
                       }}
                     >
-                      <Flag country={firm?.countryCode} size={32} />
+                      <Flag code={firm?.countryCode} height={16} />
                       <Typography
                         sx={{
                           width: "120px",

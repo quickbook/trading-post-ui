@@ -182,7 +182,7 @@ const Reviews = () => {
     setNewReview({
       id: null,
       product_id: "",
-      reviewer_name: user || "",
+      reviewer_name: user.userName || "",
       prop_name: "",
       rating: "",
       description: "",
