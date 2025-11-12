@@ -1,6 +1,7 @@
 // src/features/reviews/reviewsSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosClient from "../../api/axiosClient";
+import { API_ENDPOINTS, getFullUrl } from "../../config/apiEndpoints";
 
 // Shapes expected:
 // GET    /api/reviews                 -> Review[]
@@ -13,7 +14,7 @@ export const fetchReviews = createAsyncThunk(
   "reviews/fetchReviews",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.get("/api/reviews");
+      const res = await axiosClient.get(getFullUrl(API_ENDPOINTS.REVIEWS.BASE));
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || "Failed to fetch reviews");
@@ -25,7 +26,7 @@ export const createReview = createAsyncThunk(
   "reviews/createReview",
   async (payload, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.post("/api/reviews", payload);
+      const res = await axiosClient.post(getFullUrl(API_ENDPOINTS.REVIEWS.BASE), payload);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || "Failed to create review");
@@ -37,7 +38,7 @@ export const updateReview = createAsyncThunk(
   "reviews/updateReview",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.put(`/api/reviews/${id}`, data);
+      const res = await axiosClient.put(getFullUrl(API_ENDPOINTS.REVIEWS.BY_ID(id)), data);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || "Failed to update review");
@@ -49,7 +50,7 @@ export const deleteReview = createAsyncThunk(
   "reviews/deleteReview",
   async (id, { rejectWithValue }) => {
     try {
-      await axiosClient.delete(`/api/reviews/${id}`);
+      await axiosClient.deletegetFullUrl(API_ENDPOINTS.REVIEWS.BY_ID(id));
       return id;
     } catch (err) {
       return rejectWithValue(err.response?.data || "Failed to delete review");

@@ -28,20 +28,20 @@ import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import SocialMediaMenu from "./SocialMediaMenu";
 import { MainContext } from "../../App";
 import { useDispatch, useSelector } from "react-redux";
-import { logout, selectUser, selectRole } from "../../features/auth/loginSlice";
+import { selectUser, selectRole } from "../../features/auth/loginSlice";
 import { div } from "framer-motion/client";
 
 export const SampleUser = {
   id: 123,
-  name: 'A User',
-  role: 'USER',
-}
+  name: "A User",
+  role: "USER",
+};
 
 export const SampleAdmin = {
   id: 123,
-  name: 'An Admin',
-  role: 'ADMIN',
-}
+  name: "An Admin",
+  role: "ADMIN",
+};
 
 const UserMenu = () => {
   const dispatch = useDispatch();
@@ -49,8 +49,6 @@ const UserMenu = () => {
   const role = useSelector(selectRole);
 
   const {
-    adminLoggedIn,
-    setAdminLoggedIn,
     setSnackbarOpen,
     setSnackbarMessage,
     setSnackbarSeverity,
@@ -79,8 +77,7 @@ const UserMenu = () => {
   };
 
   const handleLogout = async () => {
-    await dispatch(logout());
-    setAdminLoggedIn(false);
+    //await dispatch(logout());
     navigate("/login");
     handleMenuClose();
   };
@@ -95,19 +92,18 @@ const UserMenu = () => {
 
   return (
     <>
-      {/* Admin Icon */}
+      {/* User Icon */}
       <IconButton
         color="inherit"
         onClick={handleMenuOpen}
         title="Admin"
         sx={{
           backgroundColor: "#f5f5f5",
-          //border: "1px solid #4b0082",
-          padding: adminLoggedIn ? "4px" : 1,
+          padding: 1,
           "&:hover": { bgcolor: "#bb9df1ff", opacity: 0.7 },
         }}
       >
-        {adminLoggedIn ? (
+        {user && user.id ? (
           <Avatar
             title={user?.name || "A"}
             sx={{ bgcolor: "#4b0082", fontSize: 18, width: 32, height: 32 }}
@@ -133,18 +129,20 @@ const UserMenu = () => {
               Admin Dashboard
             </MenuItem>
             <Divider />
+            <MenuItem sx={menuItemStyle} onClick={navigate("/profile")}>
+              Profile
+            </MenuItem>
+            <Divider />
             <MenuItem sx={menuItemStyle} onClick={handleLogout}>
               Logout
             </MenuItem>
           </div>
         ) : role === "USER" ? (
           <div>
-            <MenuItem
-              sx={menuItemStyle}
-              //onClick={}
-            >
+            <MenuItem sx={menuItemStyle} onClick={navigate("/profile")}>
               Profile
             </MenuItem>
+            <Divider />
             <MenuItem sx={menuItemStyle} onClick={handleLogout}>
               Logout
             </MenuItem>

@@ -29,6 +29,7 @@ import { initializeAuth } from "./api/axiosClient";
 import { selectAccessToken } from "./features/auth/authSlice";
 import ForgotPasswordPage from "./components/pages/ForgotPasswordPage";
 import UserProfile from "./components/pages/UserProfile";
+import { selectRole, selectUser } from "./features/auth/loginSlice";
 
 export const MainContext = createContext();
 
@@ -38,9 +39,10 @@ function App() {
   const firmsData = useSelector(selectFirms);
   const status = useSelector(selectFirmsStatus);
   const error = useSelector(selectFirmsError);
+  const user = useSelector(selectUser);
+  const role = useSelector(selectRole);
   const [isLoading, setIsLoading] = useState(true);
   const [firmData, setFirmData] = useState([]);
-  const [adminLoggedIn, setAdminLoggedIn] = useState(false);
   const [openForm, setOpenForm] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -133,8 +135,6 @@ function App() {
           handleOpenForm,
           isLoading,
           setIsLoading,
-          adminLoggedIn,
-          setAdminLoggedIn,
           setSnackbarOpen,
           setSnackbarMessage,
           setSnackbarSeverity,
@@ -145,7 +145,6 @@ function App() {
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/comparefirms" element={<CompareFirmsPage />} />
-            {/* <Route path="/comparefirms/challenges" element={<ChallengesTab />} /> */}
             <Route
               path="/comparefirms/challenges"
               element={<PropFirmsChallenges />}
@@ -153,20 +152,39 @@ function App() {
             <Route path="/featurefirms" element={<FeatureFirmsPage />} />
             <Route path="/reviews" element={<ReviewsPage />} />
             <Route path="/propfirm/:id" element={<PropFirmDetailsPage />} />
-            <Route path="/login" element={<LoginPage />} />
+            <Route
+              path="/login"
+              element={!(user && user.id) ? <LoginPage /> : <Navigate to="/" />}
+            />
             <Route path="/forgotpassword" element={<ForgotPasswordPage />} />
-            <Route path="/register" element={<RegisterPage />} />
-            <Route path="/profile" element={<UserProfile />} />
+            <Route
+              path="/register"
+              element={
+                !(user && user.id) ? <RegisterPage /> : <Navigate to="/" />
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                user && (role == "ADMIN" || role == "USER") ? (
+                  <UserProfile />
+                ) : (
+                  <Navigate to="/" />
+                )
+              }
+            />
             <Route
               path="/admin"
-              element={adminLoggedIn ? <AdminPage /> : <Navigate to="/login" />}
+              element={
+                user && role == "ADMIN" ? <AdminPage /> : <Navigate to="/" />
+              }
             />
 
             <Route path="*" element={<ErrorPage />} />
           </Routes>
           <FooterSection />
           <BookACallSection />
-          {/* Login Snackbar */}
+          {/* Alert Snackbar */}
           <Snackbar
             open={snackbarOpen}
             autoHideDuration={2000}

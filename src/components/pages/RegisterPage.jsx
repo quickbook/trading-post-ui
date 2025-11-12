@@ -14,10 +14,18 @@ import {
 } from "@mui/material";
 import { ArrowBack, Visibility, VisibilityOff } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { MainContext } from "../../App";
 import { LoadingScreen } from "./HomePage";
 import { registerUser } from "../../features/auth/registrationSlice";
+import {
+  fetchCountries,
+  selectCountryOptions,
+  selectCountriesStatus,
+  selectCountriesError,
+  selectCountryNameByCode,
+  resetDomainData,
+} from "../../features/domain/domainDataSlice";
 
 export const COUNTRIES = [
   { code: "IN", name: "India" },
@@ -36,14 +44,14 @@ const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,12}$/;
 
 const RegisterPage = () => {
   const dispatch = useDispatch();
+  const countryOptions = useSelector(selectCountryOptions);
+  const countriesStatus = useSelector(selectCountriesStatus);
+  const countriesError = useSelector(selectCountriesError);
   const navigate = useNavigate();
-  const {
-    setSnackbarMessage,
-    setSnackbarOpen,
-    setSnackbarSeverity,
-    isLoading,
-    setIsLoading,
-  } = React.useContext(MainContext);
+  const { setSnackbarMessage, setSnackbarOpen, setSnackbarSeverity } =
+    React.useContext(MainContext);
+
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const [formData, setFormData] = React.useState({
     gmail: "",
@@ -163,6 +171,7 @@ const RegisterPage = () => {
     if (!validateAll()) return;
 
     const payload = { ...formData };
+    payload.countryCode = countryOptions?.find((c) => c.value === formData.countryCode)?.value || payload.countryCode;
     delete payload.confirmPassword;
     delete payload.acceptTerms;
 
@@ -179,11 +188,13 @@ const RegisterPage = () => {
       setSnackbarOpen(true);
     } finally {
       setIsLoading(false);
+      dispatch(resetDomainData());
     }
   };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
+    dispatch(fetchCountries());
   }, []);
 
   return isLoading ? (
@@ -421,11 +432,21 @@ const RegisterPage = () => {
                     : "Select your country"
                 }
               >
-                {COUNTRIES.map((c) => (
-                  <MenuItem key={c.code} value={c.code}>
-                    {c.name}
+                {countriesStatus === "succeeded" ? (
+                  countryOptions.map((c) => (
+                    <MenuItem key={c.value} value={c.value}>
+                      {c.label}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>
+                    {countriesStatus === "loading"
+                      ? "Loading countries..."
+                      : countriesError
+                      ? "Error loading countries"
+                      : "No countries available"}
                   </MenuItem>
-                ))}
+                )}
               </TextField>
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>

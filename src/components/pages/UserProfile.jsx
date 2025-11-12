@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import {
   Container,
   Paper,
@@ -29,6 +29,15 @@ import {
   Cancel,
 } from "@mui/icons-material";
 import { COUNTRIES } from "./RegisterPage";
+import {
+  fetchCountries,
+  selectCountryOptions,
+  selectCountriesStatus,
+  selectCountriesError,
+  selectCountryNameByCode,
+  resetDomainData,
+} from "../../features/domain/domainDataSlice";
+import { useDispatch, useSelector } from "react-redux";
 
 const UserProfile = () => {
   const initialUserData = {
@@ -44,10 +53,17 @@ const UserProfile = () => {
     city: "New York",
     state: "New York",
     pinCode: "10001",
-    countryCode: "US",
+    countryCode: "USA",
   };
-
+  const dispatch = useDispatch();
+  const countryOptions = useSelector(selectCountryOptions);
+  const countriesStatus = useSelector(selectCountriesStatus);
+  const countriesError = useSelector(selectCountriesError);
   const [userData, setUserData] = useState(initialUserData);
+
+  const countryName = countryOptions.find(
+    (c) => c.value === userData.countryCode
+  )?.label;
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -60,7 +76,6 @@ const UserProfile = () => {
   const [errors, setErrors] = useState({});
 
   // Country and state options
-  const countries = COUNTRIES;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -155,6 +170,11 @@ const UserProfile = () => {
       userData.middleName ? userData.middleName + " " : ""
     }${userData.lastName}`;
   };
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    dispatch(fetchCountries());
+  }, []);
 
   return (
     <Container maxWidth="lg" sx={{ py: 4 }}>
@@ -525,7 +545,7 @@ const UserProfile = () => {
                     select
                     label="Country"
                     name="countryCode"
-                    value={userData.countryCode}
+                    value={countryName || userData.countryCode}
                     onChange={handleChange}
                     slotProps={{
                       input: {
@@ -533,11 +553,21 @@ const UserProfile = () => {
                       },
                     }}
                   >
-                    {countries.map((country) => (
-                      <MenuItem key={country.code} value={country.code}>
-                        {country.name}
+                    {countriesStatus === "succeeded" ? (
+                      countryOptions.map((c) => (
+                        <MenuItem key={c.value} value={c.label}>
+                          {c.label}
+                        </MenuItem>
+                      ))
+                    ) : (
+                      <MenuItem disabled>
+                        {countriesStatus === "loading"
+                          ? "Loading countries..."
+                          : countriesError
+                          ? "Error loading countries"
+                          : "No countries available"}
                       </MenuItem>
-                    ))}
+                    )}
                   </TextField>
                 </Grid>
 
