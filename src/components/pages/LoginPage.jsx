@@ -29,7 +29,6 @@ const LoginPage = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const {
-    setAdminLoggedIn,
     setSnackbarMessage,
     setSnackbarOpen,
     setSnackbarSeverity,
@@ -72,8 +71,7 @@ const LoginPage = () => {
         login({ username: data.identifier, password: data.password })
       ).unwrap();
 
-      if (user && user.role) {
-        setAdminLoggedIn(user.role === "ADMIN");
+      if (user && user.roleName) {
 
         if (data.remember) {
           localStorage.setItem("tpui_saved_identifier", data.identifier);

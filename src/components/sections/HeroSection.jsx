@@ -28,7 +28,7 @@ import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
 import SocialMediaMenu from "./SocialMediaMenu";
 import { MainContext } from "../../App";
 import { useDispatch, useSelector } from "react-redux";
-import { selectUser, selectRole } from "../../features/auth/loginSlice";
+import { selectUser, selectRole, setLogout } from "../../features/auth/loginSlice";
 import { div } from "framer-motion/client";
 
 export const SampleUser = {
@@ -75,9 +75,13 @@ const UserMenu = () => {
     navigate("/register");
     handleMenuClose();
   };
+  const handleProfile = () => {
+    navigate("/profile");
+    handleMenuClose();
+  };
 
   const handleLogout = async () => {
-    //await dispatch(logout());
+    await dispatch(setLogout());
     navigate("/login");
     handleMenuClose();
   };
@@ -105,10 +109,10 @@ const UserMenu = () => {
       >
         {user && user.id ? (
           <Avatar
-            title={user?.name || "A"}
+            title={user?.userName || "A"}
             sx={{ bgcolor: "#4b0082", fontSize: 18, width: 32, height: 32 }}
           >
-            {user?.name.charAt(0).toUppercase() || "A"}
+            {user?.userName.charAt(0).toUpperCase() || "A"}
           </Avatar>
         ) : (
           <AccountCircleIcon sx={{ color: "#4b0082", fontSize: 32 }} />
@@ -129,7 +133,7 @@ const UserMenu = () => {
               Admin Dashboard
             </MenuItem>
             <Divider />
-            <MenuItem sx={menuItemStyle} onClick={navigate("/profile")}>
+            <MenuItem sx={menuItemStyle} onClick={handleProfile}>
               Profile
             </MenuItem>
             <Divider />
@@ -139,7 +143,7 @@ const UserMenu = () => {
           </div>
         ) : role === "USER" ? (
           <div>
-            <MenuItem sx={menuItemStyle} onClick={navigate("/profile")}>
+            <MenuItem sx={menuItemStyle} onClick={handleProfile}>
               Profile
             </MenuItem>
             <Divider />

@@ -38,32 +38,30 @@ import {
   resetDomainData,
 } from "../../features/domain/domainDataSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { selectUser } from "../../features/auth/loginSlice";
 
 const UserProfile = () => {
-  const initialUserData = {
-    gmail: "alex.johnson@example.com",
-    userName: "alexj",
-    password: "",
-    confirmPassword: "",
-    firstName: "Alex",
-    middleName: "Michael",
-    lastName: "Johnson",
-    contactNumber: "+1 (555) 123-4567",
-    address: "123 Main Street, Apt 4B",
-    city: "New York",
-    state: "New York",
-    pinCode: "10001",
-    countryCode: "USA",
-  };
+//   const initialUserData = {
+//     gmail: "alex.johnson@example.com",
+//     userName: "alexj",
+//     password: "",
+//     confirmPassword: "",
+//     firstName: "Alex",
+//     middleName: "Michael",
+//     lastName: "Johnson",
+//     contactNumber: "+1 (555) 123-4567",
+//     address: "123 Main Street, Apt 4B",
+//     city: "New York",
+//     state: "New York",
+//     pinCode: "10001",
+//     countryName: "United States",
+//   };
   const dispatch = useDispatch();
+  const userDetails = useSelector(selectUser);
   const countryOptions = useSelector(selectCountryOptions);
   const countriesStatus = useSelector(selectCountriesStatus);
   const countriesError = useSelector(selectCountriesError);
-  const [userData, setUserData] = useState(initialUserData);
-
-  const countryName = countryOptions.find(
-    (c) => c.value === userData.countryCode
-  )?.label;
+  const [userData, setUserData] = useState(userDetails);
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -96,7 +94,7 @@ const UserProfile = () => {
   const handleToggleEdit = () => {
     if (isEditing) {
       // Reset form when canceling edit
-      setUserData(initialUserData);
+      setUserData(userDetails);
       setErrors({});
     }
     setIsEditing(!isEditing);
@@ -544,8 +542,8 @@ const UserProfile = () => {
                     fullWidth
                     select
                     label="Country"
-                    name="countryCode"
-                    value={countryName || userData.countryCode}
+                    name="countryName"
+                    value={userData.countryName}
                     onChange={handleChange}
                     slotProps={{
                       input: {

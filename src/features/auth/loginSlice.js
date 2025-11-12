@@ -14,7 +14,7 @@ export const login = createAsyncThunk(
         password: credentials.password,
       }
       const res = await axiosClient.post(getFullUrl(API_ENDPOINTS.USERS.LOGIN), body);
-      return res.data; // { id, name, role }
+      return res.data.data.user; // { id, name, role }
     } catch (err) {
       return rejectWithValue(err.response?.data || "Login failed");
     }
@@ -55,6 +55,10 @@ const slice = createSlice({
     setUserFromStorage: (state, { payload }) => {
       state.user = payload || null;
     },
+    //has to change
+    setLogout:(state)=>{
+      state.user = null
+    }
   },
   extraReducers: (b) => {
     b.addCase(login.pending, (s) => { s.status = "loading"; s.error = null; });
@@ -75,10 +79,10 @@ const slice = createSlice({
   },
 });
 
-export const { setUserFromStorage } = slice.actions;
+export const { setUserFromStorage, setLogout } = slice.actions;
 export default slice.reducer;
 
 export const selectUser = (st) => st.login.user;
-export const selectRole = (st) => st.login.user?.role || null;
+export const selectRole = (st) => st.login.user?.roleName || null;
 export const selectUserId = (st) => st.login.user?.id || null;
 export const selectIsLoginSuccess = (st) => st.login.status === "succeeded";
