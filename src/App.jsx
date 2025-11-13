@@ -29,7 +29,7 @@ import { initializeAuth } from "./api/axiosClient";
 import { selectAccessToken } from "./features/auth/authSlice";
 import ForgotPasswordPage from "./components/pages/ForgotPasswordPage";
 import UserProfile from "./components/pages/UserProfile";
-import { selectRole, selectUser } from "./features/auth/loginSlice";
+import { selectRole, selectUser, setUserFromStorage } from "./features/auth/loginSlice";
 
 export const MainContext = createContext();
 
@@ -103,6 +103,13 @@ function App() {
   }, [dispatch]);
 
   useEffect(() => {
+    const user = sessionStorage.getItem("user");
+    if (user) {
+      dispatch(setUserFromStorage(JSON.parse(user)));
+    }
+  }, [dispatch]);
+
+  useEffect(() => {
     window.addEventListener("scroll", handleScroll);
     handleScroll(); // initialize once
     return () => window.removeEventListener("scroll", handleScroll);
@@ -120,7 +127,7 @@ function App() {
     display: "flex",
     flexDirection: "column",
     width: "100%",
-    minHeight:"100vh",
+    minHeight: "100vh",
     alignItems: "center",
     paddingTop: "90px",
     background:
