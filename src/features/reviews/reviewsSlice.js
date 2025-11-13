@@ -24,9 +24,9 @@ export const fetchReviews = createAsyncThunk(
 
 export const createReview = createAsyncThunk(
   "reviews/createReview",
-  async (payload, { rejectWithValue }) => {
+  async (firmId,userId,payload, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.post(getFullUrl(API_ENDPOINTS.REVIEWS.BASE), payload);
+      const res = await axiosClient.post(getFullUrl(API_ENDPOINTS.REVIEWS.BASE)+'/'+firmId+'/'+userId, payload);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || "Failed to create review");
@@ -66,7 +66,7 @@ const slice = createSlice({
   },
   extraReducers: (b) => {
     b.addCase(fetchReviews.pending, (s) => { s.status = "loading"; s.error = null; });
-    b.addCase(fetchReviews.fulfilled, (s, { payload }) => { s.status = "succeeded"; s.data = payload || []; });
+    b.addCase(fetchReviews.fulfilled, (s, { payload }) => { s.status = "succeeded"; s.data = payload.data || []; });
     b.addCase(fetchReviews.rejected, (s, a) => { s.status = "failed"; s.error = a.payload; });
 
     b.addCase(createReview.fulfilled, (s, { payload }) => { s.data.unshift(payload); });

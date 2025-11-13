@@ -130,12 +130,10 @@ const Reviews = () => {
 
   const isLoggedIn = Boolean(user && role && role !== "guest");
 
-  const [newReview, setNewReview] = useState({
-    id: null,
-    product_id: "",
-    reviewer_id: userId,
-    reviewer_name: "",
-    prop_name: "",
+  const [newReview, setNewReview] = useState({    
+    id: null, 
+    propName: null,
+    tradingExp: "",
     rating: "",
     description: "",
   });
@@ -181,9 +179,7 @@ const Reviews = () => {
     setIsEditing(false);
     setNewReview({
       id: null,
-      product_id: "",
-      reviewer_name: user.userName || "",
-      prop_name: "",
+      tradingExp: "",
       rating: "",
       description: "",
     });
@@ -193,10 +189,8 @@ const Reviews = () => {
     setOpenModal(false);
     setIsEditing(false);
     setNewReview({
-      id: null,
-      product_id: "",
-      reviewer_name: "",
-      prop_name: "",
+       id: null,
+      tradingExp: "",
       rating: "",
       description: "",
     });
@@ -206,9 +200,7 @@ const Reviews = () => {
     setSelectedReview(review);
     setNewReview({
       id: review.id,
-      product_id: review.product_id,
-      reviewer_name: review.reviewer_name,
-      prop_name: review.prop_name,
+      tradingExp: review.tradingExp, 
       rating: review.rating,
       description: review.description,
     });
@@ -249,7 +241,7 @@ const Reviews = () => {
 
   const handleInputChange = (field, value) => {
     setNewReview((prev) => ({ ...prev, [field]: value }));
-    if (field === "prop_name" && value) {
+    if (field === "propName" && value) {
       const selected = TRADING_FIRMS.find((f) => f.name === value);
       if (selected)
         setNewReview((prev) => ({ ...prev, product_id: selected.id }));
@@ -264,7 +256,7 @@ const Reviews = () => {
     return reviewsArray.filter((r) => {
       const matchRating = ratingFilter === "all" || r.rating === ratingFilter;
       const matchFirm =
-        propNameFilter === "all" || r.prop_name === propNameFilter;
+        propNameFilter === "all" || r.propName === propNameFilter;
       return matchRating && matchFirm;
     });
   }, [reviews, ratingFilter, propNameFilter]);
@@ -298,10 +290,9 @@ const Reviews = () => {
 
   const handleSubmitReview = () => {
     if (
-      newReview.reviewer_name &&
-      newReview.description &&
+       newReview.description &&
       newReview.rating &&
-      newReview.prop_name
+      newReview.tradingExp
     ) {
       if (isEditing && newReview.id) {
         // Update existing review
@@ -320,7 +311,7 @@ const Reviews = () => {
           });
       } else {
         // Create new review
-        dispatch(createReview(newReview))
+        dispatch(createReview(newReview.propName,user.id,newReview))
           .unwrap()
           .then(() => {
             setSnackbarMessage("Review created successfully");
@@ -375,7 +366,7 @@ const Reviews = () => {
                 fontSize: "0.8rem",
               }}
             >
-              {formatDate(review.updated_at)}
+              {formatDate(review.updatedAt)}
             </Typography>
 
             <Box
@@ -395,18 +386,18 @@ const Reviews = () => {
                     height: 40,
                   }}
                 >
-                  {review.reviewer_name.charAt(0).toUpperCase()}
+                  {review.reviewerName.charAt(0).toUpperCase()}
                 </Avatar>
                 <Box flexGrow={1}>
                   <Typography variant="h6" component="div" fontWeight="medium">
-                    {review.reviewer_name}
+                    {review.reviewerName}
                   </Typography>
                   <Typography
                     variant="body1"
                     color="text.secondary"
                     sx={{ mb: 0.5 }}
                   >
-                    Firm: <strong>{review.prop_name}</strong>
+                    Firm: <strong>{review.propName}</strong>
                   </Typography>
                   <Typography
                     variant="body1"
@@ -558,18 +549,18 @@ const Reviews = () => {
           <DialogContent>
             <Box display="flex" alignItems="center" mb={3}>
               <Avatar sx={{ bgcolor: "#4b0082", mr: 2, width: 48, height: 48 }}>
-                {review.reviewer_name.charAt(0).toUpperCase()}
+                {review.reviewerName.charAt(0).toUpperCase()}
               </Avatar>
               <Box>
                 <Typography variant="h6" component="div" fontWeight="medium">
-                  {review.reviewer_name}
+                  {review.reviewerName}
                 </Typography>
                 <Typography
                   variant="body1"
                   color="text.secondary"
                   sx={{ mb: 0.5 }}
                 >
-                  Firm: <strong>{review.prop_name}</strong>
+                  Firm: <strong>{review.propName}</strong>
                 </Typography>
                 <Typography
                   variant="body1"
@@ -579,7 +570,7 @@ const Reviews = () => {
                   {getGradeDisplay(review.rating)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
-                  Updated: {formatDate(review.updated_at)}
+                  Updated: {formatDate(review.updatedAt)}
                 </Typography>
               </Box>
             </Box>
@@ -899,8 +890,8 @@ const Reviews = () => {
         <DialogTitle>Delete Review</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete {selectedReview?.reviewer_name}'s
-            review for {selectedReview?.prop_name}? This action cannot be
+            Are you sure you want to delete {selectedReview?.reviewerName}'s
+            review for {selectedReview?.propName}? This action cannot be
             undone.
           </Typography>
         </DialogContent>
@@ -968,10 +959,11 @@ const Reviews = () => {
             <TextField
               fullWidth
               label="Your Name"
-              value={newReview.reviewer_name}
+              value={user.firstName + " " + user.lastName}
               onChange={(e) =>
-                handleInputChange("reviewer_name", e.target.value)
+                handleInputChange("reviewerName", e.target.value)
               }
+              aria-readonly
               variant="outlined"
               required
             />
@@ -980,9 +972,9 @@ const Reviews = () => {
               <InputLabel id="prop-name-label">Trading Firm</InputLabel>
               <Select
                 labelId="prop-name-label"
-                value={newReview.prop_name}
+                value={newReview.propName}
                 label="Trading Firm"
-                onChange={(e) => handleInputChange("prop_name", e.target.value)}
+                onChange={(e) => handleInputChange("propName", e.target.value)}
               >
                 {TRADING_FIRMS.map((firm) => (
                   <MenuItem key={firm.id} value={firm.name}>
@@ -1033,10 +1025,10 @@ const Reviews = () => {
                 variant="contained"
                 onClick={handleSubmitReview}
                 disabled={
-                  !newReview.reviewer_name ||
+                  !newReview.reviewerName ||
                   !newReview.description ||
                   !newReview.rating ||
-                  !newReview.prop_name ||
+                  !newReview.propName ||
                   status === "loading"
                 }
               >
