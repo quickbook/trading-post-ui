@@ -4,6 +4,15 @@ import axiosClient from "../../api/axiosClient";
 import { API_ENDPOINTS, getFullUrl } from "../../config/apiEndpoints";
 const FETCH_LOGIN_ACTION = `login${API_ENDPOINTS.USERS.BASE}`;
 
+// ✅ Read stored user from sessionStorage (preferred)
+const storedUser = (() => {
+  try {
+    const user = sessionStorage.getItem("user");
+    return user ? JSON.parse(user) : null;
+  } catch {
+    return null;
+  }
+})();
 // POST /api/auth/login -> { id, name, role: "admin"|"user" }
 export const login = createAsyncThunk(
   FETCH_LOGIN_ACTION,
@@ -47,7 +56,7 @@ export const logout = createAsyncThunk("login/logout", async () => {
 const slice = createSlice({
   name: "login",
   initialState: {
-    user: null, // {id, name, role}
+    user: storedUser, // ✅ initialize from storage
     status: "idle",
     error: null,
   },
@@ -56,26 +65,25 @@ const slice = createSlice({
       state.user = payload || null;
     },
     //has to change
-    setLogout:(state)=>{
-      state.user = null
-    }
+    setLogout: (state) => {
+      state.user = null;
+      state.status = "idle";
+      state.error = null;
+      try {
+        sessionStorage.removeItem("user");
+      } catch {
+        /* ignore */
+      }
+    },
   },
   extraReducers: (b) => {
     b.addCase(login.pending, (s) => { s.status = "loading"; s.error = null; });
     b.addCase(login.fulfilled, (s, { payload }) => {
-      console.log(payload)
       s.status = "succeeded";
       s.user = payload;
-      try { localStorage.setItem("user", JSON.stringify(payload)); } catch { /* empty */ }
+      try { sessionStorage.setItem("user", JSON.stringify(payload)); } catch { /* empty */ }
     });
     b.addCase(login.rejected, (s, a) => { s.status = "failed"; s.error = a.payload; });
-
-    b.addCase(logout.fulfilled, (s) => {
-      s.user = null;
-      s.status = "idle";
-      s.error = null;
-      localStorage.removeItem("user");
-    });
   },
 });
 
