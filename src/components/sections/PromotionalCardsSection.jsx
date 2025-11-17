@@ -25,6 +25,7 @@ import {
   getBadgeStyles,
 } from "./TradingCards";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 // Card Component
 const TradingCard = ({
@@ -246,9 +247,11 @@ const TradingCard = ({
 };
 
 export const PromotionalCardsSection = ({ length }) => {
+  const allFirms = useSelector((st)=>st.firms.content);
+  const [firmDetails, setFirmDetails] = useState(allFirms);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState("");
-  const premiumCards = cardData?.filter((e) => e.firmType === "premium");
+  const premiumCards = firmDetails?.filter((e) => e.firmType === "premium");
   const displayedCards = length ? premiumCards.slice(0, length) : premiumCards;
 
   const handleCopyCode = (code) => {

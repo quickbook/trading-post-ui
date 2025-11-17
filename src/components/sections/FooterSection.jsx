@@ -48,7 +48,7 @@ const FooterSection = () => {
         px: 2,
       }}
     >
-      <Grid container mx="auto" spacing={6} justifyContent={"space-between"} sx={{width: {xs:'100%', xl: 1640}}}>
+      <Grid container mx="auto" spacing={6} justifyContent={"space-between"} sx={{width: '100%', maxWidth:'1640'}}>
         {/* Trading Post Logo and Socials */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Box

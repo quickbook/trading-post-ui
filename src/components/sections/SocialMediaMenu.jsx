@@ -96,7 +96,7 @@ const SocialMediaMenu = () => {
           borderRadius: "10px",
           //fontWeight: 500,
           //fontFamily: "Lora, serif",
-          fontSize: "16px",
+          fontSize: {xs: "14px",xl:"16px"},
           textTransform: "none",
           boxShadow: "none",
           transition: "all 0.3s ease",

@@ -100,7 +100,7 @@ const UserMenu = () => {
       <IconButton
         color="inherit"
         onClick={handleMenuOpen}
-        title="Admin"
+        title="Sign In"
         sx={{
           backgroundColor: "#f5f5f5",
           padding: 1,
@@ -283,7 +283,7 @@ const HeroSection = () => {
           position: "relative",
           display: { xs: "none", md: "flex" },
           flexWrap: "wrap",
-          width: 680,
+          width: {md:580, xl: 680},
           alignItems: "center",
           justifyContent: "space-between",
         }}
@@ -313,7 +313,7 @@ const HeroSection = () => {
                   //fontFamily: "Lora, Helvetica",
                   fontWeight: "normal",
                   color: "#fff",
-                  fontSize: "16px",
+                  fontSize: {xs: "14px",xl:"16px"},
                   lineHeight: "16px",
                   whiteSpace: "nowrap",
                   textTransform: "capitalize",
@@ -348,7 +348,7 @@ const HeroSection = () => {
                   //fontFamily: "'Lora', Helvetica",
                   fontWeight: "normal",
                   color: "#4b0082",
-                  fontSize: "16px",
+                  fontSize: {xs: "14px",xl:"16px"},
                   lineHeight: "16px",
                   whiteSpace: "nowrap",
                   textTransform: "capitalize",

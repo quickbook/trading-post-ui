@@ -21,32 +21,19 @@ import { registerUser } from "../../features/auth/registrationSlice";
 import {
   fetchCountries,
   selectCountryOptions,
-  selectCountriesStatus,
-  selectCountriesError,
   selectCountryNameByCode,
   resetDomainData,
+  selectDomainDataStatus,
+  selectDomainDataError,
 } from "../../features/domain/domainDataSlice";
-
-export const COUNTRIES = [
-  { code: "IN", name: "India" },
-  { code: "US", name: "United States" },
-  { code: "GB", name: "United Kingdom" },
-  { code: "CA", name: "Canada" },
-  { code: "AU", name: "Australia" },
-  { code: "SG", name: "Singapore" },
-  { code: "AE", name: "United Arab Emirates" },
-  { code: "DE", name: "Germany" },
-  { code: "FR", name: "France" },
-  { code: "JP", name: "Japan" },
-];
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,12}$/;
 
 const RegisterPage = () => {
   const dispatch = useDispatch();
   const countryOptions = useSelector(selectCountryOptions);
-  const countriesStatus = useSelector(selectCountriesStatus);
-  const countriesError = useSelector(selectCountriesError);
+  const countriesStatus = useSelector(selectDomainDataStatus);
+  const countriesError = useSelector(selectDomainDataError);
   const navigate = useNavigate();
   const { setSnackbarMessage, setSnackbarOpen, setSnackbarSeverity } =
     React.useContext(MainContext);
@@ -188,7 +175,7 @@ const RegisterPage = () => {
       setSnackbarOpen(true);
     } finally {
       setIsLoading(false);
-     // dispatch(resetDomainData());
+      dispatch(resetDomainData());
     }
   };
 

@@ -12,6 +12,7 @@ import {
   Divider,
   Tabs,
   Tab,
+  Container,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
 import { cardData } from "../../../CardsData";
@@ -28,67 +29,65 @@ import {
   formatDate,
   getGradeColor,
   getGradeDisplay,
+  getTradingExpDisplay,
 } from "../sections/Reviews";
 import { MainContext } from "../../App";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { selectUser } from "../../features/auth/loginSlice";
+import {
+  selectCurrentFirm,
+  selectFirmsError,
+} from "../../features/firms/firmsSelectors";
+import { fetchFirmById } from "../../features/firms/firmsSlice";
+import { LoadingScreen } from "./HomePage";
+import PropFirmsChallenges from "../sections/PropFirmsChallenges";
 
 export const PropFirmDetailsPage = () => {
+  const dispatch = useDispatch();
   const user = useSelector(selectUser);
+  const propFirm = useSelector(selectCurrentFirm) ?? null;
+  const propFirmStatus = useSelector((st) => st.firms.status.currentFirm);
+  const propFirmError = useSelector(selectFirmsError);
   const params = useParams();
-  const [firmDetails, setFirmDetails] = useState(null);
+  const firmId = params.id;
+  const [value, setValue] = useState(0);
+  const [firmDetails, setFirmDetails] = useState(propFirm);
   const [copiedCode, setCopiedCode] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  const reviewData = [
-    {
-      id: 1,
-      product_id: 1, // Alpha Trading Group
-      reviewer_name: "John Doe",
-      prop_name: "Alpha Trading Group",
-      rating: "A",
-      description:
-        "Great product! The quality exceeded my expectations. Would definitely buy again.",
-      created_at: "2024-01-15T10:30:00Z",
-      updated_at: "2024-01-15T10:30:00Z",
-      is_deleted: false,
-    },
-    {
-      id: 2,
-      product_id: 1, // Alpha Trading Group
-      reviewer_name: "Jane Smith",
-      prop_name: "Alpha Trading Group",
-      rating: "A+",
-      description:
-        "Excellent service and fast delivery. Highly recommended! The packaging was also very secure.",
-      created_at: "2024-01-16T14:20:00Z",
-      updated_at: "2024-01-16T14:20:00Z",
-      is_deleted: false,
-    },
-  ];
-
-  const handleCopyCode = (code) => {
-    navigator.clipboard.writeText(code).then(() => {
-      setCopiedCode(code);
-      setSnackbarOpen(true);
-    });
-  };
+  const reviewData = firmDetails?.reviews ?? [];
 
   const badgeStyles = getBadgeStyles(firmDetails?.firmType);
+  const valueStyles = { color: "#cecece" };
+
+  function a11yProps(index) {
+    return {
+      id: `simple-tab-${index}`,
+      "aria-controls": `simple-tabpanel-${index}`,
+    };
+  }
+
+  const handleTabChange = (event, newValue) => {
+    setValue(newValue);
+  };
 
   useEffect(() => {
-    const propFirm = cardData?.find((prop) => String(prop.id) == params.id);
-    if (!propFirm) {
-      navigate("/");
-    }
-    setFirmDetails(propFirm);
-    //setFirmDetails(cardData[0])
-    //console.log("propfirm",propFirm)
-    window.scrollTo({ top: 0, behaviour: "smooth" });
-  }, []);
+    dispatch(fetchFirmById(firmId));
+  }, [dispatch]);
 
-  return (
+  useEffect(() => {
+    setIsLoading(!propFirm && propFirmStatus === "loading" ? true : false);
+    setFirmDetails(propFirm);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [propFirm]);
+
+  return isLoading ? (
+    <LoadingScreen />
+  ) : propFirmStatus === "failed" ? (
+    <>{propFirmError}</>
+  ) : (
     <>
       <Button
         variant="contained"
@@ -239,7 +238,7 @@ export const PropFirmDetailsPage = () => {
 
             <Button
               variant="contained"
-              href={firmDetails?.firmPageURL || "#"}
+              href={firmDetails?.buyUrl || "#"}
               target="blank"
               sx={{
                 bgcolor: "#4b0082",
@@ -270,167 +269,531 @@ export const PropFirmDetailsPage = () => {
           </Alert>
         </Snackbar>
       </Box>
-      <Box
-        sx={{
-          width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          alignItems: "center",
-          bgcolor: "black",
-          p: 2.5,
-        }}
-      >
+      <Box sx={{ width: {xs: "75%", xl: "100%"}, mb: 1, maxWidth: 1280 }}>
+        <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+          <Tabs
+            value={value}
+            onChange={handleTabChange}
+            aria-label="basic tabs example"
+            textColor="secondary"
+            sx={{
+              "& .MuiTabs-indicator": {
+                backgroundColor: "#cecece", // underline color
+                height: "3px", // thickness
+              },
+            }}
+          >
+            <Tab
+              label="Details"
+              {...a11yProps(0)}
+              sx={{
+                color: "gray",
+                "&.Mui-selected": { color: "#cecece" }, // selected tab #cecece
+                width: { xs: 100, md: 200 },
+                textTransform: "capitalize",
+              }}
+            />
+            <Tab
+              label="Challenges"
+              {...a11yProps(1)}
+              sx={{
+                color: "gray",
+                "&.Mui-selected": { color: "#cecece" }, // selected tab #cecece
+                width: { xs: 100, md: 200 },
+                textTransform: "capitalize",
+              }}
+            />
+          </Tabs>
+        </Box>
+      </Box>
+      {value === 1 ? (
+        <Container maxWidth="lg" sx={{ py: 2 }}>
+          <PropFirmsChallenges firm={firmDetails?.name} />
+        </Container>
+      ) : (
         <Box
           sx={{
+            width: "100%",
             display: "flex",
-            flexDirection: { xs: "column", md: "row" },
-            gap: 4,
-            pt: 4,
-            width: "80%",
-            bgcolor: "#ffffff25",
+            flexDirection: "column",
+            justifyContent: "center",
+            alignItems: "center",
+            bgcolor: "black",
             p: 2.5,
-            justifyContent: "space-between",
-            borderRadius: "10px",
           }}
         >
-          {/* Left Column */}
-          <Box>
-            <Typography variant="h6" color="white" gutterBottom>
-              Trading Conditions
-            </Typography>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: { xs: "column", md: "row" },
+              gap: 4,
+              pt: 4,
+              width: "80%",
+              bgcolor: "#ffffff25",
+              p: 2.5,
+              justifyContent: "space-between",
+              borderRadius: "10px",
+            }}
+          >
+            {/* Left Column */}
+            <Box>
+              <Typography variant="h6" color="white" gutterBottom>
+                Trading Conditions
+              </Typography>
 
-            <Box sx={{ color: "white", mb: 2 }}>
-              <Typography>
-                Maximum Account Size:{" "}
-                {foreignNumberSystem(firmDetails?.maximumAccountSizeUsd)}
-              </Typography>
-              <Typography>
-                Profit Split: {firmDetails?.tradingConditions.profitSplitPct}%
-              </Typography>
-              {/* Trading platforms */}
-              <Box sx={{ display: "flex", gap: 2, mb: 1 }}>
-                <Typography>Trading Platforms:</Typography>
-                {firmDetails?.tradingConditions.tradingPlatforms.map((p, idx) =>
-                  platformSources[`${p}`] ? (
-                    <img
-                      key={idx}
-                      title={p}
-                      src={platformSources[`${p}`]}
-                      alt={p}
-                      style={{
-                        objectFit: "cover",
-                        width: "24px",
-                        height: "24px",
-                        padding: "2px",
-                      }}
-                    />
-                  ) : (
-                    <Avatar
-                      key={idx}
-                      title={p}
-                      sx={{
-                        width: 24,
-                        height: 24,
-                        fontSize: 12,
-                        bgcolor: "#4b0082",
-                      }}
-                    >
-                      {p.slice(0, 1).toUpperCase()}
-                    </Avatar>
-                  )
-                )}
+              <Box
+                sx={{
+                  color: "white",
+                  mb: 2,
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1.5,
+                }}
+              >
+                <Typography>
+                  Maximum Account Size: &nbsp;
+                  <span style={valueStyles}>
+                    $
+                    {foreignNumberSystem(
+                      firmDetails?.tradingConditions.maximumAccountSizeUsd
+                    )}
+                  </span>
+                </Typography>
+                <Typography>
+                  Profit Split:{" "}
+                  <span style={valueStyles}>
+                    {firmDetails?.tradingConditions.profitSplitPct}%
+                  </span>
+                </Typography>
+                {/* Trading platforms */}
+                <Box sx={{ display: "flex", gap: 2 }}>
+                  <Typography>Trading Platforms:</Typography>
+                  {firmDetails?.tradingConditions.tradingPlatforms.map(
+                    (p, idx) =>
+                      platformSources[`${p}`] ? (
+                        <img
+                          key={idx}
+                          title={p}
+                          src={platformSources[`${p}`]}
+                          alt={p}
+                          style={{
+                            objectFit: "cover",
+                            width: "24px",
+                            height: "24px",
+                            padding: "2px",
+                          }}
+                        />
+                      ) : (
+                        <Avatar
+                          key={idx}
+                          title={p}
+                          sx={{
+                            width: 24,
+                            height: 24,
+                            fontSize: 12,
+                            bgcolor: "#4b0082",
+                          }}
+                        >
+                          {p.slice(0, 1).toUpperCase()}
+                        </Avatar>
+                      )
+                  )}
+                </Box>
+                {/* Assets */}
+                <Box sx={{ display: "flex", gap: 1 }}>
+                  <Typography>Available Assets:</Typography>
+                  {firmDetails?.tradingConditions.availableAssets.map(
+                    (asset, idx) => (
+                      <Chip
+                        key={idx}
+                        label={asset}
+                        size="small"
+                        sx={{
+                          bgcolor: "rgba(255,255,255,0.4)",
+                          color: "white",
+                          fontWeight: "bold",
+                        }}
+                      />
+                    )
+                  )}
+                </Box>
+                <Typography>
+                  Discount Code: &nbsp;
+                  <CodeValue
+                    variant="span"
+                    sx={{
+                      padding: "4px 8px",
+                      bgcolor: "#4b0082",
+                      color: "#ffffff",
+                      borderRadius: 2,
+                    }}
+                  >
+                    {firmDetails?.tradingConditions.discountCode}
+                  </CodeValue>{" "}
+                </Typography>
               </Box>
-              {/* Assets */}
-              <Box sx={{ display: "flex", gap: 1 }}>
-                <Typography>Available Assets:</Typography>
-                {firmDetails?.tradingConditions.availableAssets.map(
-                  (asset, idx) => (
-                    <Chip
-                      key={idx}
-                      label={asset}
-                      size="small"
-                      sx={{
-                        bgcolor: "rgba(255,255,255,0.4)",
-                        color: "white",
-                        fontWeight: "bold",
-                      }}
-                    />
-                  )
-                )}
-              </Box>
-              <Typography>
-                Discount Code: &nbsp;
-                <CodeValue variant="span">
-                  {firmDetails?.tradingConditions.discountCode}
-                </CodeValue>{" "}
+            </Box>
+
+            {/* Right Column */}
+            <Box sx={{ minWidth: { md: "350px" } }}>
+              <Typography variant="h6" color="white" gutterBottom>
+                Key Features
               </Typography>
+              {firmDetails?.tradingConditions.keyFeatures.map((e, i) => (
+                <Typography key={i} color="white" sx={{ mb: 1 }}>
+                  {e}
+                </Typography>
+              ))}
             </Box>
           </Box>
 
-          {/* Right Column */}
-          <Box sx={{ minWidth: { md: "350px" } }}>
-            <Typography variant="h6" color="white" gutterBottom>
-              Key Features
+          {/* About Section */}
+          <Box sx={{ pt: 6, width: "80%" }}>
+            <Typography
+              variant="h5"
+              color="white"
+              sx={{ mb: 3, pb: 2, borderBottom: "1px solid #808080" }}
+            >
+              About {firmDetails?.name}
             </Typography>
-            {firmDetails?.tradingConditions.keyFeatures.map((e,i) => (
-              <Typography key={i} color="white">{e}</Typography>
-            ))}
+            <Typography
+              variant="body1"
+              sx={{ my: 1, color: "whitesmoke", fontFamily: "Lora, Helvetica" }}
+            >
+              <strong>Legal Name : </strong>{" "}
+              {firmDetails?.about.legalName || "N/A"}
+            </Typography>
+            <Typography
+              sx={{ my: 1, color: "whitesmoke", fontFamily: "Lora, Helvetica" }}
+            >
+              <strong>Country:</strong> {firmDetails?.country || "N/A"}
+            </Typography>
+            <Typography
+              sx={{ my: 1, color: "whitesmoke", fontFamily: "Lora, Helvetica" }}
+            >
+              <strong>Website:</strong>{" "}
+              {firmDetails?.buyUrl ? (
+                <a
+                  href={firmDetails.buyUrl || "#"}
+                  target="_blank"
+                  rel="noreferrer"
+                  style={{ color: "#4b9dff" }}
+                >
+                  {firmDetails.buyUrl}
+                </a>
+              ) : (
+                "N/A"
+              )}
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{ mb: 1, color: "whitesmoke", fontFamily: "Lora, Helvetica" }}
+            >
+              <strong>Registration No. : </strong>{" "}
+              {firmDetails?.about.registrationNo || "N/A"}
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{ mb: 1, color: "whitesmoke", fontFamily: "Lora, Helvetica" }}
+            >
+              <strong>Established Date : </strong>{" "}
+              {firmDetails?.about.establishedDate || "N/A"}
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{ mb: 1, color: "whitesmoke", fontFamily: "Lora, Helvetica" }}
+            >
+              <strong>Founders : </strong>{" "}
+              {firmDetails?.about.founders || "N/A"}
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{ mb: 1, color: "whitesmoke", fontFamily: "Lora, Helvetica" }}
+            >
+              <strong>Headquarters : </strong>{" "}
+              {firmDetails?.about.headquarters || "N/A"}
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{ mb: 1, color: "whitesmoke", fontFamily: "Lora, Helvetica" }}
+            >
+              <strong>Jurisdiction : </strong>{" "}
+              {firmDetails?.about.jurisdiction || "N/A"}
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{ mb: 1, color: "whitesmoke", fontFamily: "Lora, Helvetica" }}
+            >
+              <strong>Firm Status: </strong>{" "}
+              {firmDetails?.about.firmStatus || "N/A"}
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{ mb: 1, color: "whitesmoke", fontFamily: "Lora, Helvetica" }}
+            >
+              <strong>Founded Year: </strong>{" "}
+              {firmDetails?.about.foundedYear || "N/A"}
+            </Typography>
+            {firmDetails?.about.ceoName && (
+              <Typography
+                variant="body1"
+                sx={{
+                  mb: 1,
+                  color: "whitesmoke",
+                  fontFamily: "Lora, Helvetica",
+                }}
+              >
+                <strong>CEO: </strong> {firmDetails.about.ceoName}
+              </Typography>
+            )}
+            {firmDetails?.about.extraNotes && (
+              <Typography
+                variant="body1"
+                sx={{
+                  mb: 1,
+                  color: "whitesmoke",
+                  fontFamily: "Lora, Helvetica",
+                }}
+              >
+                <strong>Additional Notes: </strong>{" "}
+                {firmDetails.about.extraNotes}
+              </Typography>
+            )}
+            <Typography
+              sx={{ my: 1, color: "whitesmoke", fontFamily: "Lora, Helvetica" }}
+            >
+              <strong>Trusted:</strong> {firmDetails?.isTrusted ? "Yes" : "No"}
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: "whitesmoke",
+                fontFamily: "Lora, Helvetica",
+                textAlign: "justify",
+              }}
+            >
+              <strong>Description :</strong>&nbsp;
+              {firmDetails?.name}&nbsp;{firmDetails?.about.description}
+            </Typography>
           </Box>
-        </Box>
 
-        {/* About Section */}
-        <Box sx={{ pt: 6, width: "80%" }}>
-          <Typography variant="h6" color="white" gutterBottom>
-            About {firmDetails?.name}
-          </Typography>
-          {/* {Object.entries(firmDetails["about"]).map(([key, value='N/A']) => (
-            <Typography key={key} variant="body2" sx={{ mb: 1 }}>
-              <strong>{key.replace(/([A-Z])/g, " $1").trim()}:</strong>{" "}
-              {value}
+          <Box sx={{ pt: 6, width: "80%", color: "whitesmoke" }}>
+            <Typography
+              variant="h5"
+              color="white"
+              gutterBottom
+              sx={{ mb: 3, pb: 2, borderBottom: "1px solid #808080" }}
+            >
+              Trading Conditions & Restrictions
             </Typography>
-          ))} */}
-          <Typography variant="body1" sx={{ mb: 1, color: 'white', fontFamily: "Lora, Helvetica",}}>
-            <strong>Legal Name : </strong> {firmDetails?.about.legalName || "N/A"}
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 1, color: 'white', fontFamily: "Lora, Helvetica",}}>
-            <strong>Registration No. : </strong> {firmDetails?.about.registrationNo || "N/A"}
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 1, color: 'white', fontFamily: "Lora, Helvetica",}}>
-            <strong>Established Date : </strong> {firmDetails?.about.establishedDate || "N/A"}
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 1, color: 'white', fontFamily: "Lora, Helvetica",}}>
-            <strong>Founders : </strong> {firmDetails?.about.founders || "N/A"}
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 1, color: 'white', fontFamily: "Lora, Helvetica",}}>
-            <strong>Headquarters : </strong> {firmDetails?.about.headquarters || "N/A"}
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 1, color: 'white', fontFamily: "Lora, Helvetica",}}>
-            <strong>Jurisdiction : </strong> {firmDetails?.about.jurisdiction || "N/A"}
-          </Typography>
-          <Typography variant="body1" sx={{ mb: 1, color: 'white', fontFamily: "Lora, Helvetica",}}>
-            <strong>Firm Status: </strong> {firmDetails?.about.firmStatus || "N/A"}
-          </Typography>
-          <Typography
-            variant="body1"
-            sx={{
-              color: "white",
-              fontFamily: "Lora, Helvetica",
-              textAlign: "justify",
-            }}
-          >
-            <strong>Description :</strong>&nbsp;
-            {firmDetails?.name}&nbsp;{firmDetails?.description}
-          </Typography>
-        </Box>
+            <Typography sx={{ mb: 1 }}>
+              Withdrawal Speed:{" "}
+              {firmDetails?.tradingConditions.withdrawalSpeed || "N/A"}
+            </Typography>
+            <Typography sx={{ mb: 1 }}>
+              Commission Per Lot: $
+              {firmDetails?.tradingConditions.commissionPerLot || "N/A"}
+            </Typography>
+            <Typography sx={{ mb: 1 }}>
+              Raw Spreads:{" "}
+              {firmDetails?.tradingConditions.rawSpreads ? "Yes" : "No"}
+            </Typography>
+            <Typography sx={{ mb: 1 }}>
+              Payout Frequencies:{" "}
+              {firmDetails?.tradingConditions?.payoutFrequencies?.length
+                ? firmDetails.tradingConditions.payoutFrequencies.join(", ")
+                : "N/A"}
+            </Typography>
+            <Typography sx={{ mb: 1 }}>
+              Hedging Allowed:{" "}
+              {firmDetails?.tradingConditions.hedgingAllowed ? "Yes" : "No"}
+            </Typography>
+            <Typography sx={{ mb: 1 }}>
+              Multiple Devices:{" "}
+              {firmDetails?.tradingConditions.allowMultipleDevices
+                ? "Yes"
+                : "No"}
+            </Typography>
+            <Typography sx={{ mb: 1 }}>
+              IP Consistency Required:{" "}
+              {firmDetails?.tradingConditions.requireIpConsistency
+                ? "Yes"
+                : "No"}
+            </Typography>
+            <Typography sx={{ mb: 1 }}>
+              Live Chat Available:{" "}
+              {firmDetails?.tradingConditions.liveChatAvailable ? "Yes" : "No"}
+            </Typography>
 
-        {/* Reviews Section */}
-        <Box sx={{ width: "80%", py: 6 }}>
-          <Box sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}>
-            <Typography variant="h5" color="white">
-              Customer Reviews
+            {/* Profit Split Details */}
+            {firmDetails?.tradingConditions.profitSplitOption && (
+              <Typography>
+                Profit Split:{" "}
+                {firmDetails.tradingConditions.profitSplitOption.initialPct}%
+                initial, then{" "}
+                {firmDetails.tradingConditions.profitSplitOption.subsequentPct}%
+                subsequent
+              </Typography>
+            )}
+
+            {/* Payout Methods */}
+            {firmDetails?.tradingConditions.payoutMethods && (
+              <Typography>
+                Payout Methods:{" "}
+                {firmDetails.tradingConditions.payoutMethods.join(", ")}
+              </Typography>
+            )}
+
+            {/* Support Information */}
+            {firmDetails?.tradingConditions.supportEmail && (
+              <Typography>
+                Support Email: {firmDetails.tradingConditions.supportEmail}
+              </Typography>
+            )}
+            {firmDetails?.tradingConditions.supportPhone && (
+              <Typography>
+                Support Phone: {firmDetails.tradingConditions.supportPhone}
+              </Typography>
+            )}
+
+            <Typography sx={{ mt: 1 }}>
+              <strong>Prohibited Strategies:</strong>
             </Typography>
-            {/* <Button
+            {firmDetails?.tradingConditions?.prohibitedStrategies?.length ? (
+              firmDetails.tradingConditions.prohibitedStrategies.map(
+                (rule, idx) => (
+                  <Typography key={idx} color="whitesmoke" sx={{ ml: 2 }}>
+                    • {rule}
+                  </Typography>
+                )
+              )
+            ) : (
+              <Typography color="whitesmoke" sx={{ ml: 2 }}>
+                N/A
+              </Typography>
+            )}
+
+            <Typography sx={{ mt: 1 }}>
+              <strong>Restricted Countries:</strong>{" "}
+            </Typography>
+            {firmDetails?.tradingConditions?.restrictedCountries?.length ? (
+              firmDetails.tradingConditions.restrictedCountries.map(
+                (country, idx) => (
+                  <Typography key={idx} color="whitesmoke" sx={{ ml: 2 }}>
+                    • {country}
+                  </Typography>
+                )
+              )
+            ) : (
+              <Typography color="whitesmoke" sx={{ ml: 2 }}>
+                N/A
+              </Typography>
+            )}
+          </Box>
+
+          <Box sx={{ pt: 6, width: "80%" }}>
+            {/* Additional Features Section */}
+            <Typography
+              variant="h5"
+              color="white"
+              gutterBottom
+              sx={{ mb: 3, pb: 2, borderBottom: "1px solid #808080" }}
+            >
+              Trading Rules
+            </Typography>
+            <Typography color="whitesmoke">
+              Daily Drawdown Calculation:{" "}
+              {firmDetails?.tradingConditions.dailyDrawdownCalculation || "N/A"}
+            </Typography>
+            <Typography color="whitesmoke" sx={{ mt: 1 }}>
+              Consistency Rule:{" "}
+              {firmDetails?.tradingConditions.consistencyRuleApplied
+                ? "Applied"
+                : "Not Applied"}
+            </Typography>
+
+            {/* Scaling Information */}
+            {firmDetails?.tradingConditions.scalingCriteriaDays && (
+              <Typography color="whitesmoke" sx={{ mt: 1 }}>
+                Scaling Criteria:{" "}
+                {firmDetails.tradingConditions.scalingCriteriaDays} days
+              </Typography>
+            )}
+            {firmDetails?.tradingConditions.maxAllocationAfterScaling && (
+              <Typography color="whitesmoke" sx={{ mt: 1 }}>
+                Max Allocation After Scaling:{" "}
+                {foreignNumberSystem(
+                  firmDetails.tradingConditions.maxAllocationAfterScaling
+                )}
+              </Typography>
+            )}
+            <Typography color="whitesmoke" sx={{ mt: 1 }}>
+              Scaling Cycle Days:{" "}
+              {firmDetails?.tradingConditions?.scalingCycleDays ?? "N/A"}
+            </Typography>
+
+            <Typography color="whitesmoke" sx={{ mt: 1 }}>
+              Scaling Reward %:{" "}
+              {firmDetails?.tradingConditions?.scalingRewardPct ?? "N/A"}%
+            </Typography>
+            {firmDetails?.tradingConditions?.profitSplitOption?.note && (
+              <Typography sx={{ mt: 1 }} color="whitesmoke">
+                <strong>Profit Split Note:</strong>{" "}
+                {firmDetails.tradingConditions.profitSplitOption.note}
+              </Typography>
+            )}
+
+            <Typography sx={{ mt: 2 }} color="white">
+              <strong>Leverage Profiles:</strong>
+            </Typography>
+
+            {firmDetails?.tradingConditions?.leverages?.length ? (
+              firmDetails.tradingConditions.leverages.map((lv, i) => (
+                <Box key={i} sx={{ ml: 2, mb: 1 }}>
+                  <Typography color="whitesmoke">
+                    • <strong>Profile:</strong> {lv.profile}
+                  </Typography>
+
+                  {lv.instrumentLeverages?.map((ins, j) => (
+                    <Typography key={j} sx={{ ml: 3 }} color="whitesmoke">
+                      - {ins.instrument}: {ins.leverageFactor}x
+                    </Typography>
+                  ))}
+                </Box>
+              ))
+            ) : (
+              <Typography sx={{ ml: 2 }} color="whitesmoke">
+                N/A
+              </Typography>
+            )}
+
+            {/* News Trading Rule */}
+            {firmDetails?.tradingConditions.newsTradingRule && (
+              <>
+                <Typography
+                  variant="h6"
+                  color="white"
+                  gutterBottom
+                  sx={{ mt: 3 }}
+                >
+                  News Trading
+                </Typography>
+                <Typography color="white" sx={{ fontStyle: "italic" }}>
+                  {firmDetails.tradingConditions.newsTradingRule}
+                </Typography>
+              </>
+            )}
+          </Box>
+
+          {/* Reviews Section */}
+          <Box sx={{ width: "80%", py: 6 }}>
+            <Box
+              sx={{ display: "flex", justifyContent: "space-between", mb: 2 }}
+            >
+              <Typography variant="h5" color="white">
+                Customer Reviews
+              </Typography>
+              {/* <Button
               variant="contained"
               sx={{
                 bgcolor: "#4b0082",
@@ -440,56 +803,79 @@ export const PropFirmDetailsPage = () => {
             >
               Write a Review
             </Button> */}
-          </Box>
+            </Box>
 
-          <Typography variant="body2" color="white" textAlign="right" mb={2}>
-            Showing {reviewData?.length} reviews
-          </Typography>
+            <Typography variant="body2" color="white" textAlign="right" mb={2}>
+              Showing {reviewData?.length} reviews
+            </Typography>
 
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {reviewData.map((review, idx) => (
-              <Card
-                key={idx}
-                sx={{
-                  bgcolor: "rgba(255,255,255,0.25)",
-                  borderRadius: 2,
-                }}
-              >
-                <CardContent>
-                  <Box
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+              {reviewData?.length ? (
+                reviewData.map((review, idx) => (
+                  <Card
+                    key={idx}
                     sx={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      mb: 1,
+                      bgcolor: "rgba(255,255,255,0.25)",
+                      borderRadius: 2,
                     }}
                   >
-                    <Typography color="white" fontWeight="bold">
-                      {review?.reviewer_name}
-                    </Typography>
-                    <Typography color="rgba(255,255,255,0.7)">
-                      {formatDate(review.updated_at)}
-                    </Typography>
-                  </Box>
-                  <Typography
-                    variant="body1"
-                    fontWeight="bold"
-                    sx={{ color: getGradeColor(review?.rating) }}
-                  >
-                    {getGradeDisplay(review?.rating)}
+                    <CardContent>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          mb: 1,
+                        }}
+                      >
+                        <Typography color="white" fontWeight="bold">
+                          {review?.reviewerName}
+                        </Typography>
+                        <Typography color="rgba(255,255,255,0.7)">
+                          {formatDate(review.updatedAt)}
+                        </Typography>
+                      </Box>
+                      <Typography
+                        variant="body2"
+                        color="whitesmoke"
+                        sx={{ mb: 0.5 }}
+                      >
+                        Trading Experience:{" "}
+                        <strong>
+                          {getTradingExpDisplay(review.tradingExp)}
+                        </strong>
+                      </Typography>
+                      <Typography
+                        variant="body1"
+                        fontWeight="bold"
+                        sx={{ color: getGradeColor(review?.rating) }}
+                      >
+                        {getGradeDisplay(review?.rating)}
+                      </Typography>
+                      <Typography
+                        color="white"
+                        fontWeight="bold"
+                        sx={{ wordBreak: "break-word", mt: 3 }}
+                      >
+                        {review.description}
+                      </Typography>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <Box
+                  textAlign="center"
+                  py={4}
+                  sx={{ bgcolor: "#ffffff50", borderRadius: 2, mb: 3 }}
+                >
+                  <Typography variant="h6" color="white" gutterBottom>
+                    No reviews
                   </Typography>
-                  <Typography
-                    color="white"
-                    fontWeight="bold"
-                    sx={{ wordBreak: "break-word" }}
-                  >
-                    {review.description}
-                  </Typography>
-                </CardContent>
-              </Card>
-            ))}
+                </Box>
+              )}
+            </Box>
           </Box>
         </Box>
-      </Box>
+      )}
     </>
   );
 };

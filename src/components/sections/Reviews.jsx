@@ -1,4 +1,4 @@
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useMemo, useState, useEffect, useCallback } from "react";
 import {
   Box,
   Typography,
@@ -52,6 +52,11 @@ import {
 import { cardData } from "/CardsData";
 import { MainContext } from "../../App";
 import { useNavigate } from "react-router-dom";
+import { fetchFirmsFilterOptions } from "../../features/firms/firmsSlice";
+import {
+  selectFirmsError,
+  selectFirmsStatus,
+} from "../../features/firms/firmsSelectors";
 
 // Letter grade options
 const GRADE_OPTIONS = [
@@ -60,6 +65,14 @@ const GRADE_OPTIONS = [
   { value: "B", label: "B (Good)" },
   { value: "C", label: "C (Average)" },
   { value: "D", label: "D (Poor)" },
+];
+
+const TRADING_EXPERIENCE_OPTIONS = [
+  { value: "BEGINNER", label: "Beginner (0 - 1 year)" },
+  { value: "INTERMEDIATE", label: "Intermediate (1 - 3 years)" },
+  { value: "ADVANCED", label: "Advanced (3 - 5 years)" },
+  { value: "EXPERT", label: "Expert (5 - 10 years)" },
+  { value: "PROFESSIONAL", label: "Professional (10+ years)" },
 ];
 
 export const formatDate = (dateString) => {
@@ -105,6 +118,11 @@ export const getGradeDisplay = (grade) => {
   }
 };
 
+export const getTradingExpDisplay = (exp) => {
+  const option = TRADING_EXPERIENCE_OPTIONS.find((opt) => opt.value === exp);
+  return option ? option.label : exp;
+};
+
 const Reviews = () => {
   const dispatch = useDispatch();
   const user = useSelector(selectUser);
@@ -113,9 +131,24 @@ const Reviews = () => {
   const reviews = useSelector(selectReviews);
   const status = useSelector(selectReviewsStatus);
   const error = useSelector(selectReviewsError);
-  const { setSnackbarMessage, setSnackbarOpen, setSnackbarSeverity } =
-    React.useContext(MainContext);
-
+  const firmsFilterOptions = useSelector((st) => st.firms.filterOptions);
+  const firmsFilterOptionsStatus = useSelector(
+    (st) => st.firms.status.filterOptions
+  );
+  const firmsFilterOptionsError = useSelector(selectFirmsError);
+  const contextValue = React.useContext(MainContext);
+  const { setSnackbarMessage, setSnackbarOpen, setSnackbarSeverity } = useMemo(
+    () => ({
+      setSnackbarMessage: contextValue.setSnackbarMessage,
+      setSnackbarOpen: contextValue.setSnackbarOpen,
+      setSnackbarSeverity: contextValue.setSnackbarSeverity,
+    }),
+    [
+      contextValue.setSnackbarMessage,
+      contextValue.setSnackbarOpen,
+      contextValue.setSnackbarSeverity,
+    ]
+  );
   const [openModal, setOpenModal] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedReview, setSelectedReview] = useState(null);
@@ -130,9 +163,8 @@ const Reviews = () => {
 
   const isLoggedIn = Boolean(user && role && role !== "guest");
 
-  const [newReview, setNewReview] = useState({    
-    id: null, 
-    propName: null,
+  const [newReview, setNewReview] = useState({
+    propName: "",
     tradingExp: "",
     rating: "",
     description: "",
@@ -143,30 +175,16 @@ const Reviews = () => {
     dispatch(fetchReviews());
   }, [dispatch]);
 
-  const TRADING_FIRMS = React.useMemo(() => {
-    const items = (cardData || [])
-      .filter((c) => c && (c.title || c.name))
-      .map((c) => ({
-        id: c?.id ?? String(c?.title ?? c?.name),
-        name: String(c?.title ?? c?.name ?? "").trim(),
-      }))
-      .filter((f) => f.name.length > 0);
+  useEffect(() => {
+    //if (firmsFilterOptions && firmsFilterOptions.length) {
+      dispatch(fetchFirmsFilterOptions());
+    //}
+  }, [dispatch]);
 
-    const byName = new Map();
-    for (const f of items) {
-      if (!byName.has(f.name)) byName.set(f.name, f);
-    }
-    const arr = Array.from(byName.values());
-
-    arr.sort((a, b) => (a.name || "").localeCompare(b.name || ""));
-    return arr;
-  }, []);
-
-  const canModify = (review) => {
-    if (role === "ADMIN") return true;
-    if (role === "USER" && userId) return review.reviewer_id === userId;
+  const canModify = useCallback(() => {
+    if (user && role === "ADMIN") return true;
     return false;
-  };
+  }, [user]);
 
   const handleActionMenuOpen = (reviewId) => setActiveActionCard(reviewId);
   const handleActionMenuClose = () => {
@@ -178,7 +196,7 @@ const Reviews = () => {
     setOpenModal(true);
     setIsEditing(false);
     setNewReview({
-      id: null,
+      propName: "",
       tradingExp: "",
       rating: "",
       description: "",
@@ -189,7 +207,6 @@ const Reviews = () => {
     setOpenModal(false);
     setIsEditing(false);
     setNewReview({
-       id: null,
       tradingExp: "",
       rating: "",
       description: "",
@@ -200,7 +217,8 @@ const Reviews = () => {
     setSelectedReview(review);
     setNewReview({
       id: review.id,
-      tradingExp: review.tradingExp, 
+      propName: review.propName,
+      tradingExp: review.tradingExp,
       rating: review.rating,
       description: review.description,
     });
@@ -242,9 +260,8 @@ const Reviews = () => {
   const handleInputChange = (field, value) => {
     setNewReview((prev) => ({ ...prev, [field]: value }));
     if (field === "propName" && value) {
-      const selected = TRADING_FIRMS.find((f) => f.name === value);
-      if (selected)
-        setNewReview((prev) => ({ ...prev, product_id: selected.id }));
+      const selected = firmsFilterOptions.find((f) => f.firmName === value);
+      if (selected) setNewReview((prev) => ({ ...prev, propId: selected.id }));
     }
   };
 
@@ -261,10 +278,9 @@ const Reviews = () => {
     });
   }, [reviews, ratingFilter, propNameFilter]);
 
-  const displayedReviews = showAllReviews
-    ? filteredReviews
-    : filteredReviews.slice(0, 9);
-  const hasMoreReviews = filteredReviews.length > 9;
+  const displayedReviews = useMemo(() => {
+    return showAllReviews ? filteredReviews : filteredReviews.slice(0, 9);
+  }, [showAllReviews, filteredReviews]);
 
   const handleViewAllReviews = () => setShowAllReviews(true);
   const handleRatingFilterChange = (e) => {
@@ -289,14 +305,12 @@ const Reviews = () => {
   };
 
   const handleSubmitReview = () => {
-    if (
-       newReview.description &&
-      newReview.rating &&
-      newReview.tradingExp
-    ) {
+    if (newReview.description && newReview.rating && newReview.tradingExp) {
       if (isEditing && newReview.id) {
         // Update existing review
-        dispatch(updateReview({ id: newReview.id, data: newReview }))
+        const reviewId = newReview.id;
+        //delete newReview.id;
+        dispatch(updateReview({ id: reviewId, data: newReview }))
           .unwrap()
           .then(() => {
             setSnackbarMessage("Review updated successfully");
@@ -311,7 +325,14 @@ const Reviews = () => {
           });
       } else {
         // Create new review
-        dispatch(createReview(newReview.propName,user.id,newReview))
+        const firmId = newReview.propId;
+        const payload = { ...newReview };
+        delete payload.propId;
+        delete payload.propName;
+        console.log(firmId, userId, payload);
+        dispatch(
+          createReview({ firmId: firmId, userId: userId, payload: payload })
+        )
           .unwrap()
           .then(() => {
             setSnackbarMessage("Review created successfully");
@@ -323,72 +344,256 @@ const Reviews = () => {
             setSnackbarMessage("Failed to create review");
             setSnackbarSeverity("error");
             setSnackbarOpen(true);
+            console.log(err);
           });
       }
     }
+    //window.location.reload();
   };
 
-  const ReviewCard = ({ review }) => {
-    const isActive = activeActionCard === review.id;
-    const isExpanded = expandedReviewId === review.id;
-    const needsReadMore = (review.description || "").length > 90;
+  const ReviewCard = useCallback(
+    ({ review }) => {
+      const isActive = activeActionCard === review.id;
+      const isExpanded = expandedReviewId === review.id;
+      const needsReadMore = (review.description || "").length > 90;
 
-    return (
-      <>
-        <Card
-          sx={{
-            width: "100%",
-            height: "100%",
-            minHeight: 150,
-            display: "flex",
-            flexDirection: "column",
-            boxShadow: 2,
-            transition: "all 0.3s ease-in-out",
-            position: "relative",
-            overflow: "hidden",
-            background:
-              "linear-gradient(to bottom, #ffffff 10%, #e6ccfa 60%, #cd8cfc 90%)",
-            "&:hover": {
-              transform: "translateY(-2px)",
-              boxShadow: 4,
-              cursor: "pointer",
-            },
-          }}
-        >
-          <CardContent sx={{ flexGrow: 1, pb: 1, position: "relative" }}>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{
-                position: "absolute",
-                top: 8,
-                right: 16,
-                fontSize: "0.8rem",
-              }}
-            >
-              {formatDate(review.updatedAt)}
-            </Typography>
+      return (
+        <>
+          <Card
+            sx={{
+              width: "100%",
+              height: "100%",
+              minHeight: 150,
+              display: "flex",
+              flexDirection: "column",
+              boxShadow: 2,
+              transition: "all 0.3s ease-in-out",
+              position: "relative",
+              overflow: "hidden",
+              background:
+                "linear-gradient(to bottom, #ffffff 10%, #e6ccfa 60%, #cd8cfc 90%)",
+              "&:hover": {
+                transform: "translateY(-2px)",
+                boxShadow: 4,
+                cursor: "pointer",
+              },
+            }}
+          >
+            <CardContent sx={{ flexGrow: 1, position: "relative", padding: '0px !imporatant' }}>
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  position: "absolute",
+                  top: 8,
+                  right: 16,
+                  fontSize: "0.8rem",
+                }}
+              >
+                {formatDate(review.updatedAt)}
+              </Typography>
 
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="flex-start"
-              mb={2}
-              mt={2}
-            >
-              <Box display="flex" flexGrow={1}>
-                <Avatar
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="flex-start"
+                mb={2}
+                mt={2}
+              >
+                <Box display="flex" flexGrow={1}>
+                  <Avatar
+                    sx={{
+                      bgcolor: "#4b0082",
+                      mr: 2,
+                      mt: 0.5,
+                      width: 40,
+                      height: 40,
+                    }}
+                  >
+                    {review?.reviewerName
+                      ? review?.reviewerName.slice(0, 1).toUpperCase()
+                      : "U"}
+                  </Avatar>
+                  <Box flexGrow={1}>
+                    <Typography
+                      variant="h6"
+                      component="div"
+                      fontWeight="medium"
+                    >
+                      {review.reviewerName}
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      color="text.secondary"
+                      sx={{ mb: 0.5 }}
+                    >
+                      Firm: <strong>{review.propName}</strong>
+                    </Typography>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{ mb: 0.5 }}
+                    >
+                      Trading Experience:{" "}
+                      <strong>{getTradingExpDisplay(review.tradingExp)}</strong>
+                    </Typography>
+                    <Typography
+                      variant="body1"
+                      fontWeight="bold"
+                      sx={{ color: getGradeColor(review.rating) }}
+                    >
+                      {getGradeDisplay(review.rating)}
+                    </Typography>
+                  </Box>
+                </Box>
+                {canModify(review) && (
+                  <IconButton
+                    size="small"
+                    onClick={() => setActiveActionCard(review.id)}
+                    sx={{
+                      ml: 1,
+                      alignSelf: "flex-start",
+                      visibility: isActive ? "hidden" : "visible",
+                      "&:hover": { backgroundColor: "rgba(0,0,0,0.2)" },
+                      zIndex: 5,
+                    }}
+                  >
+                    <MoreVertIcon />
+                  </IconButton>
+                )}
+              </Box>
+
+              <Typography
+                variant="body1"
+                color="text.secondary"
+                sx={{
+                  display: "-webkit-box",
+                  WebkitLineClamp: isExpanded ? "unset" : 2,
+                  WebkitBoxOrient: "vertical",
+                  overflow: "hidden",
+                  lineHeight: 1.5,
+                  maxHeight: isExpanded ? "none" : "4.5em",
+                }}
+              >
+                {review.description}
+              </Typography>
+              {needsReadMore && !isExpanded && (
+                <Button
+                  size="small"
+                  onClick={() => setExpandedReviewId(review.id)}
                   sx={{
-                    bgcolor: "#4b0082",
-                    mr: 2,
-                    mt: 0.5,
-                    width: 40,
-                    height: 40,
+                    mt: 1,
+                    textTransform: "capitalize",
+                    color: "#4b0082",
+                    fontWeight: "bold",
+                    p: 0,
+                    minWidth: "auto",
+                    "&:hover": {
+                      backgroundColor: "transparent",
+                      color: "#8f7900",
+                    },
                   }}
                 >
-                  {review.reviewerName.charAt(0).toUpperCase()}
+                  Read More
+                </Button>
+              )}
+            </CardContent>
+
+            {isActive && (
+              <Box
+                sx={{
+                  position: "absolute",
+                  inset: 0,
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(255,255,255,0.20)",
+                  backdropFilter: "blur(4px)",
+                  zIndex: 10,
+                  gap: 2,
+                  p: 2,
+                }}
+              >
+                <IconButton
+                  size="small"
+                  onClick={() => setActiveActionCard(null)}
+                  sx={{
+                    position: "absolute",
+                    top: 8,
+                    right: 8,
+                    backgroundColor: "rgba(0,0,0,0.1)",
+                    "&:hover": { backgroundColor: "rgba(0,0,0,0.2)" },
+                  }}
+                >
+                  <CloseIcon />
+                </IconButton>
+                <Button
+                  variant="contained"
+                  startIcon={<EditIcon />}
+                  onClick={() => handleEdit(review)}
+                  sx={{
+                    minWidth: 110,
+                    borderRadius: 2,
+                    textTransform: "capitalize",
+                    border: "1px solid #fff",
+                    "&:hover": { border: "1px solid #ffd700" },
+                  }}
+                >
+                  Edit
+                </Button>
+                <Button
+                  variant="contained"
+                  color="error"
+                  startIcon={<DeleteIcon />}
+                  onClick={() => handleDeleteClick(review)}
+                  sx={{
+                    minWidth: 110,
+                    borderRadius: 2,
+                    textTransform: "capitalize",
+                    border: "1px solid #fff",
+                    "&:hover": { border: "1px solid #ffd700" },
+                  }}
+                >
+                  Delete
+                </Button>
+              </Box>
+            )}
+          </Card>
+
+          <Dialog
+            open={isExpanded}
+            onClose={() => setExpandedReviewId(null)}
+            maxWidth="md"
+            fullWidth
+          >
+            <DialogTitle>
+              <Box
+                display="flex"
+                justifyContent="space-between"
+                alignItems="center"
+              >
+                <Typography variant="h6" component="h2">
+                  Review Details
+                </Typography>
+                <IconButton
+                  onClick={() => setExpandedReviewId(null)}
+                  size="small"
+                >
+                  <CloseIcon />
+                </IconButton>
+              </Box>
+            </DialogTitle>
+            <DialogContent>
+              <Box display="flex" alignItems="center" mb={3}>
+                <Avatar
+                  sx={{ bgcolor: "#4b0082", mr: 2, width: 48, height: 48 }}
+                >
+                  {review?.reviewerName
+                    ? review?.reviewerName.slice(0, 1).toUpperCase()
+                    : "U"}
                 </Avatar>
-                <Box flexGrow={1}>
+                <Box>
                   <Typography variant="h6" component="div" fontWeight="medium">
                     {review.reviewerName}
                   </Typography>
@@ -400,197 +605,50 @@ const Reviews = () => {
                     Firm: <strong>{review.propName}</strong>
                   </Typography>
                   <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mb: 0.5 }}
+                  >
+                    Trading Experience:{" "}
+                    <strong>{getTradingExpDisplay(review.tradingExp)}</strong>
+                  </Typography>
+                  <Typography
                     variant="body1"
                     fontWeight="bold"
                     sx={{ color: getGradeColor(review.rating) }}
                   >
                     {getGradeDisplay(review.rating)}
                   </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Updated: {formatDate(review.updatedAt)}
+                  </Typography>
                 </Box>
               </Box>
-              {canModify(review) && (
-                <IconButton
-                  size="small"
-                  onClick={() => setActiveActionCard(review.id)}
-                  sx={{
-                    ml: 1,
-                    alignSelf: "flex-start",
-                    visibility: isActive ? "hidden" : "visible",
-                    "&:hover": { backgroundColor: "rgba(0,0,0,0.2)" },
-                    zIndex: 5,
-                  }}
-                >
-                  <MoreVertIcon />
-                </IconButton>
-              )}
-            </Box>
-
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{
-                display: "-webkit-box",
-                WebkitLineClamp: isExpanded ? "unset" : 2,
-                WebkitBoxOrient: "vertical",
-                overflow: "hidden",
-                lineHeight: 1.5,
-                maxHeight: isExpanded ? "none" : "4.5em",
-              }}
-            >
-              {review.description}
-            </Typography>
-            {needsReadMore && !isExpanded && (
-              <Button
-                size="small"
-                onClick={() => setExpandedReviewId(review.id)}
+              <Typography
+                variant="body1"
+                color="text.secondary"
                 sx={{
-                  mt: 1,
-                  textTransform: "capitalize",
-                  color: "#4b0082",
-                  fontWeight: "bold",
-                  p: 0,
-                  minWidth: "auto",
-                  "&:hover": {
-                    backgroundColor: "transparent",
-                    color: "#8f7900",
-                  },
+                  fontSize: "1.1rem",
+                  lineHeight: 1.6,
+                  whiteSpace: "pre-wrap",
+                  wordBreak: "break-word",
                 }}
               >
-                Read More
-              </Button>
-            )}
-          </CardContent>
-
-          {isActive && (
-            <Box
-              sx={{
-                position: "absolute",
-                inset: 0,
-                display: "flex",
-                flexDirection: "column",
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: "rgba(255,255,255,0.20)",
-                backdropFilter: "blur(4px)",
-                zIndex: 10,
-                gap: 2,
-                p: 2,
-              }}
-            >
-              <IconButton
-                size="small"
-                onClick={() => setActiveActionCard(null)}
-                sx={{
-                  position: "absolute",
-                  top: 8,
-                  right: 8,
-                  backgroundColor: "rgba(0,0,0,0.1)",
-                  "&:hover": { backgroundColor: "rgba(0,0,0,0.2)" },
-                }}
-              >
-                <CloseIcon />
-              </IconButton>
-              <Button
-                variant="contained"
-                startIcon={<EditIcon />}
-                onClick={() => handleEdit(review)}
-                sx={{
-                  minWidth: 110,
-                  borderRadius: 2,
-                  textTransform: "capitalize",
-                  border: "1px solid #fff",
-                  "&:hover": { border: "1px solid #ffd700" },
-                }}
-              >
-                Edit
-              </Button>
-              <Button
-                variant="contained"
-                color="error"
-                startIcon={<DeleteIcon />}
-                onClick={() => handleDeleteClick(review)}
-                sx={{
-                  minWidth: 110,
-                  borderRadius: 2,
-                  textTransform: "capitalize",
-                  border: "1px solid #fff",
-                  "&:hover": { border: "1px solid #ffd700" },
-                }}
-              >
-                Delete
-              </Button>
-            </Box>
-          )}
-        </Card>
-
-        <Dialog
-          open={isExpanded}
-          onClose={() => setExpandedReviewId(review.id)}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogTitle>
-            <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-            >
-              <Typography variant="h6" component="h2">
-                Review Details
+                {review.description}
               </Typography>
-              <IconButton
-                onClick={() => setExpandedReviewId(review.id)}
-                size="small"
-              >
-                <CloseIcon />
-              </IconButton>
-            </Box>
-          </DialogTitle>
-          <DialogContent>
-            <Box display="flex" alignItems="center" mb={3}>
-              <Avatar sx={{ bgcolor: "#4b0082", mr: 2, width: 48, height: 48 }}>
-                {review.reviewerName.charAt(0).toUpperCase()}
-              </Avatar>
-              <Box>
-                <Typography variant="h6" component="div" fontWeight="medium">
-                  {review.reviewerName}
-                </Typography>
-                <Typography
-                  variant="body1"
-                  color="text.secondary"
-                  sx={{ mb: 0.5 }}
-                >
-                  Firm: <strong>{review.propName}</strong>
-                </Typography>
-                <Typography
-                  variant="body1"
-                  fontWeight="bold"
-                  sx={{ color: getGradeColor(review.rating) }}
-                >
-                  {getGradeDisplay(review.rating)}
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Updated: {formatDate(review.updatedAt)}
-                </Typography>
-              </Box>
-            </Box>
-            <Typography
-              variant="body1"
-              color="text.secondary"
-              sx={{
-                fontSize: "1.1rem",
-                lineHeight: 1.6,
-                whiteSpace: "pre-wrap",
-                wordBreak: "break-word",
-              }}
-            >
-              {review.description}
-            </Typography>
-          </DialogContent>
-        </Dialog>
-      </>
-    );
-  };
+            </DialogContent>
+          </Dialog>
+        </>
+      );
+    },
+    [
+      activeActionCard,
+      expandedReviewId,
+      canModify,
+      handleEdit,
+      handleDeleteClick,
+    ]
+  );
 
   return (
     <Container maxWidth="lg">
@@ -703,11 +761,22 @@ const Reviews = () => {
             sx={{ color: "white" }}
           >
             <MenuItem value="all">All Trading Firms</MenuItem>
-            {TRADING_FIRMS.map((f) => (
-              <MenuItem key={f.id} value={f.name}>
-                {f.name}
+            {firmsFilterOptionsStatus === "succeeded" ? (
+              firmsFilterOptions.length > 0 &&
+              firmsFilterOptions?.map((f) => (
+                <MenuItem key={f.firmId} value={f.firmName}>
+                  {f.firmName}
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem disabled>
+                {firmsFilterOptionsStatus === "loading"
+                  ? "Loading firms..."
+                  : firmsFilterOptionsError
+                  ? "Error loading firms"
+                  : "No firms available"}
               </MenuItem>
-            ))}
+            )}
           </Select>
         </MuiFormControl>
 
@@ -820,8 +889,8 @@ const Reviews = () => {
           >
             <Typography variant="body2" sx={{ color: "#cecece" }}>
               Showing{" "}
-              {Math.min(displayedReviews.length, filteredReviews.length)} of{" "}
-              {filteredReviews.length} reviews
+              {Math.min(displayedReviews?.length, filteredReviews?.length)} of{" "}
+              {filteredReviews?.length} reviews
               {ratingFilter !== "all" &&
                 ` (filtered by ${getGradeDisplay(ratingFilter)})`}
               {propNameFilter !== "all" && ` (${propNameFilter})`}
@@ -830,9 +899,9 @@ const Reviews = () => {
 
           {/* Reviews Grid */}
           <Grid container spacing={3} wrap="wrap">
-            {displayedReviews.map((review) => (
-              <Grid size={{ xs: 12, md: 6, lg: 4 }} key={review.id}>
-                <ReviewCard review={review} />
+            {displayedReviews?.map((review, i) => (
+              <Grid size={{ xs: 12, md: 6, lg: 4 }} key={review.id + i}>
+                <ReviewCard key={review.id} review={review} />
               </Grid>
             ))}
           </Grid>
@@ -891,8 +960,7 @@ const Reviews = () => {
         <DialogContent>
           <Typography>
             Are you sure you want to delete {selectedReview?.reviewerName}'s
-            review for {selectedReview?.propName}? This action cannot be
-            undone.
+            review for {selectedReview?.propName}? This action cannot be undone.
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -956,17 +1024,23 @@ const Reviews = () => {
           </Box>
 
           <Stack spacing={3}>
-            <TextField
-              fullWidth
-              label="Your Name"
-              value={user.firstName + " " + user.lastName}
-              onChange={(e) =>
-                handleInputChange("reviewerName", e.target.value)
-              }
-              aria-readonly
-              variant="outlined"
-              required
-            />
+            <FormControl fullWidth required>
+              <InputLabel id="trading-exp-label">Trading Experience</InputLabel>
+              <Select
+                labelId="trading-exp-label"
+                value={newReview.tradingExp}
+                label="Trading Experience"
+                onChange={(e) =>
+                  handleInputChange("tradingExp", e.target.value)
+                }
+              >
+                {TRADING_EXPERIENCE_OPTIONS.map((option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
 
             <FormControl fullWidth required>
               <InputLabel id="prop-name-label">Trading Firm</InputLabel>
@@ -976,11 +1050,22 @@ const Reviews = () => {
                 label="Trading Firm"
                 onChange={(e) => handleInputChange("propName", e.target.value)}
               >
-                {TRADING_FIRMS.map((firm) => (
-                  <MenuItem key={firm.id} value={firm.name}>
-                    {firm.name}
+                {firmsFilterOptionsStatus === "succeeded" ? (
+                  firmsFilterOptions.length > 0 &&
+                  firmsFilterOptions?.map((f) => (
+                    <MenuItem key={f.firmId} value={f.firmName}>
+                      {f.firmName}
+                    </MenuItem>
+                  ))
+                ) : (
+                  <MenuItem disabled>
+                    {firmsFilterOptionsStatus === "loading"
+                      ? "Loading firms..."
+                      : firmsFilterOptionsError
+                      ? "Error loading firms"
+                      : "No firms available"}
                   </MenuItem>
-                ))}
+                )}
               </Select>
             </FormControl>
 
@@ -1025,7 +1110,6 @@ const Reviews = () => {
                 variant="contained"
                 onClick={handleSubmitReview}
                 disabled={
-                  !newReview.reviewerName ||
                   !newReview.description ||
                   !newReview.rating ||
                   !newReview.propName ||

@@ -6,6 +6,7 @@ import TradingPostBanner from "../sections/TradingPostBanner";
 import TrustedFirms from "../sections/TrustedFirms";
 import { Box, Typography } from "@mui/material";
 import { MainContext } from "../../App";
+import { useSelector } from "react-redux";
 
 export const LoadingScreen = () => (
   <Box
@@ -50,17 +51,27 @@ export const LoadingScreen = () => (
 );
 
 const HomePage = () => {
+  const firmsStatus = useSelector((st)=> st.firms.status);
   // Add loading state
   const {isLoading, setIsLoading} = useContext(MainContext);
 
   // Simulate loading effect
   useEffect(() => {
+    if(firmsStatus==='loading'){
+      setIsLoading(true)
+    }
+    if(firmsStatus === 'failed'){
+      setIsLoading(true)
+    }
+    if(firmsStatus === 'succeeded'){
+      setIsLoading(false)
+    }
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 600); // Show loading for 1 second
+    }, 3000); // Show loading for 1 second
 
     return () => clearTimeout(timer);
-  }, []);
+  }, [firmsStatus]);
 
   return isLoading ? (
     <LoadingScreen />

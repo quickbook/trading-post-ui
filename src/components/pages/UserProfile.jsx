@@ -28,14 +28,13 @@ import {
   Save,
   Cancel,
 } from "@mui/icons-material";
-import { COUNTRIES } from "./RegisterPage";
 import {
   fetchCountries,
   selectCountryOptions,
-  selectCountriesStatus,
-  selectCountriesError,
   selectCountryNameByCode,
   resetDomainData,
+  selectDomainDataStatus,
+  selectDomainDataError,
 } from "../../features/domain/domainDataSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { selectUser } from "../../features/auth/loginSlice";
@@ -59,8 +58,8 @@ const UserProfile = () => {
   const dispatch = useDispatch();
   const userDetails = useSelector(selectUser);
   const countryOptions = useSelector(selectCountryOptions);
-  const countriesStatus = useSelector(selectCountriesStatus);
-  const countriesError = useSelector(selectCountriesError);
+  const countriesStatus = useSelector(selectDomainDataStatus);
+  const countriesError = useSelector(selectDomainDataError);
   const [userData, setUserData] = useState(userDetails);
 
   const [showPassword, setShowPassword] = useState(false);
