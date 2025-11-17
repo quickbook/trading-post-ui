@@ -18,6 +18,8 @@ import { styled, useTheme } from "@mui/material/styles";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { foreignNumberSystem } from "../commonFuctions/CommonFunctions";
+import { selectFirms } from "../../features/firms/firmsSelectors";
+import { useSelector } from "react-redux";
 
 // Styled components for custom styling
 const StyledCard = styled(Card)(({ theme }) => ({
@@ -237,7 +239,7 @@ const TradingCard = ({
   onCopyCode,
   logo,
   firmType = "partner",
-  firmPageURL = "#",
+  buyUrl = "#",
   //badgeLabel,
 }) => {
   const badgeStyles = getBadgeStyles(firmType);
@@ -295,7 +297,7 @@ const TradingCard = ({
       </CardBody>
 
       <CardFooter>
-        <FundButton component='a' href={firmPageURL} target="blank" variant="contained" size="large">
+        <FundButton component='a' href={buyUrl} target="blank" variant="contained" size="large">
           Get Funded
         </FundButton>
       </CardFooter>
@@ -305,6 +307,8 @@ const TradingCard = ({
 
 // Main Component - Rest of the code remains the same...
 const TradingCards = () => {
+  const allFirms = useSelector((st)=>st.firms.content);
+  const [firmDetails, setFirmDetails] = useState(allFirms);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState("");
 
@@ -398,16 +402,16 @@ const TradingCards = () => {
       <CarouselContainer>
         <SliderContainer>
           <Slider {...settings}>
-            {cardData?.map((card, index) => (
+            {firmDetails?.map((card, index) => (
               <Box key={index} sx={{ padding: "10px" }}>
                 <TradingCard
-                  name={card.name}
-                  profitSplit={card.tradingConditions.profitSplitPct}
-                  account={foreignNumberSystem(card.tradingConditions.maximumAccountSizeUsd)}
-                  code={card.tradingConditions.discountCode}
-                  logo={card.logo}
-                  firmType={card.firmType}
-                  firmPageURL={card.firmPageURL}
+                  name={card?.name}
+                  profitSplit={card?.tradingConditions.profitSplitPct}
+                  account={foreignNumberSystem(card?.tradingConditions.maximumAccountSizeUsd)}
+                  code={card?.tradingConditions.discountCode}
+                  logo={card?.logo}
+                  firmType={card?.firmType}
+                  buyUrl={card?.buyUrl}
                   onCopyCode={handleCopyCode}
                 />
               </Box>

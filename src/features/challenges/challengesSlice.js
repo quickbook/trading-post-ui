@@ -13,7 +13,7 @@ export const fetchChallenges = createAsyncThunk(
   "challenges/fetchChallenges",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.get(`/api/v1/challenges`);
+      const res = await axiosClient.get(getFullUrl(API_ENDPOINTS.CHALLENGES.BASE));
       return res.data; // should be an array of challenges
     } catch (err) {
       return rejectWithValue(err.response?.data || "Failed to fetch challenges");
@@ -24,7 +24,7 @@ export const fetchChallenges = createAsyncThunk(
 // 🔹 Create a new challenge
 export const createChallenge = createAsyncThunk(
   "challenges/createChallenge",
-  async (newChallenge, { rejectWithValue }) => {
+  async ({newChallenge, Firm_id}, { rejectWithValue }) => {
     try {
       const res = await axiosClient.post(`/api/v1/firms/${Firm_id}/challenges`, newChallenge);
       return res.data; // created challenge object
@@ -88,8 +88,9 @@ const challengesSlice = createSlice({
         state.error = null;
       })
       .addCase(fetchChallenges.fulfilled, (state, { payload }) => {
+        state.data = Array.isArray(payload?.data) ? payload.data : payload;
         state.status = "succeeded";
-        state.data = payload;
+        state.error = payload;
       })
       .addCase(fetchChallenges.rejected, (state, { payload }) => {
         state.status = "failed";

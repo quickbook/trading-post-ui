@@ -5,11 +5,12 @@ import loginReducer from "../features/auth/loginSlice";
 import registrationReducer from "../features/auth/registrationSlice";
 import reviewsReducer from "../features/reviews/reviewsSlice";
 import domainDataReducer from "../features/domain/domainDataSlice.js";
-
+import challengesReducer from "../features/challenges/challengesSlice.js"
 const store = configureStore({
   reducer: {
     auth: authReducer,
     firms: firmsReducer,
+    challenges: challengesReducer,
     login: loginReducer,
     registration: registrationReducer,
     reviews: reviewsReducer,

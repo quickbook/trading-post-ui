@@ -34,17 +34,22 @@ import {
 } from "../../features/firms/firmsSelectors";
 import { cardData } from "../../../CardsData";
 //import Flag from "react-flagkit";
-import Flag from 'react-world-flags'
+import Flag from "react-world-flags";
 
 export const platformSources = {
-  MT: "/platforms/mt5.webp",
-  MT5: "/platforms/mt5.webp",
-  MT4: "/platforms/mt4.webp",
+  "MetaTrader": "/platforms/mt5.webp",
+  "MetaTrader 5": "/platforms/mt5.webp",
+ "MetaTrader 4": "/platforms/mt4.webp",
   cTrader: "/platforms/ctrader.webp",
   "Match Trader": "/platforms/matchtrader.webp",
-  "Trade Locker": "/platforms/trade-locker.webp",
+  "TradeLocker": "/platforms/trade-locker.webp",
   "Project-X": "/platforms/project-x.webp",
   DXtrade: "/platforms/DX-trade.webp",
+  NinjaTrader: "/platforms/ninjatrader.webp",
+  Volumetrica: "/platforms/volumetrica.webp",
+  TradingView: "/platorms/tradingview.png",
+  "MT5 Web Trader": "/platforms/mt5.webp",
+  "MT5 Mobile": "/platforms/mt5.webp",
 };
 
 const tableHeaders = [
@@ -135,35 +140,32 @@ const FirmDetailsTableSection = () => {
   const [value, setValue] = useState(0);
   const [page, setPage] = useState(1);
   const dispatch = useDispatch();
-  // const [filteredFirms, setFilteredFirms] = useState([]);
   const navigate = useNavigate();
-  const rowsPerPage = 8;
-  //const firms = useSelector(selectFirms);
-  const allFirms = cardData; // Replace with useSelector(selectFirms) when API is ready
+  const allFirms = useSelector(selectFirms) ?? [];
+  //const allFirms = cardData; // Replace with useSelector(selectFirms) when API is ready
   const { pageNumber, pageSize, totalElements, totalPages } =
     useSelector(selectPagination);
   const status = useSelector(selectFirmsStatus);
   const error = useSelector(selectFirmsError);
+  const rowsPerPage = pageSize ?? 8;
   // Replace useGetFirmsQuery // Replace useGetFirmsQuery
   const [filteredFirms, setFilteredFirms] = useState(allFirms);
   const hasInitialFetch = useRef(false);
+  useEffect(() => {
+    if (status === "idle" && !hasInitialFetch.current) {
+      hasInitialFetch.current = true;
+      dispatch(fetchFirmsData());
+    }
+  }, [dispatch, status]);
+
   // useEffect(() => {
-  //   if (status === 'idle' && !hasInitialFetch.current) {
-  //     hasInitialFetch.current = true;
-  //     dispatch(fetchFirmsData());
-
+  //   if (allFirms) {
+  //     setFilteredFirms(firms);
+  //   } else {
+  //     setFilteredFirms(cardData);
   //   }
-
-  // }, [dispatch, status]);
-
-  //useEffect(() => {
-  // if (firms) {
-  //   setFilteredFirms(firms);
-  // }else{
-  //   setFilteredFirms(cardData);
-  // }
-  //  console.log(filteredFirms)
-  //}, [firms]);
+  //   console.log(filteredFirms);
+  // }, [firms]);
 
   function filterFirmsByTab(index) {
     if (!filteredFirms) return;
@@ -317,7 +319,7 @@ const FirmDetailsTableSection = () => {
           textAlign: "right",
           mb: 2,
           pr: 2,
-          maxWidth: 1640
+          maxWidth: 1640,
         }}
       >
         Showing {start}–{end} of {filteredFirms.length} results
@@ -328,7 +330,7 @@ const FirmDetailsTableSection = () => {
           boxShadow: "none",
           backgroundColor: "transparent",
           border: "1px solid #4b0082",
-          maxWidth:1640
+          maxWidth: 1640,
         }}
       >
         <StyledTable size="small">
@@ -490,7 +492,7 @@ const FirmDetailsTableSection = () => {
                       <Flag code={firm?.countryCode} height={16} />
                       <Typography
                         sx={{
-                          width: "120px",
+                          maxWidth: "120px",
                           fontFamily: "'Lora', Helvetica",
                           fontWeight: 500,
                           color: "white",
@@ -556,9 +558,9 @@ const FirmDetailsTableSection = () => {
                               title={platform}
                               key={platformIndex}
                               style={{
-                                objectFit: "cover",
-                                width: "24px",
-                                height: "24px",
+                                objectFit: "contain",
+                                width: "26px",
+                                height: "26px",
                               }}
                               alt={platform}
                               src={platformSources[`${platform}`]}
@@ -568,8 +570,8 @@ const FirmDetailsTableSection = () => {
                               key={platformIndex}
                               title={platform}
                               sx={{
-                                width: 24,
-                                height: 24,
+                                width: 26,
+                                height: 26,
                                 fontSize: 12,
                                 bgcolor: "#4b0082",
                               }}
@@ -635,7 +637,7 @@ const FirmDetailsTableSection = () => {
                         <StyledButton variant="contained">Details</StyledButton>
                       </Link>
                       <StyledButton
-                        href={firm?.firmPageURL}
+                        href={firm?.buyUrl}
                         target="blank"
                         variant="contained"
                         sx={{
@@ -667,7 +669,7 @@ const FirmDetailsTableSection = () => {
           bgcolor: "#ffffff20",
           borderRadius: "8px",
           border: "1px solid #4b0082",
-          maxWidth: 1640
+          maxWidth: 1640,
         }}
       >
         <Typography

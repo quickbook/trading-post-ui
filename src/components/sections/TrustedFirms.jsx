@@ -12,9 +12,10 @@ import {
 } from "@mui/material";
 import { cardData } from "/CardsData";
 import { useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
 // Card Component
-const TradingCard = ({ id, name, logo, firmPageURL = "#" }) => {
+const TradingCard = ({ id, name, logo, buyUrl = "#" }) => {
   const navigate = useNavigate();
   return (
     <Box
@@ -64,7 +65,7 @@ const TradingCard = ({ id, name, logo, firmPageURL = "#" }) => {
 
       {/* Buy now button */}
       <Button
-        href={firmPageURL}
+        href={buyUrl}
         target={"blank"}
         variant="contained"
         sx={{
@@ -91,7 +92,8 @@ const TradingCard = ({ id, name, logo, firmPageURL = "#" }) => {
 };
 
 export const TrustedFirms = () => {
-  const [firmDetails, setFirmDetails] = useState([]);
+  const allFirms = useSelector((st)=>st.firms.content);
+  const [firmDetails, setFirmDetails] = useState(allFirms);
   const navigate = useNavigate();
 
   const handleViewAll = () => {
@@ -100,7 +102,7 @@ export const TrustedFirms = () => {
   };
 
   useEffect(() => {
-    const trustedFirms = cardData.filter(
+    const trustedFirms = firmDetails.filter(
       (e) => e.firmType == "premium" || e.firmType == "trusted"
     );
 
@@ -218,7 +220,7 @@ export const TrustedFirms = () => {
                 id={card.id}
                 name={card.name}
                 logo={card.logo}
-                firmPageURL={card.firmPageURL}
+                buyUrl={card.buyUrl}
               />
             </Grid>
           ))}

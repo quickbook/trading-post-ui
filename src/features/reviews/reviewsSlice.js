@@ -24,9 +24,16 @@ export const fetchReviews = createAsyncThunk(
 
 export const createReview = createAsyncThunk(
   "reviews/createReview",
-  async (firmId,userId,payload, { rejectWithValue }) => {
+  async ({ firmId, userId, payload }, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.post(getFullUrl(API_ENDPOINTS.REVIEWS.BASE)+'/'+firmId+'/'+userId, payload);
+      const res = await axiosClient.post(
+        getFullUrl(API_ENDPOINTS.REVIEWS.BASE) +
+          "/firm/" +
+          firmId +
+          "/" +
+          userId,
+        payload
+      );
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || "Failed to create review");
@@ -38,7 +45,10 @@ export const updateReview = createAsyncThunk(
   "reviews/updateReview",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.put(getFullUrl(API_ENDPOINTS.REVIEWS.BY_ID(id)), data);
+      const res = await axiosClient.put(
+        getFullUrl(API_ENDPOINTS.REVIEWS.BY_ID(id)),
+        data
+      );
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || "Failed to update review");
@@ -50,7 +60,7 @@ export const deleteReview = createAsyncThunk(
   "reviews/deleteReview",
   async (id, { rejectWithValue }) => {
     try {
-      await axiosClient.deletegetFullUrl(API_ENDPOINTS.REVIEWS.BY_ID(id));
+      await axiosClient.delete(getFullUrl(API_ENDPOINTS.REVIEWS.BY_ID(id)));
       return id;
     } catch (err) {
       return rejectWithValue(err.response?.data || "Failed to delete review");
@@ -62,20 +72,36 @@ const slice = createSlice({
   name: "reviews",
   initialState: { data: [], status: "idle", error: null },
   reducers: {
-    clearReviews: (s) => { s.data = []; s.status = "idle"; s.error = null; },
+    clearReviews: (s) => {
+      s.data = [];
+      s.status = "idle";
+      s.error = null;
+    },
   },
   extraReducers: (b) => {
-    b.addCase(fetchReviews.pending, (s) => { s.status = "loading"; s.error = null; });
-    b.addCase(fetchReviews.fulfilled, (s, { payload }) => { s.status = "succeeded"; s.data = payload.data || []; });
-    b.addCase(fetchReviews.rejected, (s, a) => { s.status = "failed"; s.error = a.payload; });
+    b.addCase(fetchReviews.pending, (s) => {
+      s.status = "loading";
+      s.error = null;
+    });
+    b.addCase(fetchReviews.fulfilled, (s, { payload }) => {
+      console.log('Reviews', payload)
+      s.status = "succeeded";
+      s.data = payload.data || [];
+    });
+    b.addCase(fetchReviews.rejected, (s, a) => {
+      s.status = "failed";
+      s.error = a.payload;
+    });
 
-    b.addCase(createReview.fulfilled, (s, { payload }) => { s.data.unshift(payload); });
+    b.addCase(createReview.fulfilled, (s, { payload }) => {
+      s.data.unshift(payload);
+    });
     b.addCase(updateReview.fulfilled, (s, { payload }) => {
-      const i = s.data.findIndex(r => r.id === payload.id);
+      const i = s.data.findIndex((r) => r.id === payload.id);
       if (i !== -1) s.data[i] = payload;
     });
     b.addCase(deleteReview.fulfilled, (s, { payload: id }) => {
-      s.data = s.data.filter(r => r.id !== id);
+      s.data = s.data.filter((r) => r.id !== id);
     });
   },
 });

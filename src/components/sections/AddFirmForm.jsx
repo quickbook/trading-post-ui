@@ -30,16 +30,19 @@ import {
   Tab,
   Alert,
   Container,
+  CircularProgress,
+  FormHelperText,
 } from "@mui/material";
 import { Save, Cancel, Delete, Add, CloudUpload } from "@mui/icons-material";
 import {
   selectCountryOptions,
-  selectCountriesStatus,
-  selectCountriesError,
+  fetchCountries,
+  resetDomainData,
+  selectDomainDataError,
+  selectDomainDataStatus,
 } from "../../features/domain/domainDataSlice"; // adjust path
 
-import { useSelector } from "react-redux";
-import { COUNTRIES } from "../pages/RegisterPage";
+import { useDispatch, useSelector } from "react-redux";
 
 const ITEM_HEIGHT = 48;
 const ITEM_PADDING_TOP = 8;
@@ -115,42 +118,53 @@ function TabPanel({ children, value, index, ...other }) {
   );
 }
 
-const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
-  const [formData, setFormData] = useState({
-    name: "",
-    slug: "",
-    logo: "",
-    firmPageURL: "",
-    firmType: "partner",
-    rating: "A+",
-    country: "",
-    countryCode: "",
-    description: "",
-    tradingConditions: {
-      maximumAccountSizeUsd: 100000,
-      profitSplitPct: 80,
-      tradingPlatforms: [],
-      availableAssets: [],
-      discountCode: "",
-      keyFeatures: [],
-      withdrawalSpeed: "1-3 Business Days",
-    },
-    about: {
-      legalName: "",
-      registrationNo: "",
-      establishedDate: "",
-      founders: "",
-      headquarters: "",
-      jurisdiction: "",
-      firmStatus: "Active",
-    },
-    challenges: [],
-  });
+const initialFirmData = {
+  name: "",
+  slug: "",
+  logo: "",
+  buyUrl: "",
+  firmType: "partner",
+  rating: "A+",
+  allRatings: "",
+  country: "",
+  description: "",
+  tradingConditions: {
+    maximumAccountSizeUsd: 100000,
+    profitSplitPct: 80,
+    tradingPlatforms: [],
+    availableAssets: [],
+    discountCode: "",
+    keyFeatures: [],
+    withdrawalSpeed: "1-3 Business Days",
+  },
+  about: {
+    legalName: "",
+    registrationNo: "",
+    establishedDate: "",
+    founders: "",
+    headquarters: "",
+    jurisdiction: "",
+    firmStatus: "Active",
+  },
+  challenges: [],
+};
 
-  //const countryOptions = useSelector(selectCountryOptions); // [{value, label}]
-  //const countriesStatus = useSelector(selectCountriesStatus); // idle|loading|succeeded|failed
-  //const countriesError = useSelector(selectCountriesError);
-  const countriesStatus = "succeeded";
+const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
+  const dispatch = useDispatch();
+  const [formData, setFormData] = useState(initialFirmData);
+
+  const countryOptions = useSelector(selectCountryOptions) || []; // [{value, label}]
+  const countriesStatus = useSelector(selectDomainDataStatus); // idle|loading|succeeded|failed
+  const countriesError = useSelector(selectDomainDataError);
+
+  const getCountryCode = (label) => {
+    const country = countryOptions?.find((c) => c.label === label);
+    return country?.value || "";
+  };
+  const getCountryName = (value) => {
+    const country = countryOptions?.find((c) => c.value === value);
+    return country?.label || "";
+  };
 
   const [newChallenge, setNewChallenge] = useState({
     tier: "King",
@@ -170,11 +184,26 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
   const [logoError, setLogoError] = useState("");
 
   useEffect(() => {
+    dispatch(fetchCountries());
+  }, [dispatch]);
+
+  useEffect(() => {
     if (firm) {
-      setFormData(firm);
+      // Handle both country formats (string or object)
+      const countryValue =
+        typeof firm.country === "string"
+          ? firm.country
+          : getCountryName(firm.countryCode);
+
+      setFormData({
+        ...firm,
+        country: countryValue,
+      });
       if (firm.logo) setLogoPreview(firm.logo);
+    } else {
+      setFormData(initialFirmData);
     }
-  }, [firm]);
+  }, [firm, countryOptions]);
 
   const handleTabChange = (event, newValue) => {
     setCurrentTab(newValue);
@@ -192,8 +221,8 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
     if (!formData.rating) {
       newErrors.rating = "Rating is required";
     }
-    if (!formData.country.trim()) {
-      newErrors.country = "Country is required";
+    if (!formData.allRatings.trim()) {
+      newErrors.allRatings = "Total Ratings is required";
     }
     if (!formData.countryCode.trim()) {
       newErrors.countryCode = "Country code is required";
@@ -407,6 +436,22 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
       price: { amount: 0, currency: "USD" },
       buyUrl: "",
     });
+    // Clear challenge-related errors
+    const challengeErrorFields = [
+      "tier",
+      "phase",
+      "accountSizeUsd",
+      "price",
+      "profitTargetPct",
+      "dailyLossPct",
+      "maxLossPct",
+      "buyUrl",
+    ];
+    setErrors((prev) => {
+      const newErrors = { ...prev };
+      challengeErrorFields.forEach((field) => delete newErrors[field]);
+      return newErrors;
+    });
   };
 
   const addChallenge = () => {
@@ -457,53 +502,26 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
       return;
     }
 
-    //country code add
-    const countryObj = COUNTRIES.find((e)=>e.name===formData.country)
-
-    // Generate slug from name if not provided
+    // Prepare final data with proper country handling
     const finalFormData = {
       ...formData,
       slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, "-"),
-      countryCode: countryObj.code,
+      countryCode: getCountryCode(formData.country),
+      // Ensure country is stored as string
+      country: formData.country,
     };
 
+    console.log("Submitting firm data:", finalFormData);
     onSubmit(finalFormData);
-
     if (!firm) {
-      setFormData({
-        name: "",
-        slug: "",
-        logo: "",
-        firmPageURL: "",
-        firmType: "partner",
-        rating: "A+",
-        country: "",
-        countryCode: "",
-        description: "",
-        tradingConditions: {
-          maximumAccountSizeUsd: 100000,
-          profitSplitPct: 80,
-          tradingPlatforms: [],
-          availableAssets: [],
-          discountCode: "",
-          keyFeatures: [],
-          withdrawalSpeed: "1-3 Business Days",
-        },
-        about: {
-          legalName: "",
-          registrationNo: "",
-          establishedDate: "",
-          founders: "",
-          headquarters: "",
-          jurisdiction: "",
-          firmStatus: "Active",
-        },
-        challenges: [],
-      });
+      // Reset form for new entry
+      setFormData(initialFirmData);
       setLogoPreview("");
       setErrors({});
       setLogoError("");
     }
+
+    dispatch(resetDomainData());
   };
 
   const handleNextTab = () => {
@@ -588,12 +606,12 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 required
                 fullWidth
                 label="Firm Page URL"
-                name="firmPageURL"
-                value={formData.firmPageURL}
+                name="buyUrl"
+                value={formData.buyUrl}
                 onChange={handleChange}
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth required error={!!errors.firmType}>
                 <InputLabel>Firm Type</InputLabel>
                 <Select
@@ -608,18 +626,12 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                     </MenuItem>
                   ))}
                 </Select>
-                {errors.firmType && (
-                  <Typography
-                    variant="caption"
-                    color="error"
-                    sx={{ ml: 2, mt: 0.5, display: "block" }}
-                  >
-                    {errors.firmType}
-                  </Typography>
-                )}
+                <FormHelperText error={!!errors.firmType}>
+                  {errors.firmType}
+                </FormHelperText>
               </FormControl>
             </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth required error={!!errors.rating}>
                 <InputLabel>Rating</InputLabel>
                 <Select
@@ -634,18 +646,25 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                     </MenuItem>
                   ))}
                 </Select>
-                {errors.rating && (
-                  <Typography
-                    variant="caption"
-                    color="error"
-                    sx={{ ml: 2, mt: 0.5, display: "block" }}
-                  >
-                    {errors.rating}
-                  </Typography>
-                )}
+                <FormHelperText error={!!errors.rating}>
+                  {errors.rating}
+                </FormHelperText>
               </FormControl>
             </Grid>
-            <Grid size={{ xs: 12, md: 4 }}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                required
+                fullWidth
+                type="number"
+                label="Total Ratings"
+                name="allRatings"
+                value={formData.allRatings}
+                onChange={handleChange}
+                error={!!errors.allRatings}
+                helperText={errors.allRatings}
+              />
+            </Grid>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl
                 fullWidth
                 required // if you track field errors
@@ -673,20 +692,23 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                         Failed to load countries
                       </Typography>
                     </MenuItem>
-                  ) : COUNTRIES.length === 0 ? (
+                  ) : countryOptions?.length === 0 ? (
                     <MenuItem value="" disabled>
                       <em>No countries available</em>
                     </MenuItem>
                   ) : (
-                    COUNTRIES.map((country) => (
-                      <MenuItem key={country.code} value={country.name}>
-                        {country.name}
+                    countryOptions?.map((country) => (
+                      <MenuItem key={country.value} value={country.label}>
+                        {country.label}
                       </MenuItem>
                     ))
                   )}
                 </Select>
 
                 {/* helper text states */}
+                <FormHelperText error={!!errors.country}>
+                  {errors.country}
+                </FormHelperText>
                 {countriesStatus === "loading" && (
                   <FormHelperText>Loading countries…</FormHelperText>
                 )}
@@ -791,7 +813,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 name="profitSplitPct"
                 value={formData.tradingConditions.profitSplitPct}
                 onChange={handleTradingNumberChange}
-                inputProps={{ min: 0, max: 100 }}
+                slotProps={{ htmlInput:{min: 0, max: 100} }}
                 error={!!errors.profitSplitPct}
                 helperText={errors.profitSplitPct}
               />
@@ -1200,7 +1222,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                     helperText={errors.price}
                   />
                 </Grid>
-                <Grid size={{ xs: 12, md: 4 }}>
+                <Grid size={{ xs: 12, md: 6 }}>
                   <TextField
                     required
                     fullWidth

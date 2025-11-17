@@ -19,7 +19,6 @@ import BookACallSection from "./components/sections/BookACallSection";
 import ReviewsPage from "./components/pages/ReviewsPage";
 import { PropFirmDetailsPage } from "./components/pages/PropFirmDetailsPage";
 import ErrorPage from "./components/pages/ErrorPage";
-import PropFirmsChallenges from "./components/sections/PropFirmsChallenges";
 import AdminPage from "./components/pages/AdminPage";
 import LoginPage from "./components/pages/LoginPage";
 import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
@@ -30,6 +29,7 @@ import { selectAccessToken } from "./features/auth/authSlice";
 import ForgotPasswordPage from "./components/pages/ForgotPasswordPage";
 import UserProfile from "./components/pages/UserProfile";
 import { selectRole, selectUser, setUserFromStorage } from "./features/auth/loginSlice";
+import ChallengesPage from "./components/pages/ChallengesPage";
 
 export const MainContext = createContext();
 
@@ -155,7 +155,7 @@ function App() {
             <Route path="/comparefirms" element={<CompareFirmsPage />} />
             <Route
               path="/comparefirms/challenges"
-              element={<PropFirmsChallenges />}
+              element={<ChallengesPage />}
             />
             <Route path="/featurefirms" element={<FeatureFirmsPage />} />
             <Route path="/reviews" element={<ReviewsPage />} />

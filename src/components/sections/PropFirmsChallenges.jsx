@@ -20,141 +20,42 @@ import SearchIcon from "@mui/icons-material/Search";
 import { useNavigate } from "react-router-dom";
 import { foreignNumberSystem } from "../commonFuctions/CommonFunctions";
 import { cardData } from "../../../CardsData";
-
-// Sample data for prop firms challenges (individual challenge objects)
-// export const sampleFirmChallenges = [
-//   {
-//     id: 1,
-//     firmName: "Gilmer",
-//     buyUrl: "https://gilmer.com/ref/123/",
-//     logo: "/firms/gilmer.png",
-//     tier: "Two Step Path",
-//     phase: "2-Phase",
-//     profitTarget: 13,
-//     dailyLoss: 5,
-//     maxLoss: 10,
-//     price: 15,
-//     accountSizeUsd: 2000,
-//   },
-//   {
-//     id: 2,
-//     firmName: "Alpha Trading Group",
-//     buyUrl: "https://alphafunded.com/ref/1491/",
-//     logo: "/firms/alpha-trading.png",
-//     tier: "King",
-//     phase: "1-Phase",
-//     profitTarget: 25,
-//     dailyLoss: 3,
-//     maxLoss: 5,
-//     price: 2000,
-//     accountSizeUsd: 1000000,
-//   },
-//   {
-//     id: 3,
-//     firmName: "Alpha Trading Group",
-//     buyUrl: "https://alphafunded.com/ref/1491/",
-//     logo: "/firms/alpha-trading.png",
-//     tier: "Duke",
-//     phase: "2-Phase",
-//     profitTarget: 20,
-//     dailyLoss: 4,
-//     maxLoss: 6,
-//     price: 1500,
-//     accountSizeUsd: 500000,
-//   },
-//   {
-//     id: 4,
-//     firmName: "Blue Guardian",
-//     buyUrl: "https://blueguardian.com/ref/456/",
-//     logo: "/firms/blue-guardian.png",
-//     tier: "Guardian",
-//     phase: "1-Phase",
-//     profitTarget: 15,
-//     dailyLoss: 4,
-//     maxLoss: 8,
-//     price: 99,
-//     accountSizeUsd: 50000,
-//   },
-//   {
-//     id: 5,
-//     firmName: "Apex Trader Funding",
-//     buyUrl: "https://apextrader.com/ref/789/",
-//     logo: "/firms/apex-trader.png",
-//     tier: "Pro",
-//     phase: "Instant-Funding",
-//     profitTarget: 20,
-//     dailyLoss: 3,
-//     maxLoss: 6,
-//     price: 85,
-//     accountSizeUsd: 25000,
-//   },
-//   {
-//     id: 6,
-//     firmName: "The 5%ers",
-//     buyUrl: "https://the5ers.com/ref/101/",
-//     logo: "/firms/5percenters.png",
-//     tier: "One-stage",
-//     phase: "Funded",
-//     profitTarget: 50,
-//     dailyLoss: 3,
-//     maxLoss: 5,
-//     price: 250,
-//     accountSizeUsd: 6000,
-//   },
-//   {
-//     id: 7,
-//     firmName: "Funded Trading Plus",
-//     buyUrl: "https://fundedtradingplus.com/ref/202/",
-//     logo: "/firms/funded-trading-plus.png",
-//     tier: "1 Step",
-//     phase: "Instant-Funding",
-//     profitTarget: 80,
-//     dailyLoss: 3,
-//     maxLoss: 5,
-//     price: 299,
-//     accountSizeUsd: 15000,
-//   },
-//   {
-//     id: 8,
-//     firmName: "Gilmer",
-//     buyUrl: "https://gilmer.com/ref/123/",
-//     logo: "/firms/gilmer.png",
-//     tier: "One-stage",
-//     phase: "1-Phase",
-//     profitTarget: 10,
-//     dailyLoss: 6,
-//     maxLoss: 12,
-//     price: 25,
-//     accountSizeUsd: 1000,
-//   },
-// ];
+import { useDispatch, useSelector } from "react-redux";
+import {
+  fetchChallenges,
+  selectChallenges,
+  selectChallengesError,
+  selectChallengesStatus,
+} from "../../features/challenges/challengesSlice";
+import { LoadingScreen } from "../pages/HomePage";
 
 // Main Component
-const PropFirmsChallenges = () => {
-  const allFirms = cardData;
-  const [challengesDetails, setChallengesDetails] = useState([]);
+const PropFirmsChallenges = ({firm = null}) => {
+  const dispatch = useDispatch();
+  const allChallenges = useSelector(selectChallenges);
+  const challengesStatus = useSelector(selectChallengesStatus);
+  const ChallengesError = useSelector(selectChallengesError);
+
+  const [challengesDetails, setChallengesDetails] = useState(
+    allChallenges ?? []
+  );
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFirm, setSelectedFirm] = useState("All");
   const [selectedPhase, setSelectedPhase] = useState("All");
   const [maxAccountFilter, setMaxAccountFilter] = useState("All");
   const [sortBy, setSortBy] = useState("maxAccountSize");
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
 
   useEffect(() => {
-    const allChallenges = allFirms
-      .filter((e) => e.challenges?.length > 0)
-      .flatMap((e) =>
-        e.challenges.map((ch) => ({
-          firmId: e.id,
-          firmName: e.name,
-          logo: e.logo,
-          ...ch,
-        }))
-      );
+    dispatch(fetchChallenges());
+  }, [dispatch]);
 
+  useEffect(() => {
+    setIsLoading(challengesStatus === 'loading' ? true : false)
     setChallengesDetails(allChallenges);
-  }, []);
+  }, [allChallenges]);
 
   // Get unique values for filters
   const firmNames = [
@@ -184,7 +85,7 @@ const PropFirmsChallenges = () => {
       challenge?.phase.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesFirm =
-      selectedFirm === "All" || challenge?.firmName === selectedFirm;
+      firm ? challenge?.firmName === firm :(selectedFirm === "All" || challenge?.firmName === selectedFirm);
     const matchesPhase =
       selectedPhase === "All" || challenge?.phase === selectedPhase;
 
@@ -265,58 +166,8 @@ const PropFirmsChallenges = () => {
     },
   };
 
-  return (
-    <Container maxWidth="lg" sx={{ py: 2 }}>
-      <Button
-        variant="contained"
-        color="secondary"
-        sx={{ mb: 2 }}
-        onClick={() => navigate(-1)}
-      >
-        Back
-      </Button>
-
-      {/* Header */}
-      <Box
-        sx={{
-          width: "100%",
-          textAlign: "center",
-          mb: 4,
-          bgcolor: "rgba(255,255,255,0.12)",
-          p: 3,
-          borderRadius: 2,
-          border: "1px solid #cecece",
-        }}
-      >
-        <Typography
-          variant="h3"
-          component="h1"
-          gutterBottom
-          sx={{
-            fontWeight: "bold",
-            textAlign: "center",
-            mb: 2,
-            color: "#ffffff",
-          }}
-        >
-          Trading Post Challenges
-        </Typography>
-
-        <Typography
-          variant="h6"
-          sx={{
-            textAlign: "center",
-            mb: 2,
-            maxWidth: "600px",
-            mx: "auto",
-            color: "#cecece",
-          }}
-        >
-          Find the perfect prop firm challenge that matches your trading style
-          and goals
-        </Typography>
-      </Box>
-
+  return isLoading ? <LoadingScreen /> :(
+    <Box>
       {/* Filter Controls */}
       <Paper
         sx={{
@@ -368,12 +219,13 @@ const PropFirmsChallenges = () => {
           </Grid>
 
           {/* Firm Name Select */}
-          <Grid size={{ xs: 12, md: 6, lg: 2 }}>
+          {!firm && <Grid size={{ xs: 12, md: 6, lg: 2 }}>
             <TextField
               select
               fullWidth
               label="Firm Name"
-              value={selectedFirm}
+              value={firm ? firm : selectedFirm}
+              disabled={firm}
               onChange={handleFirmChange}
               sx={filterTextFieldStyles}
               SelectProps={{
@@ -398,7 +250,7 @@ const PropFirmsChallenges = () => {
                 </MenuItem>
               ))}
             </TextField>
-          </Grid>
+          </Grid>}
 
           {/* Phase Type Select */}
           <Grid size={{ xs: 12, md: 6, lg: 2 }}>
@@ -548,27 +400,26 @@ const PropFirmsChallenges = () => {
       </Paper>
 
       {/* Challenges Grid */}
-      <ChallengesGridView challenges={sortedChallenges} />
-    </Container>
+      <ChallengesGridView challenges={sortedChallenges} challengesStatus={challengesStatus} />
+    </Box>
   );
 };
 
 // Reusable Grid View Component
-const ChallengesGridView = ({ challenges }) => {
+const ChallengesGridView = ({ challenges, challengesStatus }) => {
   if (challenges.length === 0) {
     return (
       <Paper
         sx={{
-          p: 4,
+          p: 6,
+          my: 4,
           textAlign: "center",
           width: "100%",
           background:
             "linear-gradient(135deg, #eed6ffff 0%, #e2bcffff 40%, #b173f8ff 100%)",
         }}
       >
-        <Typography variant="h6">
-          No challenges match your current filters.
-        </Typography>
+        <Typography variant="h6">{challengesStatus === 'loading'? "Loading Challenges..." :"No challenges found."}</Typography>
         <Typography variant="body2" sx={{ mt: 1 }}>
           Try adjusting your search criteria or filters.
         </Typography>
