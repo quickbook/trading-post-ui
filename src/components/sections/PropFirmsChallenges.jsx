@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Box,
   Container,
@@ -45,11 +45,16 @@ const PropFirmsChallenges = ({firm = null}) => {
   const [sortBy, setSortBy] = useState("maxAccountSize");
   const [isLoading, setIsLoading] = useState(false);
 
+  const initAllChallenges = useRef(false)
+
   const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(fetchChallenges());
-  }, [dispatch]);
+    if(!initAllChallenges.current){
+      if(!allChallenges.length) dispatch(fetchChallenges());
+      initAllChallenges.current = true;
+    }
+  }, []);
 
   useEffect(() => {
     setIsLoading(challengesStatus === 'loading' ? true : false)

@@ -141,13 +141,11 @@ const FirmDetailsTableSection = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const allFirms = useSelector(selectFirms) ?? [];
-  //const allFirms = cardData; // Replace with useSelector(selectFirms) when API is ready
   const { pageNumber, pageSize, totalElements, totalPages } =
     useSelector(selectPagination);
   const status = useSelector(selectFirmsStatus);
   const error = useSelector(selectFirmsError);
   const rowsPerPage = pageSize ?? 8;
-  // Replace useGetFirmsQuery // Replace useGetFirmsQuery
   const [filteredFirms, setFilteredFirms] = useState(allFirms);
   const hasInitialFetch = useRef(false);
   useEffect(() => {
@@ -156,15 +154,6 @@ const FirmDetailsTableSection = () => {
       dispatch(fetchFirmsData());
     }
   }, [dispatch, status]);
-
-  // useEffect(() => {
-  //   if (allFirms) {
-  //     setFilteredFirms(firms);
-  //   } else {
-  //     setFilteredFirms(cardData);
-  //   }
-  //   console.log(filteredFirms);
-  // }, [firms]);
 
   function filterFirmsByTab(index) {
     if (!filteredFirms) return;

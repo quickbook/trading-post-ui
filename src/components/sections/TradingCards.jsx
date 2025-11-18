@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { cardData } from "/CardsData";
 import Slider from "react-slick";
 import {
   Card,
@@ -310,9 +309,6 @@ const TradingCards = () => {
   const [firmDetails, setFirmDetails] = useState(allFirms);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState("");
-
-  const partnerFirms = cardData?.filter((e)=> e.firmType === 'partner')
-
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "lg"));

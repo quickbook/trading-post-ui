@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import {
   Box,
   Typography,
@@ -13,7 +13,10 @@ import {
   Tabs,
   Tab,
   Container,
+  Switch,
+  FormControlLabel,
 } from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle"; // Import the tick icon
 import { useNavigate, useParams } from "react-router-dom";
 import {
   BadgeContainer,
@@ -54,9 +57,51 @@ export const PropFirmDetailsPage = () => {
   const [copiedCode, setCopiedCode] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [filterVerifiedOnly, setFilterVerifiedOnly] = useState(false);
+  const [sortBy, setSortBy] = useState("newest");
   const navigate = useNavigate();
 
+  const initPropFirmDetails = useRef(false);
+
   const reviewData = firmDetails?.reviews ?? [];
+
+  // Helper function to convert rating letters to numerical values for sorting
+  const getRatingValue = (rating) => {
+    const ratingMap = {
+      "A+": 5,
+      A: 4,
+      "B+": 3,
+      B: 2,
+      "C+": 1,
+      C: 0,
+    };
+    return ratingMap[rating] || 0;
+  };
+
+  // Filter and sort reviews
+  const filteredReviews = React.useMemo(() => {
+    let filtered = reviewData.filter(
+      (review) => !filterVerifiedOnly || review.isVrfdPurchase
+    );
+
+    // Sort the filtered reviews
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          return new Date(b.updatedAt) - new Date(a.updatedAt);
+        case "oldest":
+          return new Date(a.updatedAt) - new Date(b.updatedAt);
+        case "top-rated":
+          return getRatingValue(b.rating) - getRatingValue(a.rating);
+        case "low-rated":
+          return getRatingValue(a.rating) - getRatingValue(b.rating);
+        default:
+          return new Date(b.updatedAt) - new Date(a.updatedAt);
+      }
+    });
+
+    return filtered;
+  }, [reviewData, filterVerifiedOnly, sortBy]);
 
   const badgeStyles = getBadgeStyles(firmDetails?.firmType);
   const valueStyles = { color: "#cecece" };
@@ -73,11 +118,14 @@ export const PropFirmDetailsPage = () => {
   };
 
   useEffect(() => {
-    dispatch(fetchFirmById(firmId));
-  }, [dispatch]);
+    if(!initPropFirmDetails.current){
+      if(!propFirm) dispatch(fetchFirmById(firmId));
+      initPropFirmDetails.current = true;
+    }
+  }, []);
 
   useEffect(() => {
-    setIsLoading(!propFirm && propFirmStatus === "loading" ? true : false);
+    setIsLoading(!propFirm || propFirmStatus === "loading" ? true : false);
     setFirmDetails(propFirm);
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [propFirm]);
@@ -268,7 +316,7 @@ export const PropFirmDetailsPage = () => {
           </Alert>
         </Snackbar>
       </Box>
-      <Box sx={{ width: {xs: "75%", xl: "100%"}, mb: 1, maxWidth: 1280 }}>
+      <Box sx={{ width: { xs: "75%", xl: "100%" }, mb: 1, maxWidth: 1280 }}>
         <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
           <Tabs
             value={value}
@@ -792,33 +840,146 @@ export const PropFirmDetailsPage = () => {
               <Typography variant="h5" color="white">
                 Customer Reviews
               </Typography>
-              {/* <Button
-              variant="contained"
+              <Button
+                onClick={() => navigate("/reviews")}
+                variant="contained"
+                sx={{
+                  borderRadius: 2,
+                  textTransform: "capitalize",
+                  bgcolor: "#4b0082",
+                  px: 2,
+                  py: 1.2,
+                  border: "1px solid #fff",
+                  "&:hover": {
+                    bgcolor: "#4b0082b2",
+                    border: "1px solid #ffd700",
+                  },
+                }}
+              >
+                Write a Review
+              </Button>
+            </Box>
+
+            {/* Filters and Sort Section */}
+            <Box
               sx={{
-                bgcolor: "#4b0082",
-                "&:hover": { bgcolor: "#4b0082dd" },
-                borderRadius: 2,
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                mb: 3,
+                flexWrap: "wrap",
+                gap: 2,
               }}
             >
-              Write a Review
-            </Button> */}
+              {/* Verified Purchase Filter with Switch */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+                <Typography
+                  variant="body2"
+                  color="white"
+                  sx={{ whiteSpace: "nowrap" }}
+                >
+                  Verified Purchase Only
+                </Typography>
+                <Switch
+                  checked={filterVerifiedOnly}
+                  onChange={(e) => setFilterVerifiedOnly(e.target.checked)}
+                  sx={{
+                    "& .MuiSwitch-switchBase": {
+                      color: "#ffffff",
+                    },
+                    "& .MuiSwitch-switchBase.Mui-checked": {
+                      color: "#0b4d0e",
+                    },
+                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                      backgroundColor: "#0b4d0e",
+                    },
+                    "& .MuiSwitch-track": {
+                      backgroundColor: "#666666",
+                      opacity: 1,
+                    },
+                    "& .MuiSwitch-switchBase:not(.Mui-checked) .MuiSwitch-thumb":
+                      {
+                        backgroundColor: "#ffffff",
+                      },
+                  }}
+                />
+              </Box>
+              {/* Sort Dropdown */}
+              <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                <Typography variant="body2" color="white">
+                  Sort by:
+                </Typography>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value)}
+                  style={{
+                    backgroundColor: "#000000",
+                    color: "white",
+                    border: "1px solid #4b0082",
+                    borderRadius: "4px",
+                    padding: "4px 8px",
+                    fontFamily: "Montserrat, Helvetica",
+                  }}
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="top-rated">Highest Rating</option>
+                  <option value="low-rated">Lowest Rating</option>
+                </select>
+              </Box>
             </Box>
 
             <Typography variant="body2" color="white" textAlign="right" mb={2}>
-              Showing {reviewData?.length} reviews
+              Showing {filteredReviews.length} reviews
             </Typography>
 
             <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
-              {reviewData?.length ? (
-                reviewData.map((review, idx) => (
+              {filteredReviews.length === 0 ? (
+                <Box
+                  textAlign="center"
+                  py={6}
+                  sx={{ bgcolor: "#ffffff50", borderRadius: 2, mt: 4 }}
+                >
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    No reviews found
+                  </Typography>
+                  <Typography variant="body1" color="text.secondary" mb={3}>
+                    No reviews found with the current filters
+                  </Typography>
+                </Box>
+              ) : (
+                filteredReviews.map((review, idx) => (
                   <Card
                     key={idx}
                     sx={{
                       bgcolor: "rgba(255,255,255,0.25)",
                       borderRadius: 2,
+                      position: "relative",
                     }}
                   >
-                    <CardContent>
+                    {/* Verified Purchase Chip - Top Right */}
+                    {review.isVrfdPurchase && (
+                      <Box sx={{ position: "absolute", top: 12, left: 12 }}>
+                        <Chip
+                          icon={<CheckCircleIcon sx={{ fontSize: "16px" }} />}
+                          label="Verified Purchase"
+                          size="small"
+                          sx={{
+                            bgcolor: "#0b4d0e91", // Green color
+                            color: "white",
+                            fontSize: "0.7rem",
+                            height: "24px",
+                            fontWeight: "bold",
+                            "& .MuiChip-icon": {
+                              color: "white",
+                              fontSize: "16px",
+                            },
+                          }}
+                        />
+                      </Box>
+                    )}
+
+                    <CardContent sx={{ pt: review.isVrfdPurchase ? 5 : 2 }}>
                       <Box
                         sx={{
                           display: "flex",
@@ -834,16 +995,6 @@ export const PropFirmDetailsPage = () => {
                         </Typography>
                       </Box>
                       <Typography
-                        variant="body2"
-                        color="whitesmoke"
-                        sx={{ mb: 0.5 }}
-                      >
-                        Trading Experience:{" "}
-                        <strong>
-                          {getTradingExpDisplay(review.tradingExp)}
-                        </strong>
-                      </Typography>
-                      <Typography
                         variant="body1"
                         fontWeight="bold"
                         sx={{ color: getGradeColor(review?.rating) }}
@@ -853,23 +1004,13 @@ export const PropFirmDetailsPage = () => {
                       <Typography
                         color="white"
                         fontWeight="bold"
-                        sx={{ wordBreak: "break-word", mt: 3 }}
+                        sx={{ wordBreak: "break-word", mt: 1 }}
                       >
                         {review.description}
                       </Typography>
                     </CardContent>
                   </Card>
                 ))
-              ) : (
-                <Box
-                  textAlign="center"
-                  py={4}
-                  sx={{ bgcolor: "#ffffff50", borderRadius: 2, mb: 3 }}
-                >
-                  <Typography variant="h6" color="white" gutterBottom>
-                    No reviews
-                  </Typography>
-                </Box>
               )}
             </Box>
           </Box>

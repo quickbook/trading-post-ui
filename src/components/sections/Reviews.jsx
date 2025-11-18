@@ -1,4 +1,10 @@
-import React, { useMemo, useState, useEffect, useCallback } from "react";
+import React, {
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+  useRef,
+} from "react";
 import {
   Box,
   Typography,
@@ -25,7 +31,11 @@ import {
   MenuItem,
   InputLabel,
   FormControl as MuiFormControl,
+  Chip,
+  Switch,
 } from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle"; // Import the tick icon
+
 import {
   Close as CloseIcon,
   Add as AddIcon,
@@ -156,7 +166,12 @@ const Reviews = () => {
   const [showAllReviews, setShowAllReviews] = useState(false);
   const [ratingFilter, setRatingFilter] = useState("all");
   const [propNameFilter, setPropNameFilter] = useState("all");
+  const [filterVerifiedOnly, setFilterVerifiedOnly] = useState(false);
+  const [sortBy, setSortBy] = useState("newest");
   const [expandedReviewId, setExpandedReviewId] = useState(null);
+
+  const initReviews = useRef(false);
+  const initFilterOptions = useRef(false);
 
   const navigate = useNavigate();
 
@@ -171,14 +186,17 @@ const Reviews = () => {
 
   // Fetch reviews on component mount
   useEffect(() => {
-    dispatch(fetchReviews());
-  }, [dispatch]);
-
-  useEffect(() => {
-    //if (firmsFilterOptions && firmsFilterOptions.length) {
-      dispatch(fetchFirmsFilterOptions());
-    //}
-  }, [dispatch]);
+    if (!initReviews.current) {
+      if(!reviews.length) dispatch(fetchReviews());
+      initReviews.current = true;
+    }
+    // Fetch firms filter options once
+    if (!initFilterOptions.current) {
+      if(!firmsFilterOptions.length && firmsFilterOptionsStatus === 'idle') dispatch(fetchFirmsFilterOptions());
+      initFilterOptions.current = true;
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, []);
 
   const canModify = useCallback(() => {
     if (user && role === "ADMIN") return true;
@@ -260,22 +278,51 @@ const Reviews = () => {
     setNewReview((prev) => ({ ...prev, [field]: value }));
     if (field === "propName" && value) {
       const selected = firmsFilterOptions.find((f) => f.firmName === value);
-      if (selected) setNewReview((prev) => ({ ...prev, propId: selected.id }));
+      if (selected)
+        setNewReview((prev) => ({ ...prev, propId: selected.firmId }));
     }
   };
 
   const handleToggleExpand = (reviewId) =>
     setExpandedReviewId(expandedReviewId === reviewId ? null : reviewId);
 
+  const getRatingValue = (rating) => {
+    const ratingMap = {
+      "A+": 5,
+      A: 4,
+      "B+": 3,
+      B: 2,
+      "C+": 1,
+      C: 0,
+    };
+    return ratingMap[rating] || 0;
+  };
   const filteredReviews = useMemo(() => {
     const reviewsArray = Array.isArray(reviews) ? reviews : [];
-    return reviewsArray.filter((r) => {
+    let filtered = reviewsArray.filter((r) => {
       const matchRating = ratingFilter === "all" || r.rating === ratingFilter;
       const matchFirm =
         propNameFilter === "all" || r.propName === propNameFilter;
-      return matchRating && matchFirm;
+      const matchVerified = !filterVerifiedOnly || r.isVrfdPurchase;
+      return matchRating && matchFirm && matchVerified;
     });
-  }, [reviews, ratingFilter, propNameFilter]);
+    // Sort the filtered reviews
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "newest":
+          return new Date(b.updatedAt) - new Date(a.updatedAt);
+        case "oldest":
+          return new Date(a.updatedAt) - new Date(b.updatedAt);
+        case "top-rated":
+          return getRatingValue(b.rating) - getRatingValue(a.rating);
+        case "low-rated":
+          return getRatingValue(a.rating) - getRatingValue(b.rating);
+        default:
+          return new Date(b.updatedAt) - new Date(a.updatedAt);
+      }
+    });
+    return filtered;
+  }, [reviews, ratingFilter, propNameFilter, filterVerifiedOnly, sortBy]);
 
   const displayedReviews = useMemo(() => {
     return showAllReviews ? filteredReviews : filteredReviews.slice(0, 9);
@@ -378,7 +425,34 @@ const Reviews = () => {
               },
             }}
           >
-            <CardContent sx={{ flexGrow: 1, position: "relative", padding: '0px !imporatant' }}>
+            {/* Verified Purchase Chip - Top Right */}
+            {review.isVrfdPurchase && (
+              <Box sx={{ position: "absolute", top: 2, left: 12 }}>
+                <Chip
+                  icon={<CheckCircleIcon sx={{ fontSize: "16px" }} />}
+                  label="Verified Purchase"
+                  size="small"
+                  sx={{
+                    bgcolor: "#024e06d2", // Green color
+                    color: "white",
+                    fontSize: "0.7rem",
+                    height: "24px",
+                    fontWeight: "bold",
+                    "& .MuiChip-icon": {
+                      color: "white",
+                      fontSize: "16px",
+                    },
+                  }}
+                />
+              </Box>
+            )}
+            <CardContent
+              sx={{
+                flexGrow: 1,
+                position: "relative",
+                padding: "0px !imporatant",
+              }}
+            >
               <Typography
                 variant="caption"
                 color="text.secondary"
@@ -583,6 +657,27 @@ const Reviews = () => {
                 </IconButton>
               </Box>
             </DialogTitle>
+            {/* Verified Purchase Chip - Top Right */}
+            {review.isVrfdPurchase && (
+              <Box sx={{ position: "absolute", top: 56, left: 88 }}>
+                <Chip
+                  icon={<CheckCircleIcon sx={{ fontSize: "16px" }} />}
+                  label="Verified Purchase"
+                  size="small"
+                  sx={{
+                    bgcolor: "#024e06d2", // Green color
+                    color: "white",
+                    fontSize: "0.7rem",
+                    height: "24px",
+                    fontWeight: "bold",
+                    "& .MuiChip-icon": {
+                      color: "white",
+                      fontSize: "16px",
+                    },
+                  }}
+                />
+              </Box>
+            )}
             <DialogContent>
               <Box display="flex" alignItems="center" mb={3}>
                 <Avatar
@@ -700,6 +795,7 @@ const Reviews = () => {
           alignItems: "center",
         }}
       >
+        {/* Rating filter options */}
         <MuiFormControl
           size="small"
           sx={{
@@ -733,7 +829,7 @@ const Reviews = () => {
             ))}
           </Select>
         </MuiFormControl>
-
+        {/* Firm filter options */}
         <MuiFormControl
           size="small"
           sx={{
@@ -778,23 +874,118 @@ const Reviews = () => {
             )}
           </Select>
         </MuiFormControl>
-
-        <Box sx={{ flexGrow: 1 }} />
-        <Button
-          onClick={handleWriteClick}
-          variant="contained"
+        {/*Sorting options */}
+        <MuiFormControl
+          size="small"
           sx={{
-            borderRadius: 2,
-            textTransform: "capitalize",
-            bgcolor: "#4b0082",
-            px: 2,
-            py: 1.2,
-            border: "1px solid #fff",
-            "&:hover": { bgcolor: "#4b0082b2", border: "1px solid #ffd700" },
+            minWidth: 220,
+            borderRadius: 1,
+            "& .MuiInputLabel-root": { color: "white" },
+            "& .MuiSelect-select": { color: "white" },
+            "& .MuiSvgIcon-root": { color: "white" },
+            "& .MuiOutlinedInput-notchedOutline": { borderColor: "white" },
+            "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "#bbb" },
           }}
         >
-          Write a Review
-        </Button>
+          <InputLabel id="prop-name-sort-by">
+            <Box display="flex" alignItems="center">
+              <FilterListIcon sx={{ fontSize: 18, mr: 0.5, color: "white" }} />
+              Sort By
+            </Box>
+          </InputLabel>
+          <Select
+            labelId="prop-name-sort-by"
+            value={sortBy}
+            label="Filter by Firm"
+            onChange={(e) => setSortBy(e.target.value)}
+            sx={{ color: "white" }}
+          >
+            <MenuItem value="newest">Newest First</MenuItem>
+            <MenuItem value="oldest">Oldest First</MenuItem>
+            <MenuItem value="top-rated">Highest Rating</MenuItem>
+            <MenuItem value="low-rated">Lowest Rating</MenuItem>
+          </Select>
+        </MuiFormControl>
+        {/* Verified Purchase Filter with Switch */}
+        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+          <Typography
+            variant="body2"
+            color="white"
+            sx={{ whiteSpace: "nowrap" }}
+          >
+            Verified Purchase Only
+          </Typography>
+          <Switch
+            checked={filterVerifiedOnly}
+            onChange={(e) => setFilterVerifiedOnly((e.target.checked))}
+            sx={{
+              "& .MuiSwitch-switchBase": {
+                color: "#ffffff",
+              },
+              "& .MuiSwitch-switchBase.Mui-checked": {
+                color: "#0b4d0e",
+              },
+              "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                backgroundColor: "#0b4d0e",
+              },
+              "& .MuiSwitch-track": {
+                backgroundColor: "#666666",
+                opacity: 1,
+              },
+              "& .MuiSwitch-switchBase:not(.Mui-checked) .MuiSwitch-thumb": {
+                backgroundColor: "#ffffff",
+              },
+            }}
+          />
+        </Box>
+
+        <Box
+          sx={{
+            width: "100%",
+            display: "flex",
+            justifyContent: "space-between",
+          }}
+        >
+          {/* Clear filters Button */}
+          <Button
+            variant="outlined"
+            size="small"
+            onClick={() => {
+              setRatingFilter("all");
+              setPropNameFilter("all");
+              setFilterVerifiedOnly(false);
+              setSortBy("newest");
+            }}
+            sx={{
+              p: 1,
+              color: "#FFFFFF",
+              borderColor: "#FFFFFF",
+              "&:hover": {
+                borderColor: "#FFFFFF",
+                backgroundColor: "rgba(255, 255, 255, 0.1)",
+              },
+            }}
+          >
+            Clear Filters
+          </Button>
+
+          {/* Write a Review Button */}
+          <Button
+            onClick={handleWriteClick}
+            variant="contained"
+            sx={{
+              borderRadius: 2,
+              textTransform: "capitalize",
+              bgcolor: "#4b0082",
+              px: 2,
+              py: 1.2,
+              border: "1px solid #fff",
+              "&:hover": { bgcolor: "#4b0082b2", border: "1px solid #ffd700" },
+            }}
+          >
+            Write a Review
+          </Button>
+        </Box>
       </Box>
 
       {/* Auth hint row (only when not logged in) */}
@@ -899,7 +1090,7 @@ const Reviews = () => {
           {/* Reviews Grid */}
           <Grid container spacing={3} wrap="wrap">
             {displayedReviews?.map((review, i) => (
-              <Grid size={{ xs: 12, md: 6, lg: 4 }} key={review.id + i}>
+              <Grid size={{ xs: 12, md: 6, lg: 4 }} key={"Grid" + review.id}>
                 <ReviewCard key={review.id} review={review} />
               </Grid>
             ))}
@@ -933,7 +1124,7 @@ const Reviews = () => {
             <Box
               textAlign="center"
               py={6}
-              sx={{ bgcolor: "#ffffff50", borderRadius: 2, mt: 4 }}
+              sx={{ bgcolor: "#ffffff75", borderRadius: 2, mt: 4 }}
             >
               <Typography variant="h6" color="text.secondary" gutterBottom>
                 No reviews found
