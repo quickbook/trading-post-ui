@@ -15,7 +15,6 @@ import {
   Container,
 } from "@mui/material";
 import { useNavigate, useParams } from "react-router-dom";
-import { cardData } from "../../../CardsData";
 import {
   BadgeContainer,
   CodeContainer,

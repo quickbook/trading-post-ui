@@ -18,7 +18,6 @@ import { styled, useTheme } from "@mui/material/styles";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import { foreignNumberSystem } from "../commonFuctions/CommonFunctions";
-import { selectFirms } from "../../features/firms/firmsSelectors";
 import { useSelector } from "react-redux";
 
 // Styled components for custom styling

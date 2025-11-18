@@ -10,7 +10,6 @@ import {
   Button,
   CardMedia,
 } from "@mui/material";
-import { cardData } from "/CardsData";
 import { useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
 

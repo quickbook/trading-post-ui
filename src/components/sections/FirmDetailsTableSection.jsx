@@ -32,7 +32,6 @@ import {
   selectFirmsStatus,
   selectPagination,
 } from "../../features/firms/firmsSelectors";
-import { cardData } from "../../../CardsData";
 //import Flag from "react-flagkit";
 import Flag from "react-world-flags";
 

@@ -19,7 +19,6 @@ import PropTypes from "prop-types";
 import SearchIcon from "@mui/icons-material/Search";
 import { useNavigate } from "react-router-dom";
 import { foreignNumberSystem } from "../commonFuctions/CommonFunctions";
-import { cardData } from "../../../CardsData";
 import { useDispatch, useSelector } from "react-redux";
 import {
   fetchChallenges,

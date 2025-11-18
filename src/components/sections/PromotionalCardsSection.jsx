@@ -8,13 +8,8 @@ import {
   Snackbar,
   Alert,
 } from "@mui/material";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
-import styled from "@emotion/styled";
-import { cardData } from "/CardsData";
 import { foreignNumberSystem } from "../commonFuctions/CommonFunctions";
-import StarIcon from "@mui/icons-material/Star";
-import HandshakeIcon from "@mui/icons-material/Handshake";
-import VerifiedUserIcon from "@mui/icons-material/VerifiedUser";
+
 import {
   BadgeContainer,
   CodeContainer,

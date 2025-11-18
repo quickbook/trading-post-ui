@@ -49,7 +49,6 @@ import {
   selectReviewsStatus,
   selectReviewsError,
 } from "../../features/reviews/reviewsSlice";
-import { cardData } from "/CardsData";
 import { MainContext } from "../../App";
 import { useNavigate } from "react-router-dom";
 import { fetchFirmsFilterOptions } from "../../features/firms/firmsSlice";
