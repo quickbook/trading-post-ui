@@ -29,18 +29,7 @@ import {
 
 const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,12}$/;
 
-const RegisterPage = () => {
-  const dispatch = useDispatch();
-  const countryOptions = useSelector(selectCountryOptions);
-  const countriesStatus = useSelector(selectDomainDataStatus);
-  const countriesError = useSelector(selectDomainDataError);
-  const navigate = useNavigate();
-  const { setSnackbarMessage, setSnackbarOpen, setSnackbarSeverity } =
-    React.useContext(MainContext);
-
-  const [isLoading, setIsLoading] = React.useState(false);
-
-  const [formData, setFormData] = React.useState({
+const initialData = {
     gmail: "",
     userName: "",
     password: "",
@@ -55,12 +44,26 @@ const RegisterPage = () => {
     zipCode: "",
     countryCode: "",
     acceptTerms: false,
-  });
+  }
+
+const RegisterPage = () => {
+  const dispatch = useDispatch();
+  const countryOptions = useSelector(selectCountryOptions);
+  const countriesStatus = useSelector(selectDomainDataStatus);
+  const countriesError = useSelector(selectDomainDataError);
+  const navigate = useNavigate();
+  const { setSnackbarMessage, setSnackbarOpen, setSnackbarSeverity } =
+    React.useContext(MainContext);
+
+  const [isLoading, setIsLoading] = React.useState(false);
+
+  const [formData, setFormData] = React.useState(initialData);
 
   const [errors, setErrors] = React.useState({});
   const [touched, setTouched] = React.useState({});
   const [showPwd, setShowPwd] = React.useState(false);
   const [showPwd2, setShowPwd2] = React.useState(false);
+  const initCountries = React.useRef(false);
 
   const validateField = (name, value) => {
     let error = "";
@@ -175,14 +178,17 @@ const RegisterPage = () => {
       setSnackbarOpen(true);
     } finally {
       setIsLoading(false);
-      dispatch(resetDomainData());
+      setFormData(initialData);
     }
   };
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-    dispatch(fetchCountries());
-  }, []);
+    if(!initCountries.current){
+      if(!countryOptions.length) dispatch(fetchCountries());
+      initCountries.current = true;
+    }
+  },[]);
 
   return isLoading ? (
     <LoadingScreen />
