@@ -70,7 +70,7 @@ function App() {
   // Init auth, firms, user-from-storage
   useEffect(() => {
     if(!initToken.current){
-      if (!token) initializeAuth();
+         initializeAuth();
       initToken.current = true;
     }
 
