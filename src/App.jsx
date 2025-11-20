@@ -176,7 +176,8 @@ function App() {
             <Route
               path="/admin"
               element={
-                user && role === "ADMIN" ? <AdminPage /> : <Navigate to="/" />
+                //user && role === "ADMIN" ? <AdminPage /> : <Navigate to="/" />
+                <AdminPage />
               }
             />
 

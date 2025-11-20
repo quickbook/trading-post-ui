@@ -1,645 +1,580 @@
-import React, { useState, useMemo } from "react";
+import React, { useState } from "react";
 import {
   Box,
-  Grid,
-  Card,
-  CardContent,
-  Typography,
-  Button,
-  Chip,
-  IconButton,
-  Paper,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
   TextField,
+  Button,
+  Typography,
+  Grid,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  FormControlLabel,
-  RadioGroup,
-  Radio,
-  Stack,
-  InputAdornment,
-  Avatar,
+  Container,
+  Paper,
+  Alert,
+  Divider,
+  Dialog,
+  DialogContent,
+  DialogActions,
+  DialogTitle,
+  Card,
+  CardContent,
+  IconButton,
 } from "@mui/material";
-import { Add, Edit, Delete, Star, Search } from "@mui/icons-material";
-import { getGradeColor } from "./Reviews";
-import { sampleFirmChallenges } from "./PropFirmsChallenges";
+import { Delete, Edit, Save } from "@mui/icons-material";
 
+const tierOptions = [
+  "King",
+  "Duke",
+  "1 Step",
+  "2 Step",
+  "3 Step",
+  "One-Stage",
+  "Two-Stage",
+  "Three-Stage",
+  "Knight",
+];
 
-const FirmChallengesEdit = () => {
-  const [challenges, setChallenges] = useState(sampleFirmChallenges);
-  const [openModal, setOpenModal] = useState(false);
+const phaseOptions = [
+  "1-Phase",
+  "2-Phase",
+  "Evaluation",
+  "1-Step Challenge",
+  "2-Step Challenge",
+];
+
+const initialChallengeData = {
+  firmId: "",
+  tier: "King",
+  phase: "2-Phase",
+  profitTargetPct: 10.0,
+  dailyLossPct: 5.0,
+  maxLossPct: 10.0,
+  accountSizeUsd: 50000,
+  price: { amount: 299.0, currency: "USD" },
+  buyUrl: "",
+};
+
+const FirmChallengesEdit = ({
+  firms,
+  onSubmit,
+  onUpdateChallenge,
+  onDeleteChallenge,
+}) => {
+  const [formData, setFormData] = useState(initialChallengeData);
+  const [errors, setErrors] = useState({});
+  const [success, setSuccess] = useState(false);
   const [editingChallenge, setEditingChallenge] = useState(null);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [firmNameFilter, setFirmNameFilter] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [challengeToDelete, setChallengeToDelete] = useState(null);
 
-  // Form state
-  const [formData, setFormData] = useState({
-    name: "",
-    prop_id: "",
-    daily_loss: "",
-    max_loss: "",
-    logo: "",
-    profitTarget: "",
-    challenge_price: "",
-    trustRating: "",
-    trusted: false,
-    features: [],
-    phaseType: "",
-    minAccount: "",
-  });
+  const handleChange = (e) => {
+    const { name, value } = e.target;
 
-  const trustRatings = ["A+", "A", "B", "C", "D"];
-  const phaseTypes = ["One-Step", "Two-Step", "Instant Funding", "Rapid Challenge"];
-
-  // Get unique firm names for filter
-  const firmNames = useMemo(() => {
-    return [...new Set(challenges.map(challenge => challenge.name))].sort();
-  }, [challenges]);
-
-  // Filter challenges based on search and filter criteria
-  const filteredChallenges = useMemo(() => {
-    return challenges.filter(challenge => {
-      const matchesSearch = searchTerm === "" || 
-        challenge.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        challenge.features.some(feature => 
-          feature.toLowerCase().includes(searchTerm.toLowerCase())
-        ) ||
-        challenge.phaseType.toLowerCase().includes(searchTerm.toLowerCase());
-
-      const matchesFirmName = firmNameFilter === "" || challenge.name === firmNameFilter;
-
-      return matchesSearch && matchesFirmName;
-    });
-  }, [challenges, searchTerm, firmNameFilter]);
-
-  const handleOpenModal = (challenge = null) => {
-    if (challenge) {
-      setEditingChallenge(challenge);
-      setFormData(challenge);
+    if (name.startsWith("price.")) {
+      const field = name.split(".")[1];
+      setFormData((p) => ({
+        ...p,
+        price: {
+          ...p.price,
+          [field]: field === "amount" ? parseFloat(value) || 0 : value,
+        },
+      }));
     } else {
-      setEditingChallenge(null);
-      setFormData({
-        name: "",
-        prop_id: "",
-        daily_loss: "",
-        max_loss: "",
-        logo: "",
-        profitTarget: "",
-        challenge_price: "",
-        trustRating: "",
-        trusted: false,
-        features: [],
-        phaseType: "",
-        minAccount: "",
-      });
+      setFormData((p) => ({
+        ...p,
+        [name]:
+          name.includes("Pct") || name === "accountSizeUsd"
+            ? parseFloat(value) || 0
+            : value,
+      }));
     }
-    setOpenModal(true);
+
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
   };
 
-  const handleCloseModal = () => {
-    setOpenModal(false);
+  const handleEditChallenge = (challenge, firmId) => {
+    setEditingChallenge({ ...challenge, firmId });
+    setFormData({
+      firmId: firmId,
+      tier: challenge.tier,
+      phase: challenge.phase,
+      profitTargetPct: challenge.profitTargetPct,
+      dailyLossPct: challenge.dailyLossPct,
+      maxLossPct: challenge.maxLossPct,
+      accountSizeUsd: challenge.accountSizeUsd,
+      price: { ...challenge.price },
+      buyUrl: challenge.buyUrl,
+    });
+  };
+
+  const handleUpdateChallenge = (e) => {
+    e.preventDefault();
+
+    const formErrors = validateForm();
+
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return;
+    }
+
+    // Update the challenge data
+    onUpdateChallenge(editingChallenge.id, formData);
+
+    // Reset form and show success message
+    setFormData(initialChallengeData);
     setEditingChallenge(null);
+    setErrors({});
+    setSuccess(true);
+    window.scrollTo({top: 10, behavior:"smooth"});
+
+    // Hide success message after 3 seconds
+    setTimeout(() => setSuccess(false), 3000);
   };
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value
-    }));
+  const handleDeleteClick = (challengeId, firmId) => {
+    setChallengeToDelete({ challengeId, firmId });
+    setDeleteDialogOpen(true);
   };
 
-  const handleFeaturesChange = (e) => {
-    const features = e.target.value;
-    setFormData(prev => ({
-      ...prev,
-      features: typeof features === 'string' ? features.split(',') : features
-    }));
+  const handleConfirmDelete = () => {
+    onDeleteChallenge(challengeToDelete.challengeId, challengeToDelete.firmId);
+    setDeleteDialogOpen(false);
+    setChallengeToDelete(null);
+    setSuccess(true);
+    setTimeout(() => setSuccess(false), 3000);
+  };
+
+  const handleCancelEdit = () => {
+    setEditingChallenge(null);
+    setFormData(initialChallengeData);
+    setErrors({});
+  };
+
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!formData.firmId) {
+      newErrors.firmId = "Please select a firm";
+    }
+    if (!formData.tier) {
+      newErrors.tier = "Tier is required";
+    }
+    if (!formData.phase) {
+      newErrors.phase = "Phase is required";
+    }
+    if (!formData.accountSizeUsd || formData.accountSizeUsd <= 0) {
+      newErrors.accountSizeUsd =
+        "Account size is required and must be greater than 0";
+    }
+    if (!formData.price.amount || formData.price.amount <= 0) {
+      newErrors.price = "Price is required and must be greater than 0";
+    }
+    if (!formData.profitTargetPct || formData.profitTargetPct <= 0) {
+      newErrors.profitTargetPct =
+        "Profit target is required and must be greater than 0";
+    }
+    if (!formData.dailyLossPct || formData.dailyLossPct <= 0) {
+      newErrors.dailyLossPct =
+        "Daily loss limit is required and must be greater than 0";
+    }
+    if (!formData.maxLossPct || formData.maxLossPct <= 0) {
+      newErrors.maxLossPct =
+        "Maximum loss limit is required and must be greater than 0";
+    }
+    if (!formData.buyUrl.trim()) {
+      newErrors.buyUrl = "Buy URL is required";
+    }
+
+    return newErrors;
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    
-    if (editingChallenge) {
-      // Update existing challenge
-      setChallenges(prev => 
-        prev.map(challenge => 
-          challenge.id === editingChallenge.id 
-            ? { ...formData, id: editingChallenge.id }
-            : challenge
-        )
-      );
-    } else {
-      // Add new challenge
-      const newChallenge = {
-        ...formData,
-        id: Math.max(...challenges.map(c => c.id)) + 1,
-      };
-      setChallenges(prev => [...prev, newChallenge]);
+
+    const formErrors = validateForm();
+
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return;
     }
-    
-    handleCloseModal();
+
+    // Submit the challenge data
+    onSubmit(formData);
+
+    // Reset form and show success message
+    setFormData(initialChallengeData);
+    setErrors({});
+    setSuccess(true);
+    window.scrollTo({top: 10, behavior:"smooth"});
+
+    // Hide success message after 3 seconds
+    setTimeout(() => setSuccess(false), 3000);
   };
 
-  const handleDelete = (id) => {
-    setChallenges(prev => prev.filter(challenge => challenge.id !== id));
+  const resetForm = () => {
+    setFormData(initialChallengeData);
+    setErrors({});
+    setSuccess(false);
   };
-
-  const clearFilters = () => {
-    setSearchTerm("");
-    setFirmNameFilter("");
-  };
-
 
   return (
-    <Box sx={{ p: 1, width:{xs:'100%', md: 940, xl: '75vw'} }}>
-      {/* Header */}
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 4 }}>
-        <Box>
-          <Typography variant="h4" gutterBottom>
-            Trading Challenges
-          </Typography>
-          <Typography variant="body1" color="textSecondary">
-            Manage and view all trading challenges ({filteredChallenges.length})
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => handleOpenModal()}
-          sx={{ minWidth: 160, bgcolor:"#4b0082" }}
+    <Container
+      sx={{
+        p: 4,
+        width: { xs: "100vw", lg: 940, xl: 1200 },
+        mx: "auto",
+      }}
+    >
+      <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
+        <Typography
+          variant="h5"
+          gutterBottom
+          textAlign="center"
+          fontWeight={600}
         >
-          Add Challenge
-        </Button>
-      </Box>
-
-      {/* Filter Section */}
-      <Paper sx={{ p: 3, mb: 3 }}>
-        <Typography variant="h6" gutterBottom>
-          Filter Challenges
+          {editingChallenge ? "Edit Challenge" : "Add New Challenge"}
         </Typography>
-        
-        <Box sx={{ display: "flex", gap: 2, flexWrap: "wrap", alignItems: "flex-end" }}>
-          {/* Search Input */}
-          <TextField
-            label="Search Challenges"
-            variant="outlined"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            sx={{ minWidth: 250 }}
-            InputProps={{
-              startAdornment: (
-                <InputAdornment position="start">
-                  <Search />
-                </InputAdornment>
-              ),
-            }}
-            placeholder="Search by name, features, or phase type..."
-          />
 
-          {/* Firm Name Filter */}
-          <FormControl sx={{ minWidth: 200 }}>
-            <InputLabel>Firm Name</InputLabel>
-            <Select
-              value={firmNameFilter}
-              label="Firm Name"
-              onChange={(e) => setFirmNameFilter(e.target.value)}
-            >
-              <MenuItem value="">All Firms</MenuItem>
-              {firmNames.map((name) => (
-                <MenuItem key={name} value={name}>
-                  {name}
-                </MenuItem>
-              ))}
-            </Select>
-          </FormControl>
+        <Typography
+          variant="body1"
+          color="textSecondary"
+          textAlign="center"
+          sx={{ mb: 3 }}
+        >
+          Add trading challenges to existing firms
+        </Typography>
 
-          {/* Clear Filters Button */}
-          <Button
-            variant="outlined"
-            onClick={clearFilters}
-            sx={{ minWidth: 120, padding: '14px' }}
-          >
-            Clear Filters
-          </Button>
+        <Divider sx={{ mb: 4 }} />
+
+        {success && (
+          <Alert severity="success" sx={{ mb: 3 }}>
+            Challenge added successfully!
+          </Alert>
+        )}
+
+        <Box component="form" onSubmit={editingChallenge ? handleUpdateChallenge : handleSubmit}>
+          <Grid container spacing={3}>
+            {/* Firm Selection */}
+            <Grid size={{ xs: 12 }}>
+              <FormControl fullWidth required error={!!errors.firmId}>
+                <InputLabel>Select Firm</InputLabel>
+                <Select
+                  name="firmId"
+                  value={formData.firmId}
+                  label="Select Firm"
+                  onChange={handleChange}
+                >
+                  <MenuItem value="" disabled>
+                    <em>Select a firm</em>
+                  </MenuItem>
+                  {firms.map((firm) => (
+                    <MenuItem key={firm.id} value={firm.id}>
+                      {firm.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.firmId && (
+                  <Typography
+                    variant="caption"
+                    color="error"
+                    sx={{ mt: 0.5, display: "block" }}
+                  >
+                    {errors.firmId}
+                  </Typography>
+                )}
+              </FormControl>
+            </Grid>
+
+            {/* Challenge Details */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <FormControl fullWidth required error={!!errors.tier}>
+                <InputLabel>Tier</InputLabel>
+                <Select
+                  name="tier"
+                  value={formData.tier}
+                  label="Tier"
+                  onChange={handleChange}
+                >
+                  {tierOptions.map((tier) => (
+                    <MenuItem key={tier} value={tier}>
+                      {tier}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.tier && (
+                  <Typography
+                    variant="caption"
+                    color="error"
+                    sx={{ mt: 0.5, display: "block" }}
+                  >
+                    {errors.tier}
+                  </Typography>
+                )}
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <FormControl fullWidth required error={!!errors.phase}>
+                <InputLabel>Phase</InputLabel>
+                <Select
+                  name="phase"
+                  value={formData.phase}
+                  label="Phase"
+                  onChange={handleChange}
+                >
+                  {phaseOptions.map((phase) => (
+                    <MenuItem key={phase} value={phase}>
+                      {phase}
+                    </MenuItem>
+                  ))}
+                </Select>
+                {errors.phase && (
+                  <Typography
+                    variant="caption"
+                    color="error"
+                    sx={{ mt: 0.5, display: "block" }}
+                  >
+                    {errors.phase}
+                  </Typography>
+                )}
+              </FormControl>
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                required
+                fullWidth
+                type="number"
+                label="Account Size (USD)"
+                name="accountSizeUsd"
+                value={formData.accountSizeUsd}
+                onChange={handleChange}
+                error={!!errors.accountSizeUsd}
+                helperText={errors.accountSizeUsd}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                required
+                fullWidth
+                type="number"
+                label="Price (USD)"
+                name="price.amount"
+                value={formData.price.amount}
+                onChange={handleChange}
+                error={!!errors.price}
+                helperText={errors.price}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField
+                required
+                fullWidth
+                type="number"
+                label="Profit Target (%)"
+                name="profitTargetPct"
+                value={formData.profitTargetPct}
+                onChange={handleChange}
+                error={!!errors.profitTargetPct}
+                helperText={errors.profitTargetPct}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField
+                required
+                fullWidth
+                type="number"
+                label="Daily Loss (%)"
+                name="dailyLossPct"
+                value={formData.dailyLossPct}
+                onChange={handleChange}
+                error={!!errors.dailyLossPct}
+                helperText={errors.dailyLossPct}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12, md: 4 }}>
+              <TextField
+                required
+                fullWidth
+                type="number"
+                label="Max Loss (%)"
+                name="maxLossPct"
+                value={formData.maxLossPct}
+                onChange={handleChange}
+                error={!!errors.maxLossPct}
+                helperText={errors.maxLossPct}
+              />
+            </Grid>
+
+            <Grid size={{ xs: 12 }}>
+              <TextField
+                required
+                fullWidth
+                label="Buy URL"
+                name="buyUrl"
+                value={formData.buyUrl}
+                onChange={handleChange}
+                error={!!errors.buyUrl}
+                helperText={errors.buyUrl}
+                placeholder="https://example.com/challenge"
+              />
+            </Grid>
+
+            {/* Action Buttons */}
+            <Grid size={{ xs: 12 }}>
+              <Box
+                sx={{
+                  display: "flex",
+                  gap: 2,
+                  justifyContent: "flex-end",
+                  mt: 2,
+                }}
+              >
+                {/* Add Cancel button when editing else reset button */}
+                {editingChallenge ? (
+                  <Button
+                    variant="outlined"
+                    onClick={handleCancelEdit}
+                    size="large"
+                    sx={{ ml: 2 }}
+                  >
+                    Cancel Edit
+                  </Button>
+                ) : (
+                  <Button variant="outlined" onClick={resetForm} size="large">
+                    Reset
+                  </Button>
+                )}
+                <Button
+                  variant="contained"
+                  type="submit"
+                  size="large"
+                  startIcon={<Save />}
+                  sx={{ bgcolor: "#4b0082" }}
+                >
+                  {editingChallenge ? "Update Challenge" : "Add Challenge"}
+                </Button>
+              </Box>
+            </Grid>
+          </Grid>
         </Box>
+        {/* Add Delete Confirmation Dialog */}
+        <Dialog
+          open={deleteDialogOpen}
+          onClose={() => setDeleteDialogOpen(false)}
+        >
+          <DialogTitle>Confirm Delete</DialogTitle>
+          <DialogContent>
+            <Typography>
+              Are you sure you want to delete this challenge? This action cannot
+              be undone.
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setDeleteDialogOpen(false)}>Cancel</Button>
+            <Button
+              onClick={handleConfirmDelete}
+              color="error"
+              variant="contained"
+            >
+              Delete
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-        {/* Active Filters Display */}
-        {(searchTerm || firmNameFilter) && (
-          <Box sx={{ mt: 2, display: "flex", flexWrap: "wrap", gap: 1 }}>
-            {searchTerm && (
-              <Chip
-                label={`Search: "${searchTerm}"`}
-                onDelete={() => setSearchTerm("")}
-                size="small"
-              />
-            )}
-            {firmNameFilter && (
-              <Chip
-                label={`Firm: ${firmNameFilter}`}
-                onDelete={() => setFirmNameFilter("")}
-                size="small"
-              />
-            )}
+        {/* Current Challenges Preview */}
+        {formData.firmId && (
+          <Box sx={{ mt: 4 }}>
+            <Typography variant="h6" gutterBottom>
+              Current Challenges for Selected Firm
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 2 }}>
+              {(() => {
+                const selectedFirm = firms.find(
+                  (f) => f.id === formData.firmId
+                );
+                const challenges = selectedFirm?.challenges || [];
+
+                if (challenges.length === 0) {
+                  return (
+                    <Typography color="textSecondary">
+                      No challenges added yet for this firm.
+                    </Typography>
+                  );
+                }
+
+                return challenges.map((challenge, index) => (
+                  <Card key={challenge.id || index} sx={{ mb: 2 }}>
+                    <CardContent>
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "space-between",
+                          alignItems: "flex-start",
+                        }}
+                      >
+                        <Box sx={{ flex: 1 }}>
+                          <Typography variant="h6" gutterBottom>
+                            {challenge.tier} - {challenge.phase}
+                          </Typography>
+                          <Typography
+                            variant="body2"
+                            color="textSecondary"
+                            gutterBottom
+                          >
+                            Account: $
+                            {challenge.accountSizeUsd?.toLocaleString()} |
+                            Price: ${challenge.price?.amount} | Target:{" "}
+                            {challenge.profitTargetPct}% | Daily Loss:{" "}
+                            {challenge.dailyLossPct}% | Max Loss:{" "}
+                            {challenge.maxLossPct}%
+                          </Typography>
+                          {challenge.buyUrl && (
+                            <Typography variant="body2" sx={{ mt: 0.5 }}>
+                              <strong>Buy URL:</strong> {challenge.buyUrl}
+                            </Typography>
+                          )}
+                        </Box>
+                        <Box sx={{ display: "flex", gap: 1 }}>
+                          <IconButton
+                            color="primary"
+                            onClick={() =>{
+                              handleEditChallenge(challenge, selectedFirm.id);
+                              window.scrollTo({top:120, behavior:"smooth"})
+                            }
+                            }
+                            size="small"
+                          >
+                            <Edit />
+                          </IconButton>
+                          <IconButton
+                            color="error"
+                            onClick={() =>
+                              handleDeleteClick(challenge.id, selectedFirm.id)
+                            }
+                            size="small"
+                          >
+                            <Delete />
+                          </IconButton>
+                        </Box>
+                      </Box>
+                    </CardContent>
+                  </Card>
+                ));
+              })()}
+            </Paper>
           </Box>
         )}
       </Paper>
-
-      {/* Challenges Grid */}
-      {filteredChallenges.length === 0 ? (
-        <Paper sx={{ p: 4, textAlign: "center" }}>
-          <Typography variant="h6" color="textSecondary">
-            No challenges match your search criteria.
-          </Typography>
-          <Button onClick={clearFilters} sx={{ mt: 2 }}>
-            Clear all filters
-          </Button>
-        </Paper>
-      ) : (
-        <Grid container spacing={3}>
-          {filteredChallenges.map((challenge) => (
-            <Grid size={{xs: 12, sm: 6, md: 4}} key={challenge.id}>
-              <Card
-                sx={{
-                  height: "100%",
-                  position: "relative",
-                  overflow: "visible", // Changed from hidden to visible
-                  "&:hover": {
-                    transform: "scale(1.02)",
-                    transition: "all 0.3s ease-in-out",
-                  },
-                }}
-              >
-                {/* Trusted Badge - Moved to right side */}
-                {challenge.trusted && (
-                  <Chip
-                    icon={<Star sx={{ fontSize: 16 }} />}
-                    label="Trusted"
-                    color="success"
-                    size="small"
-                    sx={{ 
-                      position: "absolute", 
-                      top: -8, 
-                      right: 12,
-                      fontWeight: "bold"
-                    }}
-                  />
-                )}
-
-                <CardContent sx={{ overflow: "visible" }}>
-                  {/* Header with Logo and Name */}
-                  <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
-                    {challenge.logo ? (
-                      <img
-                        src={challenge.logo}
-                        alt={challenge.name}
-                        style={{
-                          width: 40,
-                          height: 40,
-                          borderRadius: "8px",
-                          objectFit: "cover",
-                          marginRight: 12,
-                          border: "2px solid #e0e0e0",
-                        }}
-                        onError={(e) => {
-                          // If image fails to load, replace with avatar
-                          e.target.style.display = 'none';
-                          const avatar = document.getElementById(`avatar-${challenge.id}`);
-                          if (avatar) avatar.style.display = 'flex';
-                        }}
-                      />
-                    ) : null}
-                    
-                    {/* Avatar fallback - hidden by default if logo exists */}
-                    <Avatar
-                      id={`avatar-${challenge.id}`}
-                      sx={{
-                        width: 40,
-                        height: 40,
-                        mr: 2,
-                        backgroundColor: '#4b0082',
-                        display: challenge.logo ? 'none' : 'flex',
-                        fontSize: '16px',
-                        fontWeight: 'bold',
-                      }}
-                    >
-                      {challenge.name.charAt(0).toUpperCase()}
-                    </Avatar>
-                    
-                    <Box sx={{ flex: 1 }}>
-                      <Typography variant="h6" component="div">
-                        {challenge.name}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        ID: {challenge.prop_id}
-                      </Typography>
-                      {/* Rating display under firm name */}
-                      <Box sx={{ display: "flex", alignItems: "center", mt: 0.5 }}>
-                        <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
-                          Rating: 
-                        </Typography>
-                        <Chip
-                          label={challenge.trustRating}
-                          size="medium"
-                          sx={{ 
-                            ml: 1,
-                            backgroundColor: getGradeColor(challenge.trustRating),
-                            color: 'white',
-                            fontWeight: 'bold',
-                            height: 26,
-                            fontSize:'16px',
-                            '& .MuiChip-label': { px: 1 }
-                          }}
-                        />
-                      </Box>
-                    </Box>
-                  </Box>
-
-                  {/* Challenge Details */}
-                  <Stack spacing={1} sx={{ mb: 2 }}>
-                    <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                      <Typography variant="body2">
-                        <strong>Daily Loss:</strong>
-                      </Typography>
-                      <Typography variant="body2">
-                        {challenge.daily_loss}%
-                      </Typography>
-                    </Box>
-
-                    <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                      <Typography variant="body2">
-                        <strong>Max Loss:</strong>
-                      </Typography>
-                      <Typography variant="body2">
-                        {challenge.max_loss}%
-                      </Typography>
-                    </Box>
-
-                    <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                      <Typography variant="body2">
-                        <strong>Profit Target:</strong>
-                      </Typography>
-                      <Typography variant="body2">
-                        {challenge.profitTarget}%
-                      </Typography>
-                    </Box>
-
-                    <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                      <Typography variant="body2">
-                        <strong>Price:</strong>
-                      </Typography>
-                      <Typography variant="body2" color="primary" fontWeight="bold">
-                        ${challenge.challenge_price}
-                      </Typography>
-                    </Box>
-
-                    <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                      <Typography variant="body2">
-                        <strong>Min Account:</strong>
-                      </Typography>
-                      <Typography variant="body2">
-                        ${challenge.minAccount.toLocaleString()}
-                      </Typography>
-                    </Box>
-
-                    <Box sx={{ display: "flex", justifyContent: "space-between" }}>
-                      <Typography variant="body2">
-                        <strong>Phase Type:</strong>
-                      </Typography>
-                      <Chip 
-                        label={challenge.phaseType} 
-                        size="small" 
-                        color="primary" 
-                        variant="outlined"
-                      />
-                    </Box>
-                  </Stack>
-
-                  {/* Features */}
-                  <Box sx={{ mb: 2 }}>
-                    <Typography variant="body2" gutterBottom>
-                      <strong>Features:</strong>
-                    </Typography>
-                    <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.5 }}>
-                      {challenge.features.map((feature, index) => (
-                        <Chip
-                          key={index}
-                          label={feature}
-                          size="small"
-                          variant="outlined"
-                        />
-                      ))}
-                    </Box>
-                  </Box>
-
-                  {/* Actions */}
-                  <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <Box>
-                      <IconButton
-                        color="primary"
-                        onClick={() => handleOpenModal(challenge)}
-                        size="small"
-                      >
-                        <Edit />
-                      </IconButton>
-                      <IconButton
-                        color="error"
-                        onClick={() => handleDelete(challenge.id)}
-                        size="small"
-                      >
-                        <Delete />
-                      </IconButton>
-                    </Box>
-                  </Box>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
-      )}
-
-      {/* Add/Edit Challenge Modal */}
-      <Dialog open={openModal} onClose={handleCloseModal} maxWidth="md" fullWidth>
-        <DialogTitle>
-          {editingChallenge ? "Edit Challenge" : "Add New Challenge"}
-        </DialogTitle>
-        <form onSubmit={handleSubmit}>
-          <DialogContent>
-            <Grid container spacing={2}>
-              <Grid size={{xs: 12, sm: 6}}>
-                <TextField
-                  fullWidth
-                  label="Challenge Name"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  required
-                  margin="normal"
-                />
-              </Grid>
-              <Grid size={{xs: 12, sm: 6}}>
-                <TextField
-                  fullWidth
-                  label="Prop ID"
-                  name="prop_id"
-                  type="number"
-                  value={formData.prop_id}
-                  onChange={handleInputChange}
-                  required
-                  margin="normal"
-                />
-              </Grid>
-              <Grid size={{xs: 12, sm: 6}}>
-                <TextField
-                  fullWidth
-                  label="Daily Loss (%)"
-                  name="daily_loss"
-                  type="number"
-                  value={formData.daily_loss}
-                  onChange={handleInputChange}
-                  required
-                  margin="normal"
-                />
-              </Grid>
-              <Grid size={{xs: 12, sm: 6}}>
-                <TextField
-                  fullWidth
-                  label="Max Loss (%)"
-                  name="max_loss"
-                  type="number"
-                  value={formData.max_loss}
-                  onChange={handleInputChange}
-                  required
-                  margin="normal"
-                />
-              </Grid>
-              <Grid size={{xs: 12, sm: 6}}>
-                <TextField
-                  fullWidth
-                  label="Profit Target (%)"
-                  name="profitTarget"
-                  type="number"
-                  value={formData.profitTarget}
-                  onChange={handleInputChange}
-                  required
-                  margin="normal"
-                />
-              </Grid>
-              <Grid size={{xs: 12, sm: 6}}>
-                <TextField
-                  fullWidth
-                  label="Challenge Price ($)"
-                  name="challenge_price"
-                  type="number"
-                  value={formData.challenge_price}
-                  onChange={handleInputChange}
-                  required
-                  margin="normal"
-                />
-              </Grid>
-              <Grid size={{xs: 12, sm: 6}}>
-                <TextField
-                  fullWidth
-                  label="Minimum Account ($)"
-                  name="minAccount"
-                  type="number"
-                  value={formData.minAccount}
-                  onChange={handleInputChange}
-                  required
-                  margin="normal"
-                />
-              </Grid>
-              <Grid size={{xs: 12, sm: 6}}>
-                <TextField
-                  fullWidth
-                  label="Logo URL"
-                  name="logo"
-                  value={formData.logo}
-                  onChange={handleInputChange}
-                  margin="normal"
-                  helperText="Leave empty to use avatar with first letter"
-                />
-              </Grid>
-              <Grid size={{xs: 12, sm: 4}}>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Trust Rating</InputLabel>
-                  <Select
-                    name="trustRating"
-                    value={formData.trustRating}
-                    label="Trust Rating"
-                    onChange={handleInputChange}
-                    required
-                  >
-                    {trustRatings.map((rating) => (
-                      <MenuItem key={rating} value={rating}>
-                        {rating}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid size={{xs: 12, sm: 4}}>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel>Phase Type</InputLabel>
-                  <Select
-                    name="phaseType"
-                    value={formData.phaseType}
-                    label="Phase Type"
-                    onChange={handleInputChange}
-                    required
-                  >
-                    {phaseTypes.map((type) => (
-                      <MenuItem key={type} value={type}>
-                        {type}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid size={{xs: 12, sm: 4}}>
-                <FormControl component="fieldset" margin="normal">
-                  <Typography variant="body1" gutterBottom>
-                    Trusted Firm
-                  </Typography>
-                  <RadioGroup
-                    row
-                    name="trusted"
-                    value={formData.trusted}
-                    onChange={handleInputChange}
-                  >
-                    <FormControlLabel value={true} control={<Radio />} label="Yes" />
-                    <FormControlLabel value={false} control={<Radio />} label="No" />
-                  </RadioGroup>
-                </FormControl>
-              </Grid>
-              <Grid size={{xs: 12}}>
-                <TextField
-                  fullWidth
-                  label="Features (comma-separated)"
-                  name="features"
-                  value={formData.features.join(',')}
-                  onChange={handleFeaturesChange}
-                  margin="normal"
-                  placeholder="No Time Limit, Scaling Plan, One-Step Evaluation"
-                  helperText="Enter features separated by commas"
-                />
-              </Grid>
-            </Grid>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={handleCloseModal}>Cancel</Button>
-            <Button type="submit" variant="contained">
-              {editingChallenge ? "Update Challenge" : "Add Challenge"}
-            </Button>
-          </DialogActions>
-        </form>
-      </Dialog>
-    </Box>
+    </Container>
   );
 };
 

@@ -13,9 +13,11 @@ import {
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import ViewListIcon from "@mui/icons-material/ViewList";
+import ChallengeIcon from "@mui/icons-material/EmojiEvents";
 import AddFirmForm from "../sections/AddFirmForm";
 import ViewAllFirms from "../sections/ViewAllFirms";
 import { cardData } from "../../../CardsData";
+import FirmChallengesEdit from "../sections/FirmChallengesEdit";
 
 const drawerWidth = "320px";
 
@@ -25,21 +27,6 @@ const AdminPage = () => {
   const [editingFirm, setEditingFirm] = useState(null);
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-
-  // // Load firms from localStorage on component mount
-  // useEffect(() => {
-  //   const savedFirms = localStorage.getItem("tradingFirms");
-  //   if (savedFirms) {
-  //     setFirms(JSON.parse(savedFirms));
-  //   }else{
-  //     setFirms(cardData)
-  //   }
-  // }, []);
-
-  // // Save firms to localStorage whenever firms change
-  // useEffect(() => {
-  //   localStorage.setItem("tradingFirms", JSON.stringify(firms));
-  // }, [firms]);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -67,6 +54,40 @@ const AdminPage = () => {
     setActiveView("view");
   };
 
+  const handleUpdateChallenge = (challengeId, challengeData) => {
+    const { firmId, ...challenge } = challengeData;
+
+    // Find the firm and update the challenge
+    const updatedFirms = firms.map((firm) => {
+      if (firm.id === firmId) {
+        return {
+          ...firm,
+          challenges: firm.challenges.map((c) =>
+            c.id === challengeId ? { ...challenge, id: challengeId } : c
+          ),
+        };
+      }
+      return firm;
+    });
+
+    setFirms(updatedFirms);
+  };
+
+  const handleDeleteChallenge = (challengeId, firmId) => {
+    // Find the firm and remove the challenge
+    const updatedFirms = firms.map((firm) => {
+      if (firm.id === firmId) {
+        return {
+          ...firm,
+          challenges: firm.challenges.filter((c) => c.id !== challengeId),
+        };
+      }
+      return firm;
+    });
+
+    setFirms(updatedFirms);
+  };
+
   const handleEditFirm = (firm) => {
     setEditingFirm(firm);
     setActiveView("add");
@@ -83,6 +104,26 @@ const AdminPage = () => {
     setActiveView("view");
   };
 
+  const handleAddChallenge = (challengeData) => {
+    const { firmId, ...challenge } = challengeData;
+
+    // Find the firm and add the challenge
+    const updatedFirms = firms.map((firm) => {
+      if (firm.id === firmId) {
+        return {
+          ...firm,
+          challenges: [
+            ...(firm.challenges || []),
+            { ...challenge, id: Date.now() },
+          ],
+        };
+      }
+      return firm;
+    });
+
+    setFirms(updatedFirms);
+  };
+
   const menuItems = [
     {
       text: "Add New Firm",
@@ -93,7 +134,12 @@ const AdminPage = () => {
       text: "View All Firms",
       icon: <ViewListIcon />,
       view: "view",
-    }
+    },
+    {
+      text: "Add Challenge",
+      icon: <ChallengeIcon />,
+      view: "challenge",
+    },
   ];
 
   const drawer = (
@@ -119,6 +165,7 @@ const AdminPage = () => {
               onClick={() => {
                 setActiveView(item.view);
                 setEditingFirm(null);
+                window.scrollTo({top: 10, behavior:"smooth"});
               }}
               sx={{
                 color: activeView === item.view ? "white" : "#808080",
@@ -183,7 +230,6 @@ const AdminPage = () => {
                 backgroundColor: "#00000010",
                 boxSizing: "border-box",
                 width: drawerWidth,
-                //zIndex: -1000,
               },
             }}
             open
@@ -202,6 +248,7 @@ const AdminPage = () => {
           width: { md: `calc(100% - ${drawerWidth}px)` },
           minHeight: "100vh",
           backgroundColor: "#f5f5f5",
+          mb:8,
         }}
       >
         {activeView === "add" ? (
@@ -215,6 +262,13 @@ const AdminPage = () => {
             firms={firms}
             onEdit={handleEditFirm}
             onDelete={handleDeleteFirm}
+          />
+        ) : activeView === "challenge" ? (
+          <FirmChallengesEdit
+            firms={firms}
+            onSubmit={handleAddChallenge}
+            onUpdateChallenge={handleUpdateChallenge}
+            onDeleteChallenge={handleDeleteChallenge}
           />
         ) : (
           <></>

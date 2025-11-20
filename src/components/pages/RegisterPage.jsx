@@ -49,7 +49,7 @@ const initialData = {
 const RegisterPage = () => {
   const dispatch = useDispatch();
   const countryOptions = useSelector(selectCountryOptions);
-  const countriesStatus = useSelector(selectDomainDataStatus);
+  const countriesStatus = useSelector(selectDomainDataStatus('countries'));
   const countriesError = useSelector(selectDomainDataError);
   const navigate = useNavigate();
   const { setSnackbarMessage, setSnackbarOpen, setSnackbarSeverity } =
