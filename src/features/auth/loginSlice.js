@@ -21,11 +21,32 @@ export const login = createAsyncThunk(
       let body = {
         username: credentials.username,
         password: credentials.password,
-      }
-      const res = await axiosClient.post(getFullUrl(API_ENDPOINTS.USERS.LOGIN), body);
+      };
+      const res = await axiosClient.post(
+        getFullUrl(API_ENDPOINTS.USERS.LOGIN),
+        body
+      );
       return res.data.data.user; // { id, name, role }
     } catch (err) {
       return rejectWithValue(err.response?.data || "Login failed");
+    }
+  }
+);
+
+export const updateUser = createAsyncThunk(
+  API_ENDPOINTS.USERS.BASE + "/update",
+  async ({ userName, payload }, { rejectWithValue }) => {
+    try {
+      const res = await axiosClient.put(
+        getFullUrl(API_ENDPOINTS.USERS.BASE + "/" + userName),
+        payload
+      );
+
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data || "User Details Update failed"
+      );
     }
   }
 );
@@ -77,13 +98,40 @@ const slice = createSlice({
     },
   },
   extraReducers: (b) => {
-    b.addCase(login.pending, (s) => { s.status = "loading"; s.error = null; });
+    b.addCase(login.pending, (s) => {
+      s.status = "loading";
+      s.error = null;
+    });
     b.addCase(login.fulfilled, (s, { payload }) => {
       s.status = "succeeded";
       s.user = payload;
-      try { sessionStorage.setItem("user", JSON.stringify(payload)); } catch { /* empty */ }
+      try {
+        sessionStorage.setItem("user", JSON.stringify(payload));
+      } catch {
+        /* empty */
+      }
     });
-    b.addCase(login.rejected, (s, a) => { s.status = "failed"; s.error = a.payload; });
+    b.addCase(login.rejected, (s, a) => {
+      s.status = "failed";
+      s.error = a.payload;
+    });
+    b.addCase(updateUser.pending, (s) => {
+      s.status = "loading";
+    });
+
+    b.addCase(updateUser.fulfilled, (s, { payload }) => {
+      s.status = "succeeded";
+      s.user = payload; // update logged-in user
+
+      try {
+        sessionStorage.setItem("user", JSON.stringify(payload));
+      } catch {}
+    });
+
+    b.addCase(updateUser.rejected, (s, { payload }) => {
+      s.status = "failed";
+      s.error = payload;
+    });
   },
 });
 
