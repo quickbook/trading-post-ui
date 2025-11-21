@@ -30,6 +30,7 @@ import {
   setUserFromStorage,
 } from "./features/auth/loginSlice";
 import ChallengesPage from "./components/pages/ChallengesPage";
+import { fetchFirmsData } from "./features/firms/firmsSlice";
 
 export const MainContext = createContext();
 
@@ -51,6 +52,7 @@ function App() {
   const user = useSelector(selectUser);
   const role = useSelector(selectRole);
 
+  const [openForm, handleOpenForm] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState("");
@@ -67,10 +69,10 @@ function App() {
     if (reason !== "clickaway") setSnackbarOpen(false);
   };
 
-  // Init auth, firms, user-from-storage
+  // STEP 1 → Initialize auth (run once)
   useEffect(() => {
-    if(!initToken.current){
-         initializeAuth();
+    if (!initToken.current) {
+      initializeAuth();
       initToken.current = true;
     }
 
@@ -78,11 +80,15 @@ function App() {
     if (storedUser) {
       dispatch(setUserFromStorage(JSON.parse(storedUser)));
     }
-    if (!initCalled.current) {
+  }, []);
+
+  // STEP 2 → Wait for token, then run initApp()
+  useEffect(() => {
+    if (token && !initCalled.current) {
       initCalled.current = true;
       dispatch(initApp());
     }
-  }, []);
+  }, [token]);
 
   // Loading skeleton timeout
   useEffect(() => {
@@ -134,6 +140,8 @@ function App() {
           setSnackbarOpen,
           setSnackbarMessage,
           setSnackbarSeverity,
+          openForm,
+          handleOpenForm,
         }}
       >
         <StyledContainer>
@@ -176,8 +184,7 @@ function App() {
             <Route
               path="/admin"
               element={
-                //user && role === "ADMIN" ? <AdminPage /> : <Navigate to="/" />
-                <AdminPage />
+                user && role === "ADMIN" ? <AdminPage /> : <Navigate to="/" />
               }
             />
 

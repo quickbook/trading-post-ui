@@ -40,9 +40,9 @@ const initialData = {
     contactNumber: "",
     address: "",
     city: "",
-    stateCode: "",
+    stateName: "",
     zipCode: "",
-    countryCode: "",
+    countryName: "",
     acceptTerms: false,
   }
 
@@ -106,7 +106,7 @@ const RegisterPage = () => {
       case "city":
         if (!value.trim()) error = "City is required";
         break;
-      case "stateCode":
+      case "stateName":
         if (value && !/^[A-Za-z0-9\- ]{2,8}$/.test(value))
           error = "Invalid state/region";
         break;
@@ -114,7 +114,7 @@ const RegisterPage = () => {
         if (!value.trim()) error = "Pin/Zip is required";
         else if (!/^[0-9]{4,10}$/.test(value)) error = "Enter 4–10 digits";
         break;
-      case "countryCode":
+      case "countryName":
         if (!value.trim()) error = "Country is required";
         break;
       case "acceptTerms":
@@ -161,7 +161,8 @@ const RegisterPage = () => {
     if (!validateAll()) return;
 
     const payload = { ...formData };
-    payload.countryCode = countryOptions?.find((c) => c.value === formData.countryCode)?.value || payload.countryCode;
+    payload.countryCode = countryOptions?.find((c) => c.label === formData.countryName)?.value || payload.countryName;
+    delete payload.countryName;
     delete payload.confirmPassword;
     delete payload.acceptTerms;
 
@@ -407,27 +408,27 @@ const RegisterPage = () => {
               <TextField
                 select
                 required
-                name="countryCode"
+                name="countryName"
                 label="Country"
                 fullWidth
-                SelectProps={{
+                SelectProps={{ 
                   MenuProps: {
                     PaperProps: { style: { maxHeight: 260, width: 320 } },
                   },
                 }}
-                value={formData.countryCode}
+                value={formData.countryName}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                error={!!errors.countryCode && touched.countryCode}
+                error={!!errors.countryName && touched.countryName}
                 helperText={
-                  touched.countryCode
-                    ? errors.countryCode
+                  touched.countryName
+                    ? errors.countryName
                     : "Select your country"
                 }
               >
                 {countriesStatus === "succeeded" ? (
                   countryOptions.map((c) => (
-                    <MenuItem key={c.value} value={c.value}>
+                    <MenuItem key={c.value} value={c.label}>
                       {c.label}
                     </MenuItem>
                   ))
@@ -444,14 +445,14 @@ const RegisterPage = () => {
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>
               <TextField
-                name="stateCode"
+                name="stateName"
                 label="State / Region"
                 fullWidth
-                value={formData.stateCode}
+                value={formData.stateName}
                 onChange={handleChange}
                 onBlur={handleBlur}
-                error={!!errors.stateCode && touched.stateCode}
-                helperText={touched.stateCode ? errors.stateCode : " "}
+                error={!!errors.stateName && touched.stateName}
+                helperText={touched.stateName ? errors.stateName : " "}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 4 }}>

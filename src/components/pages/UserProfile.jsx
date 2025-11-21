@@ -1,4 +1,4 @@
-import React, { use, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Container,
   Paper,
@@ -37,31 +37,20 @@ import {
   selectDomainDataError,
 } from "../../features/domain/domainDataSlice";
 import { useDispatch, useSelector } from "react-redux";
-import { selectUser } from "../../features/auth/loginSlice";
+import { selectUser, updateUser } from "../../features/auth/loginSlice";
+import { MainContext } from "../../App";
+import { useNavigate } from "react-router-dom";
 
 const UserProfile = () => {
-//   const initialUserData = {
-//     gmail: "alex.johnson@example.com",
-//     userName: "alexj",
-//     password: "",
-//     confirmPassword: "",
-//     firstName: "Alex",
-//     middleName: "Michael",
-//     lastName: "Johnson",
-//     contactNumber: "+1 (555) 123-4567",
-//     address: "123 Main Street, Apt 4B",
-//     city: "New York",
-//     state: "New York",
-//     pinCode: "10001",
-//     countryName: "United States",
-//   };
   const dispatch = useDispatch();
   const userDetails = useSelector(selectUser);
   const countryOptions = useSelector(selectCountryOptions);
-  const countriesStatus = useSelector(selectDomainDataStatus);
+  const countriesStatus = useSelector(selectDomainDataStatus("countries"));
   const countriesError = useSelector(selectDomainDataError);
+  const { setSnackbarMessage, setSnackbarOpen, setSnackbarSeverity } =
+    React.useContext(MainContext);
+  const navigate = useNavigate();
   const [userData, setUserData] = useState(userDetails);
-
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -71,6 +60,8 @@ const UserProfile = () => {
     severity: "success",
   });
   const [errors, setErrors] = useState({});
+
+  const initCountries = React.useRef(false);
 
   // Country and state options
 
@@ -135,7 +126,7 @@ const UserProfile = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm()) {
       setSnackbar({
         open: true,
@@ -145,17 +136,39 @@ const UserProfile = () => {
       return;
     }
 
-    // Simulate API call
-    setTimeout(() => {
-      setSnackbar({
-        open: true,
-        message: "Profile updated successfully!",
-        severity: "success",
-      });
+    const payload = { ...userData };
+    const userName = payload.userName;
+    payload.countryCode =
+      countryOptions?.find((c) => c.label === userData.countryName)?.value ||
+      payload.countryName;
+
+    delete payload.confirmPassword; // backend does not need this field
+    delete payload.id;
+    delete payload.roleName;
+    delete payload.countryName;
+    delete payload.userName;
+
+    try {
+      await dispatch(updateUser({ userName, payload })).unwrap();
+      setUserData(userDetails);
+      // Stop editing mode
       setIsEditing(false);
-      // Clear passwords after save
-      setUserData((prev) => ({ ...prev, password: "", confirmPassword: "" }));
-    }, 1000);
+
+      // Clear password fields
+      setUserData((prev) => ({
+        ...prev,
+        password: "",
+        confirmPassword: "",
+      }));
+      setSnackbarMessage("Profile updated successfully");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+      navigate("/login");
+    } catch (error) {
+      setSnackbarMessage(error?.message || "Profile update failed");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {}
   };
 
   const handleCloseSnackbar = () => {
@@ -170,7 +183,10 @@ const UserProfile = () => {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "smooth" });
-    dispatch(fetchCountries());
+    if (!initCountries.current) {
+      if (!countryOptions.length) dispatch(fetchCountries());
+      initCountries.current = true;
+    }
   }, []);
 
   return (
@@ -271,6 +287,10 @@ const UserProfile = () => {
                 </Box>
               }
             />
+            <Alert severity="info">
+              Click on the edit profile button to update your details and save
+              it
+            </Alert>
             <Divider sx={{ border: "2px solid #cecece" }} />
             <CardContent sx={{ px: 6, py: 4 }}>
               <Grid container spacing={3} sx={{ mb: 4 }}>
@@ -307,11 +327,7 @@ const UserProfile = () => {
                     name="userName"
                     value={userData.userName}
                     onChange={handleChange}
-                    slotProps={{
-                      input: {
-                        readOnly: !isEditing,
-                      },
-                    }}
+                    disabled
                     error={!!errors.userName}
                     helperText={errors.userName}
                   />
@@ -417,7 +433,7 @@ const UserProfile = () => {
                     fullWidth
                     label="Middle Name"
                     name="middleName"
-                    value={userData.middleName}
+                    value={userData.middleName ?? ""}
                     onChange={handleChange}
                     slotProps={{
                       input: {
@@ -510,8 +526,8 @@ const UserProfile = () => {
                   <TextField
                     fullWidth
                     label="State"
-                    name="state"
-                    value={userData.state}
+                    name="stateName"
+                    value={userData.stateName ?? ""}
                     onChange={handleChange}
                     slotProps={{
                       input: {
@@ -525,8 +541,8 @@ const UserProfile = () => {
                   <TextField
                     fullWidth
                     label="ZIP Code"
-                    name="pinCode"
-                    value={userData.pinCode}
+                    name="zipCode"
+                    value={userData.zipCode}
                     onChange={handleChange}
                     slotProps={{
                       input: {
@@ -567,47 +583,11 @@ const UserProfile = () => {
                     )}
                   </TextField>
                 </Grid>
-
-                {/* Preferences */}
-                {/* {isEditing && (
-                  <Grid size={{ xs: 12 }}>
-                    <Typography
-                      variant="h6"
-                      gutterBottom
-                      color="primary"
-                      sx={{ mt: 2 }}
-                    >
-                      Preferences
-                    </Typography>
-                    <Divider sx={{ mb: 2 }} />
-                    <FormControlLabel
-                      control={<Switch color="primary" />}
-                      label="Receive email notifications"
-                      defaultChecked
-                    />
-                  </Grid>
-                )} */}
               </Grid>
             </CardContent>
           </Card>
         </Grid>
       </Grid>
-
-      {/* Success/Error Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={handleCloseSnackbar}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert
-          onClose={handleCloseSnackbar}
-          severity={snackbar.severity}
-          sx={{ width: "100%" }}
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
     </Container>
   );
 };
