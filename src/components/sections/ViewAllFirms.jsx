@@ -100,7 +100,7 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
     <Box sx={{width: {xs:'100%',md:960,xl:'75vw'}}}>
       {/* Header Section */}
       <Box sx={{ mb: 2 }}>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h5" gutterBottom>
           All Firms 
         </Typography>
         <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
@@ -221,7 +221,7 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
           </Button>
         </Paper>
       ) : (
-        <Grid container spacing={3} sx={{placeItems: "center" }}>
+        <Grid container spacing={3}>
           {filteredFirms.map((firm) => (
             <Grid size={{xs: 12, sm: 6, md: 4}} key={firm.id}>
               <Card

@@ -187,12 +187,13 @@ const Reviews = () => {
   // Fetch reviews on component mount
   useEffect(() => {
     if (!initReviews.current) {
-      if(!reviews.length) dispatch(fetchReviews());
+      if (!reviews.length) dispatch(fetchReviews());
       initReviews.current = true;
     }
     // Fetch firms filter options once
     if (!initFilterOptions.current) {
-      if(!firmsFilterOptions.length && firmsFilterOptionsStatus === 'idle') dispatch(fetchFirmsFilterOptions());
+      if (!firmsFilterOptions.length && firmsFilterOptionsStatus === "idle")
+        dispatch(fetchFirmsFilterOptions());
       initFilterOptions.current = true;
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -362,6 +363,8 @@ const Reviews = () => {
             setSnackbarMessage("Review updated successfully");
             setSnackbarSeverity("success");
             setSnackbarOpen(true);
+            // Fetch updated list
+            dispatch(fetchReviews());
             handleCloseModal();
           })
           .catch((err) => {
@@ -384,6 +387,8 @@ const Reviews = () => {
             setSnackbarMessage("Review created successfully");
             setSnackbarSeverity("success");
             setSnackbarOpen(true);
+            //Fetch updated list
+            dispatch(fetchReviews());
             handleCloseModal();
           })
           .catch((err) => {
@@ -450,7 +455,7 @@ const Reviews = () => {
               sx={{
                 flexGrow: 1,
                 position: "relative",
-                padding: "0px !imporatant",
+                padding: "12px 16px 0 16px",
               }}
             >
               <Typography
@@ -917,7 +922,7 @@ const Reviews = () => {
           </Typography>
           <Switch
             checked={filterVerifiedOnly}
-            onChange={(e) => setFilterVerifiedOnly((e.target.checked))}
+            onChange={(e) => setFilterVerifiedOnly(e.target.checked)}
             sx={{
               "& .MuiSwitch-switchBase": {
                 color: "#ffffff",
@@ -1130,7 +1135,7 @@ const Reviews = () => {
                 No reviews found
               </Typography>
               <Typography variant="body1" color="text.secondary" mb={3}>
-                {ratingFilter === "all" && propNameFilter === "all"
+                {ratingFilter === "all" && propNameFilter === "all" && filterVerifiedOnly === true
                   ? "Be the first to share your experience!"
                   : `No reviews found with the current filters`}
               </Typography>
