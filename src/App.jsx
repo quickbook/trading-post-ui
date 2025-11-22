@@ -71,9 +71,9 @@ function App() {
 
   // STEP 1 → Initialize auth (run once)
   useEffect(() => {
-    if (!initToken.current) {
+    if(!initCalled.current){
       initializeAuth();
-      initToken.current = true;
+      initCalled.current = true;
     }
 
     const storedUser = sessionStorage.getItem("user");
@@ -82,11 +82,10 @@ function App() {
     }
   }, []);
 
-  // STEP 2 → Wait for token, then run initApp()
   useEffect(() => {
-    if (token && !initCalled.current) {
-      initCalled.current = true;
+    if (token && !initToken.current) {
       dispatch(initApp());
+      initToken.current = true;
     }
   }, [token]);
 

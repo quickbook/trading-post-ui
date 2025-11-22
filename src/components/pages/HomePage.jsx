@@ -52,6 +52,7 @@ export const LoadingScreen = () => (
 
 const HomePage = () => {
   const firmsStatus = useSelector((st)=> st.firms.status);
+  const firmsData = useSelector((st)=> st.firms.content);
   // Add loading state
   const {isLoading, setIsLoading} = useContext(MainContext);
 
@@ -59,12 +60,10 @@ const HomePage = () => {
   useEffect(() => {
     if(firmsStatus==='loading'){
       setIsLoading(true)
-    }
-    if(firmsStatus === 'failed'){
-      setIsLoading(true)
-    }
-    if(firmsStatus === 'succeeded'){
+    }else if(firmsStatus === 'succeeded' && firmsData.length){
       setIsLoading(false)
+    }else if(firmsStatus === 'failed'){
+      setIsLoading(true)
     }
     const timer = setTimeout(() => {
       setIsLoading(false);
