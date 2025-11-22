@@ -107,8 +107,8 @@ const RegisterPage = () => {
         if (!value.trim()) error = "City is required";
         break;
       case "stateName":
-        if (value && !/^[A-Za-z0-9\- ]{2,8}$/.test(value))
-          error = "Invalid state/region";
+        if (!value.trim())
+          error = "State Name is required";
         break;
       case "zipCode":
         if (!value.trim()) error = "Pin/Zip is required";
