@@ -82,12 +82,20 @@ function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (token && !initToken.current) {
+  // useEffect(() => {
+  //   if (token) {
+  //     if(!initToken.current){
+  //       initToken.current = true;
+  //       dispatch(initApp());
+  //     }
+  //   }
+  // }, [token]);
+
+  useEffect(()=>{
+    if(token){
       dispatch(initApp());
-      initToken.current = true;
     }
-  }, [token]);
+  },[token])
 
   // Loading skeleton timeout
   useEffect(() => {
