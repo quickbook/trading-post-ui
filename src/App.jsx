@@ -71,7 +71,7 @@ function App() {
 
   // STEP 1 → Initialize auth (run once)
   useEffect(() => {
-    if(!initCalled.current){
+    if (!initCalled.current) {
       initializeAuth();
       initCalled.current = true;
     }
@@ -91,11 +91,9 @@ function App() {
   //   }
   // }, [token]);
 
-  useEffect(()=>{
-    if(token){
-      dispatch(initApp());
-    }
-  },[token])
+  useEffect(() => {
+    dispatch(initApp());
+  }, [dispatch]);
 
   // Loading skeleton timeout
   useEffect(() => {
