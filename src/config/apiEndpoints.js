@@ -20,8 +20,8 @@ export const API_ENDPOINTS = {
     INSTRUMENTS: '/api/v1/domain/instruments',
     TIERS: "/api/v1/domain/tiers",
     PHASES: "/api/v1/domain/challenge-phases",
-    PAYOUT_FREQUENCIES: "api/v1/domain/payout-frequencies",
-    CURRENCIES: "/tradingpost/api/v1/domain/currencies",
+    PAYOUT_FREQUENCIES: "/api/v1/domain/payout-frequencies",
+    CURRENCIES: "/api/v1/domain/currencies",
   },
 
   FIRMS: {

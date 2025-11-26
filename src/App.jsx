@@ -82,23 +82,11 @@ function App() {
     }
   }, []);
 
-  // useEffect(() => {
-  //   if (token) {
-  //     if(!initToken.current){
-  //       initToken.current = true;
-  //       dispatch(initApp());
-  //     }
-  //   }
-  // }, [token]);
-
   useEffect(() => {
-    dispatch(initApp());
-  }, [dispatch]);
-
-  // Loading skeleton timeout
-  useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 1200);
-    return () => clearTimeout(t);
+    if (!initToken.current) {
+      initToken.current = true;
+      dispatch(initApp());
+    }
   }, []);
 
   // Scroll logic
@@ -190,6 +178,7 @@ function App() {
               path="/admin"
               element={
                 user && role === "ADMIN" ? <AdminPage /> : <Navigate to="/" />
+                //<AdminPage />
               }
             />
 

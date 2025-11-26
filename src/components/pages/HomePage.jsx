@@ -7,6 +7,10 @@ import TrustedFirms from "../sections/TrustedFirms";
 import { Box, Typography } from "@mui/material";
 import { MainContext } from "../../App";
 import { useSelector } from "react-redux";
+import {
+  selectFirms,
+  selectFirmsStatus,
+} from "../../features/firms/firmsSelectors";
 
 export const LoadingScreen = () => (
   <Box
@@ -51,29 +55,43 @@ export const LoadingScreen = () => (
 );
 
 const HomePage = () => {
-  const firmsStatus = useSelector((st)=> st.firms.status);
-  const firmsData = useSelector((st)=> st.firms.content);
+  const firmsStatus = useSelector(selectFirmsStatus);
+  const firmsData = useSelector(selectFirms);
   // Add loading state
-  const {isLoading, setIsLoading} = useContext(MainContext);
+  const { isLoading, setIsLoading } = useContext(MainContext);
 
   // Simulate loading effect
   useEffect(() => {
-    if(firmsStatus==='loading'){
-      setIsLoading(true)
-    }else if(firmsStatus === 'succeeded' && firmsData.length){
-      setIsLoading(false)
-    }else if(firmsStatus === 'failed'){
-      setIsLoading(true)
+    if (firmsStatus === "loading") {
+      setIsLoading(true);
+    } else if (firmsStatus === "succeeded" && firmsData.length) {
+      setIsLoading(false);
+    } else if (firmsStatus === "failed") {
+      setIsLoading(true);
     }
     const timer = setTimeout(() => {
       setIsLoading(false);
-    }, 3000); // Show loading for 1 second
+    }, 5000); // Show loading for 1 second
 
     return () => clearTimeout(timer);
   }, [firmsStatus]);
 
   return isLoading ? (
     <LoadingScreen />
+  ) : firmsStatus === "failed" ? (
+    <Box
+      component={"h6"}
+      sx={{
+        height: "50vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        color: "#8b0000",
+      }}
+    >
+      {" "}
+      Unable to fetch firms data
+    </Box>
   ) : (
     <>
       <TradingPostBanner />

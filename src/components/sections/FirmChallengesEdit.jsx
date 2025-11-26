@@ -22,31 +22,37 @@ import {
   IconButton,
 } from "@mui/material";
 import { Delete, Edit, Save } from "@mui/icons-material";
+import { useSelector } from "react-redux";
+import {
+  selectPhases,
+  selectTiers,
+} from "../../features/domain/domainDataSlice";
+import { selectFirms } from "../../features/firms/firmsSelectors";
 
-const tierOptions = [
-  "King",
-  "Duke",
-  "1 Step",
-  "2 Step",
-  "3 Step",
-  "One-Stage",
-  "Two-Stage",
-  "Three-Stage",
-  "Knight",
-];
+// const tierOptions = [
+//   "King",
+//   "Duke",
+//   "1 Step",
+//   "2 Step",
+//   "3 Step",
+//   "One-Stage",
+//   "Two-Stage",
+//   "Three-Stage",
+//   "Knight",
+// ];
 
-const phaseOptions = [
-  "1-Phase",
-  "2-Phase",
-  "Evaluation",
-  "1-Step Challenge",
-  "2-Step Challenge",
-];
+// const phaseOptions = [
+//   "1-Phase",
+//   "2-Phase",
+//   "Evaluation",
+//   "1-Step Challenge",
+//   "2-Step Challenge",
+// ];
 
 const initialChallengeData = {
   firmId: "",
   tier: "King",
-  phase: "2-Phase",
+  phase: "TWO_PHASE",
   profitTargetPct: 10.0,
   dailyLossPct: 5.0,
   maxLossPct: 10.0,
@@ -56,11 +62,17 @@ const initialChallengeData = {
 };
 
 const FirmChallengesEdit = ({
-  firms,
+  allChallenges,
   onSubmit,
   onUpdateChallenge,
   onDeleteChallenge,
 }) => {
+  const tierOptions = useSelector(selectTiers);
+  const phaseOptions = useSelector(selectPhases);
+  const firms = useSelector(selectFirms);
+
+  const firmFilterOptions = firms.flatMap((e) => ({ id: e.id, name: e.name }));
+
   const [formData, setFormData] = useState(initialChallengeData);
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
@@ -97,11 +109,14 @@ const FirmChallengesEdit = ({
   };
 
   const handleEditChallenge = (challenge, firmId) => {
+    const phaseName = phaseOptions?.find(
+      (p) => p.code === challenge.phase
+    );
     setEditingChallenge({ ...challenge, firmId });
     setFormData({
       firmId: firmId,
       tier: challenge.tier,
-      phase: challenge.phase,
+      phase: phaseName ? phaseName.label : challenge.phase,
       profitTargetPct: challenge.profitTargetPct,
       dailyLossPct: challenge.dailyLossPct,
       maxLossPct: challenge.maxLossPct,
@@ -129,7 +144,7 @@ const FirmChallengesEdit = ({
     setEditingChallenge(null);
     setErrors({});
     setSuccess(true);
-    window.scrollTo({top: 10, behavior:"smooth"});
+    window.scrollTo({ top: 10, behavior: "smooth" });
 
     // Hide success message after 3 seconds
     setTimeout(() => setSuccess(false), 3000);
@@ -209,7 +224,7 @@ const FirmChallengesEdit = ({
     setFormData(initialChallengeData);
     setErrors({});
     setSuccess(true);
-    window.scrollTo({top: 10, behavior:"smooth"});
+    window.scrollTo({ top: 10, behavior: "smooth" });
 
     // Hide success message after 3 seconds
     setTimeout(() => setSuccess(false), 3000);
@@ -225,7 +240,7 @@ const FirmChallengesEdit = ({
     <Container
       sx={{
         p: 4,
-        width: { xs: "100vw", lg: 940, xl: 1200 },
+        width: { xs: "100%", lg: 940, xl: "75vw" },
         mx: "auto",
       }}
     >
@@ -256,7 +271,10 @@ const FirmChallengesEdit = ({
           </Alert>
         )}
 
-        <Box component="form" onSubmit={editingChallenge ? handleUpdateChallenge : handleSubmit}>
+        <Box
+          component="form"
+          onSubmit={editingChallenge ? handleUpdateChallenge : handleSubmit}
+        >
           <Grid container spacing={3}>
             {/* Firm Selection */}
             <Grid size={{ xs: 12 }}>
@@ -271,7 +289,7 @@ const FirmChallengesEdit = ({
                   <MenuItem value="" disabled>
                     <em>Select a firm</em>
                   </MenuItem>
-                  {firms.map((firm) => (
+                  {firmFilterOptions.map((firm) => (
                     <MenuItem key={firm.id} value={firm.id}>
                       {firm.name}
                     </MenuItem>
@@ -300,8 +318,8 @@ const FirmChallengesEdit = ({
                   onChange={handleChange}
                 >
                   {tierOptions.map((tier) => (
-                    <MenuItem key={tier} value={tier}>
-                      {tier}
+                    <MenuItem key={tier.name} value={tier.name}>
+                      {tier.name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -322,13 +340,13 @@ const FirmChallengesEdit = ({
                 <InputLabel>Phase</InputLabel>
                 <Select
                   name="phase"
-                  value={formData.phase}
+                  value={formData.phase ?? ""}
                   label="Phase"
                   onChange={handleChange}
                 >
                   {phaseOptions.map((phase) => (
-                    <MenuItem key={phase} value={phase}>
-                      {phase}
+                    <MenuItem key={phase.code} value={phase.code}>
+                      {phase.label}
                     </MenuItem>
                   ))}
                 </Select>
@@ -501,9 +519,11 @@ const FirmChallengesEdit = ({
                 const selectedFirm = firms.find(
                   (f) => f.id === formData.firmId
                 );
-                const challenges = selectedFirm?.challenges || [];
+                const challengesByFirm = allChallenges.filter(
+                  (c) => c.firmId === selectedFirm.id
+                );
 
-                if (challenges.length === 0) {
+                if (challengesByFirm.length === 0) {
                   return (
                     <Typography color="textSecondary">
                       No challenges added yet for this firm.
@@ -511,7 +531,7 @@ const FirmChallengesEdit = ({
                   );
                 }
 
-                return challenges.map((challenge, index) => (
+                return challengesByFirm.map((challenge, index) => (
                   <Card key={challenge.id || index} sx={{ mb: 2 }}>
                     <CardContent>
                       <Box
@@ -546,11 +566,10 @@ const FirmChallengesEdit = ({
                         <Box sx={{ display: "flex", gap: 1 }}>
                           <IconButton
                             color="primary"
-                            onClick={() =>{
+                            onClick={() => {
                               handleEditChallenge(challenge, selectedFirm.id);
-                              window.scrollTo({top:120, behavior:"smooth"})
-                            }
-                            }
+                              window.scrollTo({ top: 120, behavior: "smooth" });
+                            }}
                             size="small"
                           >
                             <Edit />

@@ -179,7 +179,17 @@ const slice = createSlice({
       state.phases = [];
       state.payoutfrq = [];
       state.currencies = [];
-      state.status = "idle";
+      state.status = {
+        // "idle" | "loading" | "succeeded" | "failed"
+        countries: "idle",
+        platforms: "idle",
+        instruments: "idle",
+        tiers: "idle",
+        phases: "idle",
+        payoutfrq: "idle",
+        currencies: "idle",
+        all: "idle",
+      };
       state.error = null;
       state.lastFetched = null;
     },
@@ -311,7 +321,8 @@ export const selectTiers = (st) => st.domainData.tiers;
 export const selectPhases = (st) => st.domainData.phases;
 export const selectPayoutFrequencies = (st) => st.domainData.payoutfrq;
 export const selectCurrencies = (st) => st.domainData.currencies;
-export const selectDomainDataStatus = (domain) => (st) => st.domainData.status[domain];
+export const selectDomainDataStatus = (domain) => (st) =>
+  st.domainData.status[domain];
 export const selectDomainDataError = (st) => st.domainData.error;
 
 // Country selectors

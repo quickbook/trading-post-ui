@@ -25,8 +25,11 @@ import {
   VerifiedUser,
   Search,
 } from "@mui/icons-material";
+import { selectFirms } from "../../features/firms/firmsSelectors";
+import { useSelector } from "react-redux";
 
 const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
+  const allFirms = useSelector(selectFirms);
   const [searchTerm, setSearchTerm] = useState("");
   const [ratingFilter, setRatingFilter] = useState("");
   const [firmNameFilter, setFirmNameFilter] = useState("");
@@ -43,7 +46,7 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
 
   // Filter firms based on search and filter criteria
   const filteredFirms = useMemo(() => {
-    return firms.filter(firm => {
+    return allFirms?.filter(firm => {
       const matchesSearch = searchTerm === "" || 
         firm.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         firm.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -88,7 +91,7 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
 
   if (firms.length === 0) {
     return (
-      <Paper sx={{ p: 4, textAlign: "center" }}>
+      <Paper sx={{ width: {xs:'100%',lg:960,xl:'75vw'}, p: 4, textAlign: "center" }}>
         <Typography variant="h6" color="textSecondary">
           No firms added yet. Click "Add New Firm" to get started.
         </Typography>
@@ -97,7 +100,7 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
   }
 
   return (
-    <Box sx={{width: {xs:'100%',md:960,xl:'75vw'}}}>
+    <Box sx={{width: {xs:'100%',lg:960,xl:'75vw'}}}>
       {/* Header Section */}
       <Box sx={{ mb: 2 }}>
         <Typography variant="h5" gutterBottom>
@@ -296,7 +299,7 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
                   </Box>
 
                   {/* Profit Split and Account Size */}
-                  <Typography color="textSecondary" gutterBottom>
+                  <Typography color="green" gutterBottom>
                     {firm.tradingConditions?.profitSplitPct}% Profit Split | $
                     {firm.tradingConditions?.maximumAccountSizeUsd?.toLocaleString()} Account
                   </Typography>
@@ -319,9 +322,9 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
                   )}
 
                   {/* Challenges Count */}
-                  <Typography variant="body2" gutterBottom>
+                  {/* <Typography variant="body2" gutterBottom>
                     <strong>Challenges:</strong> {firm.challenges?.length || 0} available
-                  </Typography>
+                  </Typography> */}
 
                   {/* Trading Platforms */}
                   {firm.tradingConditions?.tradingPlatforms && (
