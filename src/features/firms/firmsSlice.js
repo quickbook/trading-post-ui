@@ -74,7 +74,7 @@ export const createFirm = createAsyncThunk(
   async (firmData, { rejectWithValue }) => {
     try {
       const res = await axiosClient.post(
-        getFullUrl(API_ENDPOINTS.BASE),
+        getFullUrl(API_ENDPOINTS.FIRMS.BASE),
         firmData
       );
       return res.data;

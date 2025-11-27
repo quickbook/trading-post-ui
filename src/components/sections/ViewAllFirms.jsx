@@ -28,7 +28,7 @@ import {
 import { selectFirms } from "../../features/firms/firmsSelectors";
 import { useSelector } from "react-redux";
 
-const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
+const ViewAllFirms = ({ onEdit, onDelete }) => {
   const allFirms = useSelector(selectFirms);
   const [searchTerm, setSearchTerm] = useState("");
   const [ratingFilter, setRatingFilter] = useState("");
@@ -36,13 +36,13 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
 
   // Get unique firm names for filter
   const firmNames = useMemo(() => {
-    return [...new Set(firms.map(firm => firm.name))].sort();
-  }, [firms]);
+    return [...new Set(allFirms?.map(firm => firm.name))].sort();
+  }, [allFirms]);
 
   // Get unique ratings for filter
   const ratings = useMemo(() => {
-    return [...new Set(firms.map(firm => firm.rating))].sort();
-  }, [firms]);
+    return [...new Set(allFirms?.map(firm => firm.rating))].sort();
+  }, [allFirms]);
 
   // Filter firms based on search and filter criteria
   const filteredFirms = useMemo(() => {
@@ -57,7 +57,7 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
 
       return matchesSearch && matchesRating && matchesFirmName;
     });
-  }, [firms, searchTerm, ratingFilter, firmNameFilter]);
+  }, [allFirms, searchTerm, ratingFilter, firmNameFilter]);
 
   const getBadgeIcon = (firmType) => {
     switch (firmType) {
@@ -89,7 +89,7 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
     setFirmNameFilter("");
   };
 
-  if (firms.length === 0) {
+  if (allFirms.length === 0) {
     return (
       <Paper sx={{ width: {xs:'100%',lg:960,xl:'75vw'}, p: 4, textAlign: "center" }}>
         <Typography variant="h6" color="textSecondary">
@@ -107,7 +107,7 @@ const ViewAllFirms = ({ firms, onEdit, onDelete }) => {
           All Firms 
         </Typography>
         <Typography variant="body2" color="textSecondary" sx={{ mb: 1 }}>
-         Showing {filteredFirms.length} of {firms.length} firms
+         Showing {filteredFirms.length} of {allFirms.length} firms
         </Typography>
         <Typography variant="body1" color="textSecondary" sx={{ mb: 1 }}>
           Manage and view all trading firms in your database

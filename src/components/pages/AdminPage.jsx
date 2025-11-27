@@ -25,10 +25,23 @@ import { cardData } from "../../../CardsData";
 import FirmChallengesEdit from "../sections/FirmChallengesEdit";
 import { MainContext } from "../../App";
 import { useDispatch, useSelector } from "react-redux";
-import { selectCurrentFirm, selectFirms } from "../../features/firms/firmsSelectors";
-import { fetchFirmById, fetchFirmsData } from "../../features/firms/firmsSlice";
+import {
+  selectCurrentFirm,
+  selectFirms,
+} from "../../features/firms/firmsSelectors";
+import {
+  createFirm,
+  deleteFirm,
+  fetchFirmById,
+  fetchFirmsData,
+  updateFirm,
+} from "../../features/firms/firmsSlice";
 import { fetchAllDomainData } from "../../features/domain/domainDataSlice";
-import { fetchChallenges } from "../../features/challenges/challengesSlice";
+import {
+  createChallenge,
+  fetchChallenges,
+  updateChallenge,
+} from "../../features/challenges/challengesSlice";
 
 const drawerWidth = "320px";
 
@@ -52,7 +65,7 @@ const AdminPage = () => {
     useState(false);
 
   // Redux selectors
-  const firms = useSelector((st) => st.firms.content || []);
+  //const firms = useSelector((st) => st.firms.content || []);
   const currentFirmDetails = useSelector(selectCurrentFirm);
   const firmsStatus = useSelector((st) => st.firms.status.firms);
   const challenges = useSelector((st) => st.challenges.data) || [];
@@ -73,8 +86,6 @@ const AdminPage = () => {
       dispatch(fetchChallenges());
       initChallenges.current = true;
     }
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
   // useEffect(() => {
@@ -82,12 +93,15 @@ const AdminPage = () => {
   //     dispatch(fetchFirmById(editingFirmLocal.id));
   //   }
   // }, [editingFirmLocal]);
+  useEffect(() => {
+    window.scrollTo({ top: 20, behavior: "smooth" });
+  }, [activeView]);
 
-  const handleAddOrUpdateFirm = (finalFormData) => {
+  const handleAddOrUpdateFirm = async (finalFormData) => {
     if (editingFirmLocal) {
       // Update existing firm
       if (editingFirmLocal && editingFirmLocal?.id) {
-        dispatch(
+        await dispatch(
           updateFirm({ id: editingFirmLocal.id, firmData: finalFormData })
         )
           .unwrap()
@@ -108,9 +122,9 @@ const AdminPage = () => {
     } else {
       // Add new firm
       const newFirm = {
-        ...firmData,
+        ...finalFormData,
       };
-      dispatch(createFirm(finalFormData))
+      await dispatch(createFirm(finalFormData))
         .unwrap()
         .then(() => {
           setSnackbarMessage("Firm Created successfully");
@@ -128,13 +142,14 @@ const AdminPage = () => {
     setActiveView("view");
   };
 
-  const handleEditFirm = async(firm) => {
+  const handleEditFirm = async (firm) => {
     // pass the object to AddFirmForm to pre-fill
-    await dispatch(fetchFirmById(firm.id)).unwrap().then((e)=>{
+    await dispatch(fetchFirmById(firm.id))
+      .unwrap()
+      .then((e) => {
         setEditingFirmLocal(e.data);
-    });
+      });
     setActiveView("add");
-    window.scrollTo({ top: 10, behavior: "smooth" });
   };
 
   const handleDeleteFirmRequest = (firmId) => {
@@ -163,16 +178,21 @@ const AdminPage = () => {
   const handleAddChallenge = async (challengeData) => {
     // challengeData expected to contain firmId (as in FirmChallengesEdit)
     try {
-      const { firmId, ...newChallenge } = challengeData;
       await dispatch(
-        createChallenge({ newChallenge, Firm_id: firmId })
+        createChallenge(challengeData)
       ).unwrap();
+      setSnackbarMessage("Firm Challenge Created successfully");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
     } catch (err) {
       console.error("Create challenge failed:", err);
+      setSnackbarMessage("Failed to create firm challenge");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     } finally {
       dispatch(fetchChallenges());
-      dispatch(fetchFirmsData()); // if your backend stores challenges inside firm object
-      setActiveView("view");
+      //dispatch(fetchFirmsData()); // if your backend stores challenges inside firm object
+      //setActiveView("view");
     }
   };
 
@@ -250,7 +270,6 @@ const AdminPage = () => {
               onClick={() => {
                 setActiveView(item.view);
                 setEditingFirmLocal(null);
-                window.scrollTo({ top: 10, behavior: "smooth" });
               }}
               sx={{
                 color: activeView === item.view ? "white" : "#808080",
@@ -342,7 +361,7 @@ const AdminPage = () => {
           />
         ) : activeView === "view" ? (
           <ViewAllFirms
-            firms={firms}
+            //firms={firms}
             onEdit={(f) => handleEditFirm(f)}
             onDelete={(id) => handleDeleteFirmRequest(id)}
           />

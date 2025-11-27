@@ -178,7 +178,6 @@ function App() {
               path="/admin"
               element={
                 user && role === "ADMIN" ? <AdminPage /> : <Navigate to="/" />
-                //<AdminPage />
               }
             />
 

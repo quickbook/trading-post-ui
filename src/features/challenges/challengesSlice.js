@@ -13,10 +13,14 @@ export const fetchChallenges = createAsyncThunk(
   "challenges/fetchChallenges",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.get(getFullUrl(API_ENDPOINTS.CHALLENGES.BASE));
+      const res = await axiosClient.get(
+        getFullUrl(API_ENDPOINTS.CHALLENGES.BASE)
+      );
       return res.data; // should be an array of challenges
     } catch (err) {
-      return rejectWithValue(err.response?.data || "Failed to fetch challenges");
+      return rejectWithValue(
+        err.response?.data || "Failed to fetch challenges"
+      );
     }
   }
 );
@@ -24,12 +28,17 @@ export const fetchChallenges = createAsyncThunk(
 // 🔹 Create a new challenge
 export const createChallenge = createAsyncThunk(
   "challenges/createChallenge",
-  async ({newChallenge, Firm_id}, { rejectWithValue }) => {
+  async (newChallenge, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.post(`/api/v1/firms/${Firm_id}/challenges`, newChallenge);
+      const res = await axiosClient.post(
+        getFullUrl(API_ENDPOINTS.CHALLENGES.BASE),
+        newChallenge
+      );
       return res.data; // created challenge object
     } catch (err) {
-      return rejectWithValue(err.response?.data || "Failed to create challenge");
+      return rejectWithValue(
+        err.response?.data || "Failed to create challenge"
+      );
     }
   }
 );
@@ -39,10 +48,15 @@ export const updateChallenge = createAsyncThunk(
   "challenges/updateChallenge",
   async ({ id, updatedData }, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.put(`/api/v1/challenges/${id}`, updatedData);
+      const res = await axiosClient.put(
+        getFullUrl(API_ENDPOINTS.CHALLENGES.BY_ID(id)),
+        updatedData
+      );
       return res.data; // updated challenge object
     } catch (err) {
-      return rejectWithValue(err.response?.data || "Failed to update challenge");
+      return rejectWithValue(
+        err.response?.data || "Failed to update challenge"
+      );
     }
   }
 );
@@ -52,10 +66,12 @@ export const deleteChallenge = createAsyncThunk(
   "challenges/deleteChallenge",
   async (id, { rejectWithValue }) => {
     try {
-      await axiosClient.delete(`/api/v1/challenges/${id}`);
+      await axiosClient.delete(getFullUrl(API_ENDPOINTS.CHALLENGES.BY_ID(id)));
       return id; // return deleted challenge ID
     } catch (err) {
-      return rejectWithValue(err.response?.data || "Failed to delete challenge");
+      return rejectWithValue(
+        err.response?.data || "Failed to delete challenge"
+      );
     }
   }
 );

@@ -80,13 +80,13 @@ const HomePage = () => {
     <LoadingScreen />
   ) : firmsStatus === "failed" ? (
     <Box
-      component={"h6"}
+      component={"h2"}
       sx={{
         height: "50vh",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        color: "#8b0000",
+        color: "#ff3737ff",
       }}
     >
       {" "}

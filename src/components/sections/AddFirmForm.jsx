@@ -153,7 +153,6 @@ function TabPanel({ children, value, index, ...other }) {
 const initialFirmData = {
   name: "",
   logo: "",
-  buyUrl: "",
   website: "",
   firmType: "partner",
   rating: "A+",
@@ -196,7 +195,7 @@ const initialFirmData = {
     leverages: [
       {
         profile: "EVALUATION",
-        instrumentLeverages: [{ instrument: "FX", leverageFactor: 100 }],
+        instrumentLeverages: [{ instrument: "FOREX", leverageFactor: 100 }],
       },
     ],
   },
@@ -253,7 +252,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
         ...firm,
         country: countryValue,
       });
-      if (firm.logo) setLogoPreview(firm.logo);
+      //if (firm.logo) setLogoPreview(firm.logo);
     } else {
       setFormData(initialFirmData);
     }
@@ -281,9 +280,20 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
     if (!formData?.country) {
       newErrors.country = "Country is required";
     }
-    if (!formData?.logo && !firm?.logo) {
-      setLogoError("Logo is required");
+    if (!formData?.website) {
+      newErrors.website = "Website is Required";
+    } else if (!formData?.website.includes("https://")) {
+      newErrors.website = "Enter a valid website url";
     }
+    if (!formData?.logo) {
+      newErrors.logo = "logo is Required";
+    } else if (!formData?.logo.includes("https://")) {
+      newErrors.logo = "Enter a valid logo url";
+    }
+    // if (!formData?.logo && !firm?.logo) {
+    //   newErrors.logo = "Upload logo is required";
+    //   setLogoError("Logo is required");
+    // }
 
     return newErrors;
   };
@@ -307,6 +317,27 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
     }
     if (!formData?.tradingConditions.tradingPlatforms.length) {
       newErrors.tradingPlatforms = "At least one trading platform is required";
+    }
+    if (!formData?.tradingConditions.prohibitedStrategies.length) {
+      newErrors.prohibitedStrategies =
+        "At least one prohibited strategy is required";
+    }
+    if (!formData?.tradingConditions.payoutMethods.length) {
+      newErrors.payoutMethods = "At least one payout method is required";
+    }
+    if (!formData?.tradingConditions.payoutFrequencies.length) {
+      newErrors.payoutFrequencies = "At least one payout frequency is required";
+    }
+    if (!formData?.tradingConditions.discountCode) {
+      newErrors.discountCode = "Discount Code is required";
+    }
+    if (!formData?.tradingConditions.supportPhone) {
+      newErrors.supportPhone = "Discount Code is required";
+    }
+    if (!formData?.tradingConditions.discordUrl) {
+      newErrors.discordUrl = "Discord Url is required";
+    } else if (!formData?.tradingConditions.discordUrl.includes("https://")) {
+      newErrors.discordUrl = "Enter a valid discord url";
     }
     if (!formData?.tradingConditions.availableAssets.length) {
       newErrors.availableAssets = "At least one asset type is required";
@@ -394,30 +425,30 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
     }
   };
 
-  const handleLogoUpload = (e) => {
-    const file = e.target.files[0];
-    setLogoError("");
+  // const handleLogoUpload = (e) => {
+  //   const file = e.target.files[0];
+  //   setLogoError("");
 
-    if (!file) return;
+  //   if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      setLogoError("Please upload an image file (JPEG, PNG, etc.)");
-      return;
-    }
+  //   if (!file.type.startsWith("image/")) {
+  //     setLogoError("Please upload an image file (JPEG, PNG, etc.)");
+  //     return;
+  //   }
 
-    if (file.size > 100 * 1024) {
-      setLogoError("Logo must be less than 100KB");
-      return;
-    }
+  //   if (file.size > 50 * 1024) {
+  //     setLogoError("Logo size must be less than 50KB");
+  //     return;
+  //   }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result;
-      setLogoPreview(base64String);
-      setFormData((p) => ({ ...p, logo: base64String }));
-    };
-    reader.readAsDataURL(file);
-  };
+  //   const reader = new FileReader();
+  //   reader.onloadend = () => {
+  //     const base64String = reader.result;
+  //     setLogoPreview(base64String);
+  //     setFormData((p) => ({ ...p, logo: base64String }));
+  //   };
+  //   reader.readAsDataURL(file);
+  // };
 
   const handleFirmStatusToggle = (e) => {
     const isActive = e.target.checked;
@@ -522,7 +553,22 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
       ...formData,
       slug: formData?.slug || formData?.name.toLowerCase().replace(/\s+/g, "-"),
       countryCode: formData?.countryCode || getCountryCode(formData?.country),
+      tradingConditions: {
+        ...formData.tradingConditions,
+        availableAssets: assetOptions
+          .filter((a) =>
+            formData.tradingConditions.availableAssets.includes(a.code)
+          )
+          .map((a) => a.code),
+        tradingPlatforms: platformOptions
+          .filter((p) =>
+            formData.tradingConditions.tradingPlatforms.includes(p.name)
+          )
+          .map((p) => p.code),
+      },
     };
+
+    delete finalFormData.country;
 
     console.log("Submitting firm data:", finalFormData);
     onSubmit(finalFormData);
@@ -612,7 +658,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 helperText={errors.name}
               />
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
+            {/* <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 required
                 fullWidth
@@ -621,7 +667,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 value={formData?.buyUrl}
                 onChange={handleChange}
               />
-            </Grid>
+            </Grid> */}
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
@@ -630,6 +676,8 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 value={formData?.website ?? ""}
                 onChange={handleChange}
                 placeholder="https://example.com"
+                error={!!errors.website}
+                helperText={errors.website}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
@@ -661,7 +709,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                   label="Rating"
                   onChange={handleChange}
                 >
-                  {["A+", "A", "B", "C", "D", "E", "F"].map((r) => (
+                  {["A+", "A", "B", "C", "D"].map((r) => (
                     <MenuItem key={r} value={r}>
                       {r}
                     </MenuItem>
@@ -731,7 +779,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 </FormHelperText>
               </FormControl>
             </Grid>
-            <Grid size={{ xs: 12, md: 6 }}>
+            {/* <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <Button
                   variant="outlined"
@@ -769,8 +817,21 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 color="text.secondary"
                 sx={{ mt: 1, display: "block" }}
               >
-                Required. Image files only, max 100KB
+                Required. Image files only, max 50KB
               </Typography>
+            </Grid> */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                required
+                fullWidth
+                type="text"
+                label="Logo Url"
+                name="logo"
+                value={formData?.logo}
+                onChange={handleChange}
+                error={!!errors.logo}
+                helperText={errors.logo}
+              />
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
@@ -866,10 +927,13 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
+                required
                 label="Discount Code"
                 name="discountCode"
                 value={formData?.tradingConditions.discountCode}
                 onChange={handleTradingConditionsChange}
+                error={!!errors.discountCode}
+                helperText={errors.discountCode}
               />
             </Grid>
 
@@ -985,13 +1049,13 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                   MenuProps={MenuProps}
                 >
                   {platformOptions.map((platform) => (
-                    <MenuItem key={platform.code} value={platform.code}>
+                    <MenuItem key={platform.code} value={platform.name}>
                       <Checkbox
                         checked={formData?.tradingConditions.tradingPlatforms.includes(
-                          platform.code
+                          platform.name
                         )}
                       />
-                      <ListItemText primary={platform.code} />
+                      <ListItemText primary={platform.name} />
                     </MenuItem>
                   ))}
                 </Select>
@@ -1042,7 +1106,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth>
+              <FormControl fullWidth required error={!!errors.payoutMethods}>
                 <InputLabel>Payout Methods</InputLabel>
                 <Select
                   multiple
@@ -1074,11 +1138,24 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                     </MenuItem>
                   ))}
                 </Select>
+                {errors.payoutMethods && (
+                  <Typography
+                    variant="caption"
+                    color="error"
+                    sx={{ ml: 2, mt: 0.5, display: "block" }}
+                  >
+                    {errors.payoutMethods}
+                  </Typography>
+                )}
               </FormControl>
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth>
+              <FormControl
+                fullWidth
+                required
+                error={!!errors.payoutFrequencies}
+              >
                 <InputLabel>Payout Frequencies</InputLabel>
                 <Select
                   multiple
@@ -1110,11 +1187,24 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                     </MenuItem>
                   ))}
                 </Select>
+                {errors.payoutFrequencies && (
+                  <Typography
+                    variant="caption"
+                    color="error"
+                    sx={{ ml: 2, mt: 0.5, display: "block" }}
+                  >
+                    {errors.payoutFrequencies}
+                  </Typography>
+                )}
               </FormControl>
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth>
+              <FormControl
+                required
+                fullWidth
+                error={!!errors.prohibitedStrategies}
+              >
                 <InputLabel>Prohibited Strategies</InputLabel>
                 <Select
                   multiple
@@ -1146,6 +1236,15 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                     </MenuItem>
                   ))}
                 </Select>
+                {errors.prohibitedStrategies && (
+                  <Typography
+                    variant="caption"
+                    color="error"
+                    sx={{ ml: 2, mt: 0.5, display: "block" }}
+                  >
+                    {errors.prohibitedStrategies}
+                  </Typography>
+                )}
               </FormControl>
             </Grid>
 
@@ -1348,17 +1447,23 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 fullWidth
                 label="Support Phone"
                 name="supportPhone"
+                required
                 value={formData?.tradingConditions.supportPhone}
                 onChange={handleTradingConditionsChange}
+                error={!!errors.supportPhone}
+                helperText={errors.supportPhone}
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Discord URL"
+                required
                 name="discordUrl"
                 value={formData?.tradingConditions.discordUrl}
                 onChange={handleTradingConditionsChange}
+                error={!!errors.discordUrl}
+                helperText={errors.discordUrl}
               />
             </Grid>
 
@@ -1519,11 +1624,11 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                               <Typography>
                                 <strong>
                                   {assetOptions.length
-                                    ? assetOptions.find(
+                                    ? assetOptions?.find(
                                         (e) =>
                                           e.code ===
                                           instrumentLeverage.instrument
-                                      ).name
+                                      )?.name
                                     : instrumentLeverage.instrument}
                                   :
                                 </strong>{" "}
@@ -1586,7 +1691,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 type="date"
                 label="Established Date"
                 name="establishedDate"
-                value={formData?.about.establishedDate}
+                value={formData?.about.establishedDate ?? ""}
                 onChange={handleAboutChange}
                 InputLabelProps={{ shrink: true }}
               />
@@ -1704,7 +1809,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
 
           {currentTab < 3 ? (
             <span>
-              {onCancel && (
+              {firm && onCancel && (
                 <Button
                   variant="outlined"
                   startIcon={<Cancel />}
@@ -1713,7 +1818,11 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                   Cancel
                 </Button>
               )}
-              <Button variant="contained" onClick={handleNextTab} sx={{ml:3}}>
+              <Button
+                variant="contained"
+                onClick={handleNextTab}
+                sx={{ ml: 3 }}
+              >
                 Next
               </Button>
             </span>

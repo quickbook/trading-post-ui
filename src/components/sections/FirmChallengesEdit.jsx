@@ -52,13 +52,12 @@ import { selectFirms } from "../../features/firms/firmsSelectors";
 const initialChallengeData = {
   firmId: "",
   tier: "King",
-  phase: "TWO_PHASE",
+  phase: "2 Phase",
   profitTargetPct: 10.0,
   dailyLossPct: 5.0,
   maxLossPct: 10.0,
   accountSizeUsd: 50000,
   price: { amount: 299.0, currency: "USD" },
-  buyUrl: "",
 };
 
 const FirmChallengesEdit = ({
@@ -75,7 +74,6 @@ const FirmChallengesEdit = ({
 
   const [formData, setFormData] = useState(initialChallengeData);
   const [errors, setErrors] = useState({});
-  const [success, setSuccess] = useState(false);
   const [editingChallenge, setEditingChallenge] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [challengeToDelete, setChallengeToDelete] = useState(null);
@@ -109,14 +107,11 @@ const FirmChallengesEdit = ({
   };
 
   const handleEditChallenge = (challenge, firmId) => {
-    const phaseName = phaseOptions?.find(
-      (p) => p.code === challenge.phase
-    );
     setEditingChallenge({ ...challenge, firmId });
     setFormData({
       firmId: firmId,
       tier: challenge.tier,
-      phase: phaseName ? phaseName.label : challenge.phase,
+      phase: challenge.phase,
       profitTargetPct: challenge.profitTargetPct,
       dailyLossPct: challenge.dailyLossPct,
       maxLossPct: challenge.maxLossPct,
@@ -126,29 +121,6 @@ const FirmChallengesEdit = ({
     });
   };
 
-  const handleUpdateChallenge = (e) => {
-    e.preventDefault();
-
-    const formErrors = validateForm();
-
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
-      return;
-    }
-
-    // Update the challenge data
-    onUpdateChallenge(editingChallenge.id, formData);
-
-    // Reset form and show success message
-    setFormData(initialChallengeData);
-    setEditingChallenge(null);
-    setErrors({});
-    setSuccess(true);
-    window.scrollTo({ top: 10, behavior: "smooth" });
-
-    // Hide success message after 3 seconds
-    setTimeout(() => setSuccess(false), 3000);
-  };
 
   const handleDeleteClick = (challengeId, firmId) => {
     setChallengeToDelete({ challengeId, firmId });
@@ -159,8 +131,6 @@ const FirmChallengesEdit = ({
     onDeleteChallenge(challengeToDelete.challengeId, challengeToDelete.firmId);
     setDeleteDialogOpen(false);
     setChallengeToDelete(null);
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 3000);
   };
 
   const handleCancelEdit = () => {
@@ -172,9 +142,6 @@ const FirmChallengesEdit = ({
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.firmId) {
-      newErrors.firmId = "Please select a firm";
-    }
     if (!formData.tier) {
       newErrors.tier = "Tier is required";
     }
@@ -200,40 +167,59 @@ const FirmChallengesEdit = ({
       newErrors.maxLossPct =
         "Maximum loss limit is required and must be greater than 0";
     }
-    if (!formData.buyUrl.trim()) {
-      newErrors.buyUrl = "Buy URL is required";
-    }
-
     return newErrors;
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const formErrors = validateForm();
+  const formErrors = validateForm();
+  if (Object.keys(formErrors).length > 0) {
+    setErrors(formErrors);
+    return;
+  }
 
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
-      return;
-    }
+  // Build payload (common for both update and create)
+  const tierId = tierOptions.find((item) => item.name === formData.tier)?.id;
+  const phaseId = phaseOptions.find((item) => item.label === formData.phase)?.id;
 
-    // Submit the challenge data
-    onSubmit(formData);
-
-    // Reset form and show success message
-    setFormData(initialChallengeData);
-    setErrors({});
-    setSuccess(true);
-    window.scrollTo({ top: 10, behavior: "smooth" });
-
-    // Hide success message after 3 seconds
-    setTimeout(() => setSuccess(false), 3000);
+  const payload = {
+    firmId: formData.firmId,
+    dmnTierId: tierId,
+    dmnPhaseId: phaseId,
+    profitTargetPct: formData.profitTargetPct,
+    dailyLossPct: formData.dailyLossPct,
+    maxLossPct: formData.maxLossPct,
+    accountSizeUsd: formData.accountSizeUsd,
+    price: {
+      amount: formData.price?.amount,
+      currency: "USD",
+    },
   };
+
+  console.log("Challenge Payload:", payload);
+
+  if (editingChallenge) {
+    // 👉 UPDATE MODE
+    onUpdateChallenge(editingChallenge.id, payload);
+    setEditingChallenge(null);
+    setSuccess("Challenge updated successfully!");
+  } else {
+    // 👉 CREATE MODE
+    onSubmit(payload);
+    setSuccess("Challenge created successfully!");
+  }
+
+  // Reset form
+  setFormData(initialChallengeData);
+  setErrors({});
+  window.scrollTo({ top: 10, behavior: "smooth" });
+};
+
 
   const resetForm = () => {
     setFormData(initialChallengeData);
     setErrors({});
-    setSuccess(false);
   };
 
   return (
@@ -265,15 +251,15 @@ const FirmChallengesEdit = ({
 
         <Divider sx={{ mb: 4 }} />
 
-        {success && (
+        {/* {success && (
           <Alert severity="success" sx={{ mb: 3 }}>
             Challenge added successfully!
           </Alert>
-        )}
+        )} */}
 
         <Box
           component="form"
-          onSubmit={editingChallenge ? handleUpdateChallenge : handleSubmit}
+          onSubmit={handleSubmit}
         >
           <Grid container spacing={3}>
             {/* Firm Selection */}
@@ -345,7 +331,7 @@ const FirmChallengesEdit = ({
                   onChange={handleChange}
                 >
                   {phaseOptions.map((phase) => (
-                    <MenuItem key={phase.code} value={phase.code}>
+                    <MenuItem key={phase.code} value={phase.label}>
                       {phase.label}
                     </MenuItem>
                   ))}
@@ -429,20 +415,6 @@ const FirmChallengesEdit = ({
                 onChange={handleChange}
                 error={!!errors.maxLossPct}
                 helperText={errors.maxLossPct}
-              />
-            </Grid>
-
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                required
-                fullWidth
-                label="Buy URL"
-                name="buyUrl"
-                value={formData.buyUrl}
-                onChange={handleChange}
-                error={!!errors.buyUrl}
-                helperText={errors.buyUrl}
-                placeholder="https://example.com/challenge"
               />
             </Grid>
 
