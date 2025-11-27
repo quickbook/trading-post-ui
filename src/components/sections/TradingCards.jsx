@@ -406,7 +406,7 @@ const TradingCards = () => {
                   code={card?.tradingConditions.discountCode}
                   logo={card?.logo}
                   firmType={card?.firmType}
-                  buyUrl={card?.buyUrl}
+                  buyUrl={card?.buyUrl || card?.website}
                   onCopyCode={handleCopyCode}
                 />
               </Box>

@@ -285,7 +285,7 @@ export const PropFirmDetailsPage = () => {
 
             <Button
               variant="contained"
-              href={firmDetails?.buyUrl || "#"}
+              href={firmDetails?.website || "#"}
               target="blank"
               sx={{
                 bgcolor: "#4b0082",
@@ -519,14 +519,14 @@ export const PropFirmDetailsPage = () => {
               sx={{ my: 1, color: "whitesmoke", fontFamily: "Lora, Helvetica" }}
             >
               <strong>Website:</strong>{" "}
-              {firmDetails?.buyUrl ? (
+              {firmDetails?.website ? (
                 <a
-                  href={firmDetails.buyUrl || "#"}
+                  href={firmDetails.website || "#"}
                   target="_blank"
                   rel="noreferrer"
                   style={{ color: "#4b9dff" }}
                 >
-                  {firmDetails.buyUrl}
+                  {firmDetails.website}
                 </a>
               ) : (
                 "N/A"

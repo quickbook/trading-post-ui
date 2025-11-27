@@ -72,7 +72,7 @@ export default function BookACallSection() {
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
-            bgcolor: "#000000c9",
+            bgcolor: "#260242ff",
             color: "white",
             px: 3,
             py: 2,
@@ -90,7 +90,7 @@ export default function BookACallSection() {
           </IconButton>
         </DialogTitle>
 
-        <DialogContent dividers sx={{ bgcolor: "#d3d3d375", color: "white" }}>
+        <DialogContent dividers sx={{ bgcolor: "#ecddf8", color: "white" }}>
           <form onSubmit={handleSubmit(onSubmit)}>
             <div style={{ display: "flex", gap: "16px", marginBottom: "16px" }}>
               <Controller
@@ -279,8 +279,8 @@ export default function BookACallSection() {
                 type="submit"
                 variant="contained"
                 sx={{
-                  backgroundColor: "#4b0082b5",
-                  "&:hover": { backgroundColor: "#b8b2be" },
+                  backgroundColor: "#260242ff",
+                  "&:hover": { backgroundColor: "#6b03bbff" },
                   color: "#ffffff",
                   border: "2px solid #ffd700",
                   borderRadius: "20px",

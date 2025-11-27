@@ -29,10 +29,13 @@ import {
 import { Save, Cancel, CloudUpload, Add, Delete } from "@mui/icons-material";
 import {
   selectCountryOptions,
-  fetchCountries,
   resetDomainData,
   selectDomainDataError,
   selectDomainDataStatus,
+  fetchAllDomainData,
+  selectInstruments,
+  selectPlatforms,
+  selectPayoutFrequencies,
 } from "../../features/domain/domainDataSlice";
 import { useDispatch, useSelector } from "react-redux";
 
@@ -47,27 +50,27 @@ const MenuProps = {
   },
 };
 
-const assetOptions = [
-  "Forex",
-  "Crypto",
-  "Indices",
-  "Commodities",
-  "Stocks",
-  "ETFs",
-  "Bonds",
-  "Futures"
-];
+// const assetOptions = [
+//   "Forex",
+//   "Crypto",
+//   "Indices",
+//   "Commodities",
+//   "Stocks",
+//   "ETFs",
+//   "Bonds",
+//   "Futures"
+// ];
 
-const platformOptions = [
-  "MetaTrader 4",
-  "MetaTrader 5",
-  "cTrader",
-  "Match Trader",
-  "TradeLocker",
-  "Project-X",
-  "DXtrade",
-  "NinjaTrader"
-];
+// const platformOptions = [
+//   "MetaTrader 4",
+//   "MetaTrader 5",
+//   "cTrader",
+//   "Match Trader",
+//   "TradeLocker",
+//   "Project-X",
+//   "DXtrade",
+//   "NinjaTrader"
+// ];
 
 const firmTypeOptions = ["premium", "trusted", "partner"];
 const keyFeaturesOptions = [
@@ -85,12 +88,31 @@ const keyFeaturesOptions = [
   "Expert Advisors Allowed",
 ];
 
-const payoutMethodOptions = ["Rise", "Bank Transfer", "PayPal", "Skrill", "Neteller", "Crypto", "Wire Transfer"];
-const payoutFrequencyOptions = ["Daily", "Weekly", "Bi-Weekly", "Monthly"];
-const withdrawalSpeedOptions = ["1-3 Business Days", "WEEKLY", "BI-WEEKLY", "MONTHLY", "INSTANT"];
+const payoutMethodOptions = [
+  "Rise",
+  "Bank Transfer",
+  "PayPal",
+  "Skrill",
+  "Neteller",
+  "Crypto",
+  "Wire Transfer",
+];
+const payoutFrequencyOptionsData = ["Daily", "Weekly", "Bi-Weekly", "Monthly"];
+const withdrawalSpeedOptions = [
+  "1-3 Business Days",
+  "WEEKLY",
+  "BI-WEEKLY",
+  "MONTHLY",
+  "INSTANT",
+];
 const dailyDrawdownOptions = ["equity", "balance", "equityOrBalance"];
-const instrumentOptions = ["FOREX", "CRYPTO", "INDICES", "COMMODITIES", "STOCKS", "ETFs", "FUTURES"];
-const leverageProfileOptions = ["EVALUATION", "FUNDED", "INSTANT_STANDARD", "INSTANT_PRO"];
+//const instrumentOptions = ["FOREX", "CRYPTO", "INDICES", "COMMODITIES", "STOCKS", "ETFs", "FUTURES"];
+const leverageProfileOptions = [
+  "EVALUATION",
+  "FUNDED",
+  "INSTANT_STANDARD",
+  "INSTANT_PRO",
+];
 
 const prohibitedStrategiesOptions = [
   "Martingale",
@@ -105,13 +127,13 @@ const prohibitedStrategiesOptions = [
   "Guaranteed Limit Orders",
   "Data Feed Manipulation",
   "Trading on Delayed Charts",
-  "Macroeconomic Trading During High Impact Events"
+  "Macroeconomic Trading During High Impact Events",
 ];
 
-const restrictedCountriesOptions = [
-  "Afghanistan", "Cuba", "Iran", "North Korea", "Pakistan", "Russia", 
-  "Syria", "Somalia", "Nigeria", "Myanmar", "Sudan", "Yemen", "Venezuela"
-];
+// const restrictedCountriesOptions = [
+//   "Afghanistan", "Cuba", "Iran", "North Korea", "Pakistan", "Russia",
+//   "Syria", "Somalia", "Nigeria", "Myanmar", "Sudan", "Yemen", "Venezuela"
+// ];
 
 // Tab Panel Component
 function TabPanel({ children, value, index, ...other }) {
@@ -131,13 +153,11 @@ function TabPanel({ children, value, index, ...other }) {
 const initialFirmData = {
   name: "",
   logo: "",
-  buyUrl: "",
   website: "",
   firmType: "partner",
   rating: "A+",
   allRatings: "",
   country: "",
-  description: "",
   isTrusted: false,
   tradingConditions: {
     maximumAccountSizeUsd: 100000,
@@ -153,7 +173,7 @@ const initialFirmData = {
     profitSplitOption: {
       initialPct: 80,
       subsequentPct: 100,
-      note: "First payout is 80%, next payouts are 100%"
+      note: "First payout is 80%, next payouts are 100%",
     },
     payoutMethods: [],
     payoutFrequencies: [],
@@ -175,11 +195,9 @@ const initialFirmData = {
     leverages: [
       {
         profile: "EVALUATION",
-        instrumentLeverages: [
-          { instrument: "FOREX", leverageFactor: 100 }
-        ]
-      }
-    ]
+        instrumentLeverages: [{ instrument: "FOREX", leverageFactor: 100 }],
+      },
+    ],
   },
   about: {
     legalName: "",
@@ -192,19 +210,23 @@ const initialFirmData = {
     firmStatus: "Active",
     foundedYear: "",
     ceoName: "",
-    extraNotes: ""
+    extraNotes: "",
   },
 };
 
 const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
-  const dispatch = useDispatch();
   const [formData, setFormData] = useState(initialFirmData);
 
+  //domaindata
   const countryOptions = useSelector(selectCountryOptions) || [];
-  const countriesStatus = useSelector(selectDomainDataStatus('countries'));
-  const countriesError = useSelector(selectDomainDataError);
-
-  const initCountries = useRef(false);
+  const assetOptions = useSelector(selectInstruments) || [];
+  const platformOptions = useSelector(selectPlatforms) || [];
+  const payoutFrequencies = useSelector(selectPayoutFrequencies);
+  const payoutFrequencyOptions = payoutFrequencies.length
+    ? payoutFrequencies
+    : payoutFrequencyOptionsData;
+  const domainDataStatus = useSelector(selectDomainDataStatus("all"));
+  const domainDataError = useSelector(selectDomainDataError);
 
   const getCountryCode = (label) => {
     const country = countryOptions?.find((c) => c.label === label);
@@ -217,28 +239,20 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
   const [logoError, setLogoError] = useState("");
   const [newLeverage, setNewLeverage] = useState({
     profile: "EVALUATION",
-    instrument: "FOREX",
-    leverageFactor: 100
+    instrument: "FX",
+    leverageFactor: 100,
   });
 
   useEffect(() => {
-    if(!initCountries.current){
-      dispatch(fetchCountries());
-      initCountries.current = true;
-    }
-  }, [dispatch]);
-
-  useEffect(() => {
     if (firm) {
-      const countryValue = typeof firm.country === "string"
-        ? firm.country
-        : firm.country;
+      const countryValue =
+        typeof firm.country === "string" ? firm.country : firm.country;
 
       setFormData({
         ...firm,
         country: countryValue,
       });
-      if (firm.logo) setLogoPreview(firm.logo);
+      //if (firm.logo) setLogoPreview(firm.logo);
     } else {
       setFormData(initialFirmData);
     }
@@ -251,27 +265,35 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
   const validateBasicDetails = () => {
     const newErrors = {};
 
-    if (!formData.name.trim()) {
+    if (!formData?.name.trim()) {
       newErrors.name = "Firm name is required";
     }
-    if (!formData.firmType) {
+    if (!formData?.firmType) {
       newErrors.firmType = "Firm type is required";
     }
-    if (!formData.rating) {
+    if (!formData?.rating) {
       newErrors.rating = "Rating is required";
     }
-    if (!formData.allRatings) {
+    if (!formData?.allRatings) {
       newErrors.allRatings = "Total Ratings is required";
     }
-    if (!formData.country) {
+    if (!formData?.country) {
       newErrors.country = "Country is required";
     }
-    if (!formData.description.trim()) {
-      newErrors.description = "Description is required";
+    if (!formData?.website) {
+      newErrors.website = "Website is Required";
+    } else if (!formData?.website.includes("https://")) {
+      newErrors.website = "Enter a valid website url";
     }
-    if (!formData.logo && !firm?.logo) {
-      setLogoError("Logo is required");
+    if (!formData?.logo) {
+      newErrors.logo = "logo is Required";
+    } else if (!formData?.logo.includes("https://")) {
+      newErrors.logo = "Enter a valid logo url";
     }
+    // if (!formData?.logo && !firm?.logo) {
+    //   newErrors.logo = "Upload logo is required";
+    //   setLogoError("Logo is required");
+    // }
 
     return newErrors;
   };
@@ -279,16 +301,45 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
   const validateTradingConditions = () => {
     const newErrors = {};
 
-    if (!formData.tradingConditions.maximumAccountSizeUsd || formData.tradingConditions.maximumAccountSizeUsd <= 0) {
-      newErrors.maximumAccountSizeUsd = "Maximum account size is required and must be greater than 0";
+    if (
+      !formData?.tradingConditions.maximumAccountSizeUsd ||
+      formData?.tradingConditions.maximumAccountSizeUsd <= 0
+    ) {
+      newErrors.maximumAccountSizeUsd =
+        "Maximum account size is required and must be greater than 0";
     }
-    if (!formData.tradingConditions.profitSplitPct || formData.tradingConditions.profitSplitPct <= 0) {
-      newErrors.profitSplitPct = "Profit split percentage is required and must be greater than 0";
+    if (
+      !formData?.tradingConditions.profitSplitPct ||
+      formData?.tradingConditions.profitSplitPct <= 0
+    ) {
+      newErrors.profitSplitPct =
+        "Profit split percentage is required and must be greater than 0";
     }
-    if (!formData.tradingConditions.tradingPlatforms.length) {
+    if (!formData?.tradingConditions.tradingPlatforms.length) {
       newErrors.tradingPlatforms = "At least one trading platform is required";
     }
-    if (!formData.tradingConditions.availableAssets.length) {
+    if (!formData?.tradingConditions.prohibitedStrategies.length) {
+      newErrors.prohibitedStrategies =
+        "At least one prohibited strategy is required";
+    }
+    if (!formData?.tradingConditions.payoutMethods.length) {
+      newErrors.payoutMethods = "At least one payout method is required";
+    }
+    if (!formData?.tradingConditions.payoutFrequencies.length) {
+      newErrors.payoutFrequencies = "At least one payout frequency is required";
+    }
+    if (!formData?.tradingConditions.discountCode) {
+      newErrors.discountCode = "Discount Code is required";
+    }
+    if (!formData?.tradingConditions.supportPhone) {
+      newErrors.supportPhone = "Discount Code is required";
+    }
+    if (!formData?.tradingConditions.discordUrl) {
+      newErrors.discordUrl = "Discord Url is required";
+    } else if (!formData?.tradingConditions.discordUrl.includes("https://")) {
+      newErrors.discordUrl = "Enter a valid discord url";
+    }
+    if (!formData?.tradingConditions.availableAssets.length) {
       newErrors.availableAssets = "At least one asset type is required";
     }
 
@@ -297,9 +348,9 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData((p) => ({ 
-      ...p, 
-      [name]: type === 'checkbox' ? checked : value 
+    setFormData((p) => ({
+      ...p,
+      [name]: type === "checkbox" ? checked : value,
     }));
 
     if (errors[name]) {
@@ -311,9 +362,9 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
     const { name, value, type, checked } = e.target;
     setFormData((p) => ({
       ...p,
-      tradingConditions: { 
-        ...p.tradingConditions, 
-        [name]: type === 'checkbox' ? checked : value 
+      tradingConditions: {
+        ...p.tradingConditions,
+        [name]: type === "checkbox" ? checked : value,
       },
     }));
 
@@ -330,9 +381,9 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
         ...p.tradingConditions,
         profitSplitOption: {
           ...p.tradingConditions.profitSplitOption,
-          [name]: name.includes("Pct") ? parseFloat(value) || 0 : value
-        }
-      }
+          [name]: name.includes("Pct") ? parseFloat(value) ?? 0 : value,
+        },
+      },
     }));
   };
 
@@ -374,30 +425,30 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
     }
   };
 
-  const handleLogoUpload = (e) => {
-    const file = e.target.files[0];
-    setLogoError("");
+  // const handleLogoUpload = (e) => {
+  //   const file = e.target.files[0];
+  //   setLogoError("");
 
-    if (!file) return;
+  //   if (!file) return;
 
-    if (!file.type.startsWith("image/")) {
-      setLogoError("Please upload an image file (JPEG, PNG, etc.)");
-      return;
-    }
+  //   if (!file.type.startsWith("image/")) {
+  //     setLogoError("Please upload an image file (JPEG, PNG, etc.)");
+  //     return;
+  //   }
 
-    if (file.size > 100 * 1024) {
-      setLogoError("Logo must be less than 100KB");
-      return;
-    }
+  //   if (file.size > 50 * 1024) {
+  //     setLogoError("Logo size must be less than 50KB");
+  //     return;
+  //   }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result;
-      setLogoPreview(base64String);
-      setFormData((p) => ({ ...p, logo: base64String }));
-    };
-    reader.readAsDataURL(file);
-  };
+  //   const reader = new FileReader();
+  //   reader.onloadend = () => {
+  //     const base64String = reader.result;
+  //     setLogoPreview(base64String);
+  //     setFormData((p) => ({ ...p, logo: base64String }));
+  //   };
+  //   reader.readAsDataURL(file);
+  // };
 
   const handleFirmStatusToggle = (e) => {
     const isActive = e.target.checked;
@@ -412,33 +463,34 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
 
   const addLeverage = () => {
     const { profile, instrument, leverageFactor } = newLeverage;
-    
+
     // Find if profile already exists
-    const existingProfileIndex = formData.tradingConditions.leverages.findIndex(
-      l => l.profile === profile
-    );
+    const existingProfileIndex =
+      formData?.tradingConditions.leverages.findIndex(
+        (l) => l.profile === profile
+      );
 
     if (existingProfileIndex >= 0) {
       // Add to existing profile
-      const updatedLeverages = [...formData.tradingConditions.leverages];
+      const updatedLeverages = [...formData?.tradingConditions.leverages];
       updatedLeverages[existingProfileIndex] = {
         ...updatedLeverages[existingProfileIndex],
         instrumentLeverages: [
           ...updatedLeverages[existingProfileIndex].instrumentLeverages,
-          { instrument, leverageFactor }
-        ]
+          { instrument, leverageFactor },
+        ],
       };
-      
-      setFormData(p => ({
+
+      setFormData((p) => ({
         ...p,
         tradingConditions: {
           ...p.tradingConditions,
-          leverages: updatedLeverages
-        }
+          leverages: updatedLeverages,
+        },
       }));
     } else {
       // Create new profile
-      setFormData(p => ({
+      setFormData((p) => ({
         ...p,
         tradingConditions: {
           ...p.tradingConditions,
@@ -446,38 +498,41 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
             ...p.tradingConditions.leverages,
             {
               profile,
-              instrumentLeverages: [{ instrument, leverageFactor }]
-            }
-          ]
-        }
+              instrumentLeverages: [{ instrument, leverageFactor }],
+            },
+          ],
+        },
       }));
     }
 
     // Reset new leverage form
     setNewLeverage({
       profile: "EVALUATION",
-      instrument: "FOREX",
-      leverageFactor: 100
+      instrument: "FX",
+      leverageFactor: 100,
     });
   };
 
   const removeLeverage = (profileIndex, instrumentIndex) => {
-    const updatedLeverages = [...formData.tradingConditions.leverages];
-    
+    const updatedLeverages = [...formData?.tradingConditions.leverages];
+
     if (updatedLeverages[profileIndex].instrumentLeverages.length === 1) {
       // Remove entire profile if last instrument
       updatedLeverages.splice(profileIndex, 1);
     } else {
       // Remove just the instrument
-      updatedLeverages[profileIndex].instrumentLeverages.splice(instrumentIndex, 1);
+      updatedLeverages[profileIndex].instrumentLeverages.splice(
+        instrumentIndex,
+        1
+      );
     }
 
-    setFormData(p => ({
+    setFormData((p) => ({
       ...p,
       tradingConditions: {
         ...p.tradingConditions,
-        leverages: updatedLeverages
-      }
+        leverages: updatedLeverages,
+      },
     }));
   };
 
@@ -496,9 +551,24 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
 
     const finalFormData = {
       ...formData,
-      slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, "-"),
-      countryCode: formData.countryCode || getCountryCode(formData.country),
+      slug: formData?.slug || formData?.name.toLowerCase().replace(/\s+/g, "-"),
+      countryCode: formData?.countryCode || getCountryCode(formData?.country),
+      tradingConditions: {
+        ...formData.tradingConditions,
+        availableAssets: assetOptions
+          .filter((a) =>
+            formData.tradingConditions.availableAssets.includes(a.code)
+          )
+          .map((a) => a.code),
+        tradingPlatforms: platformOptions
+          .filter((p) =>
+            formData.tradingConditions.tradingPlatforms.includes(p.name)
+          )
+          .map((p) => p.code),
+      },
     };
+
+    delete finalFormData.country;
 
     console.log("Submitting firm data:", finalFormData);
     onSubmit(finalFormData);
@@ -509,7 +579,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
       setLogoError("");
     }
 
-    dispatch(resetDomainData());
+    //dispatch(resetDomainData());
   };
 
   const handleNextTab = () => {
@@ -537,7 +607,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
     <Container
       sx={{
         p: 4,
-        width: { xs: "100vw", lg: 940, xl: 1200 },
+        width: { xs: "100vw", lg: 940, xl: "75vw" },
         mx: "auto",
         borderRadius: 3,
         bgcolor: "background.paper",
@@ -566,49 +636,56 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
 
         {/* Basic Details Tab */}
         <TabPanel value={currentTab} index={0}>
-          <Typography variant="h6" gutterBottom fontWeight={600} color="primary">
+          <Typography
+            variant="h6"
+            gutterBottom
+            fontWeight={600}
+            color="primary"
+          >
             Basic Information
           </Typography>
 
           <Grid container spacing={3}>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 required
                 fullWidth
                 label="Firm Name"
                 name="name"
-                value={formData.name}
+                value={formData?.name}
                 onChange={handleChange}
                 error={!!errors.name}
                 helperText={errors.name}
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            {/* <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 required
                 fullWidth
                 label="Firm Page URL"
                 name="buyUrl"
-                value={formData.buyUrl}
+                value={formData?.buyUrl}
                 onChange={handleChange}
               />
-            </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            </Grid> */}
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Website"
                 name="website"
-                value={formData.website}
+                value={formData?.website ?? ""}
                 onChange={handleChange}
                 placeholder="https://example.com"
+                error={!!errors.website}
+                helperText={errors.website}
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth required error={!!errors.firmType}>
                 <InputLabel>Firm Type</InputLabel>
                 <Select
                   name="firmType"
-                  value={formData.firmType}
+                  value={formData?.firmType}
                   label="Firm Type"
                   onChange={handleChange}
                 >
@@ -623,16 +700,16 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 </FormHelperText>
               </FormControl>
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth required error={!!errors.rating}>
                 <InputLabel>Rating</InputLabel>
                 <Select
                   name="rating"
-                  value={formData.rating}
+                  value={formData?.rating}
                   label="Rating"
                   onChange={handleChange}
                 >
-                  {["A+", "A", "B", "C", "D", "E", "F"].map((r) => (
+                  {["A+", "A", "B", "C", "D"].map((r) => (
                     <MenuItem key={r} value={r}>
                       {r}
                     </MenuItem>
@@ -643,41 +720,43 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 </FormHelperText>
               </FormControl>
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 required
                 fullWidth
                 type="number"
                 label="Total Ratings"
                 name="allRatings"
-                value={formData.allRatings}
+                value={formData?.allRatings}
                 onChange={handleChange}
                 error={!!errors.allRatings}
                 helperText={errors.allRatings}
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl
                 fullWidth
                 required
-                disabled={countriesStatus === "loading"}
+                disabled={domainDataStatus === "loading"}
                 error={!!errors.country}
               >
                 <InputLabel>Select Country</InputLabel>
                 <Select
                   name="country"
-                  value={formData.country ?? ""}
+                  value={formData?.country ?? ""}
                   label="Select Country"
                   onChange={handleChange}
                 >
-                  {countriesStatus === "loading" ? (
+                  {domainDataStatus === "loading" ? (
                     <MenuItem value="" disabled>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
                         <CircularProgress size={16} />
                         <span>Loading countries...</span>
                       </Box>
                     </MenuItem>
-                  ) : countriesStatus === "failed" ? (
+                  ) : domainDataStatus === "failed" ? (
                     <MenuItem value="" disabled>
                       <Typography variant="body2" color="error">
                         Failed to load countries
@@ -700,7 +779,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 </FormHelperText>
               </FormControl>
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            {/* <Grid size={{ xs: 12, md: 6 }}>
               <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
                 <Button
                   variant="outlined"
@@ -725,20 +804,41 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 )}
               </Box>
               {logoError && (
-                <Typography variant="caption" color="error" sx={{ mt: 1, display: "block" }}>
+                <Typography
+                  variant="caption"
+                  color="error"
+                  sx={{ mt: 1, display: "block" }}
+                >
                   {logoError}
                 </Typography>
               )}
-              <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: "block" }}>
-                Required. Image files only, max 100KB
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ mt: 1, display: "block" }}
+              >
+                Required. Image files only, max 50KB
               </Typography>
+            </Grid> */}
+            <Grid size={{ xs: 12, md: 6 }}>
+              <TextField
+                required
+                fullWidth
+                type="text"
+                label="Logo Url"
+                name="logo"
+                value={formData?.logo}
+                onChange={handleChange}
+                error={!!errors.logo}
+                helperText={errors.logo}
+              />
             </Grid>
-            
-            <Grid size={{xs:12, md: 6}}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControlLabel
                 control={
                   <Switch
-                    checked={formData.isTrusted}
+                    checked={formData?.isTrusted}
                     onChange={handleChange}
                     name="isTrusted"
                   />
@@ -747,7 +847,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
               />
             </Grid>
 
-            <Grid size={{xs:12}}>
+            {/* <Grid size={{ xs: 12 }}>
               <TextField
                 required
                 fullWidth
@@ -755,58 +855,63 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 rows={3}
                 label="Description"
                 name="description"
-                value={formData.description}
+                value={formData?.description}
                 onChange={handleChange}
                 placeholder="Enter firm description..."
                 error={!!errors.description}
                 helperText={errors.description}
               />
-            </Grid>
+            </Grid> */}
           </Grid>
         </TabPanel>
 
         {/* Trading Conditions Tab */}
         <TabPanel value={currentTab} index={1}>
-          <Typography variant="h6" gutterBottom fontWeight={600} color="primary">
+          <Typography
+            variant="h6"
+            gutterBottom
+            fontWeight={600}
+            color="primary"
+          >
             Trading Conditions
           </Typography>
 
           <Grid container spacing={3}>
             {/* Basic Trading Conditions */}
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 required
                 fullWidth
                 type="number"
                 label="Maximum Account Size (USD)"
                 name="maximumAccountSizeUsd"
-                value={formData.tradingConditions.maximumAccountSizeUsd}
+                value={formData?.tradingConditions.maximumAccountSizeUsd}
                 onChange={handleTradingNumberChange}
                 error={!!errors.maximumAccountSizeUsd}
                 helperText={errors.maximumAccountSizeUsd}
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 required
                 fullWidth
                 type="number"
                 label="Profit Split (%)"
                 name="profitSplitPct"
-                value={formData.tradingConditions.profitSplitPct}
+                value={formData?.tradingConditions.profitSplitPct}
                 onChange={handleTradingNumberChange}
                 inputProps={{ min: 0, max: 100 }}
                 error={!!errors.profitSplitPct}
                 helperText={errors.profitSplitPct}
               />
             </Grid>
-            
-            <Grid size={{xs:12, md: 6}}>
+
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>Withdrawal Speed</InputLabel>
                 <Select
                   name="withdrawalSpeed"
-                  value={formData.tradingConditions.withdrawalSpeed}
+                  value={formData?.tradingConditions.withdrawalSpeed ?? " "}
                   label="Withdrawal Speed"
                   onChange={handleTradingConditionsChange}
                 >
@@ -819,60 +924,78 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
               </FormControl>
             </Grid>
 
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
+                required
                 label="Discount Code"
                 name="discountCode"
-                value={formData.tradingConditions.discountCode}
+                value={formData?.tradingConditions.discountCode}
                 onChange={handleTradingConditionsChange}
+                error={!!errors.discountCode}
+                helperText={errors.discountCode}
               />
             </Grid>
 
             {/* Profit Split Option */}
-            <Grid size={{xs:12}}>
-              <Typography variant="h6" sx={{ mb: 2, mt: 2 }}>Profit Split Options</Typography>
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="h6" sx={{ mb: 2, mt: 2 }}>
+                Profit Split Options
+              </Typography>
             </Grid>
-            <Grid size={{xs:12, md:4}}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 type="number"
                 label="Initial Profit Split (%)"
                 name="initialPct"
-                value={formData.tradingConditions.profitSplitOption.initialPct}
+                value={
+                  formData?.tradingConditions.profitSplitOption
+                    ? formData?.tradingConditions.profitSplitOption.initialPct
+                    : 0
+                }
                 onChange={handleProfitSplitChange}
                 inputProps={{ min: 0, max: 100 }}
               />
             </Grid>
-            <Grid size={{xs:12, md:4}}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 type="number"
                 label="Subsequent Profit Split (%)"
                 name="subsequentPct"
-                value={formData.tradingConditions.profitSplitOption.subsequentPct}
+                value={
+                  formData?.tradingConditions.profitSplitOption
+                    ? formData?.tradingConditions.profitSplitOption
+                        .subsequentPct
+                    : 0
+                }
                 onChange={handleProfitSplitChange}
                 inputProps={{ min: 0, max: 100 }}
               />
             </Grid>
-            <Grid size={{xs:12, md:4}}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 label="Profit Split Note"
                 name="note"
-                value={formData.tradingConditions.profitSplitOption.note}
+                value={
+                  formData?.tradingConditions.profitSplitOption
+                    ? formData?.tradingConditions.profitSplitOption.note
+                    : ""
+                }
                 onChange={handleProfitSplitChange}
               />
             </Grid>
 
             {/* Multi-select Fields */}
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth required error={!!errors.availableAssets}>
                 <InputLabel>Available Assets</InputLabel>
                 <Select
                   multiple
                   name="availableAssets"
-                  value={formData.tradingConditions.availableAssets}
+                  value={formData?.tradingConditions.availableAssets}
                   onChange={handleMultiSelect}
                   input={<OutlinedInput label="Available Assets" />}
                   renderValue={(selected) => (
@@ -885,29 +1008,35 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                   MenuProps={MenuProps}
                 >
                   {assetOptions.map((asset) => (
-                    <MenuItem key={asset} value={asset}>
+                    <MenuItem key={asset.code} value={asset.code}>
                       <Checkbox
-                        checked={formData.tradingConditions.availableAssets.indexOf(asset) > -1}
+                        checked={formData?.tradingConditions.availableAssets.includes(
+                          asset.code
+                        )}
                       />
-                      <ListItemText primary={asset} />
+                      <ListItemText primary={asset.name} />
                     </MenuItem>
                   ))}
                 </Select>
                 {errors.availableAssets && (
-                  <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5, display: "block" }}>
+                  <Typography
+                    variant="caption"
+                    color="error"
+                    sx={{ ml: 2, mt: 0.5, display: "block" }}
+                  >
                     {errors.availableAssets}
                   </Typography>
                 )}
               </FormControl>
             </Grid>
 
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth required error={!!errors.tradingPlatforms}>
                 <InputLabel>Trading Platforms</InputLabel>
                 <Select
                   multiple
                   name="tradingPlatforms"
-                  value={formData.tradingConditions.tradingPlatforms}
+                  value={formData?.tradingConditions.tradingPlatforms}
                   onChange={handleMultiSelect}
                   input={<OutlinedInput label="Trading Platforms" />}
                   renderValue={(selected) => (
@@ -920,29 +1049,35 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                   MenuProps={MenuProps}
                 >
                   {platformOptions.map((platform) => (
-                    <MenuItem key={platform} value={platform}>
+                    <MenuItem key={platform.code} value={platform.name}>
                       <Checkbox
-                        checked={formData.tradingConditions.tradingPlatforms.indexOf(platform) > -1}
+                        checked={formData?.tradingConditions.tradingPlatforms.includes(
+                          platform.name
+                        )}
                       />
-                      <ListItemText primary={platform} />
+                      <ListItemText primary={platform.name} />
                     </MenuItem>
                   ))}
                 </Select>
                 {errors.tradingPlatforms && (
-                  <Typography variant="caption" color="error" sx={{ ml: 2, mt: 0.5, display: "block" }}>
+                  <Typography
+                    variant="caption"
+                    color="error"
+                    sx={{ ml: 2, mt: 0.5, display: "block" }}
+                  >
                     {errors.tradingPlatforms}
                   </Typography>
                 )}
               </FormControl>
             </Grid>
 
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>Key Features</InputLabel>
                 <Select
                   multiple
                   name="keyFeatures"
-                  value={formData.tradingConditions.keyFeatures}
+                  value={formData?.tradingConditions.keyFeatures}
                   onChange={handleMultiSelect}
                   input={<OutlinedInput label="Key Features" />}
                   renderValue={(selected) => (
@@ -957,7 +1092,11 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                   {keyFeaturesOptions.map((feature) => (
                     <MenuItem key={feature} value={feature}>
                       <Checkbox
-                        checked={formData.tradingConditions.keyFeatures.indexOf(feature) > -1}
+                        checked={
+                          formData?.tradingConditions.keyFeatures.indexOf(
+                            feature
+                          ) > -1
+                        }
                       />
                       <ListItemText primary={feature} />
                     </MenuItem>
@@ -966,13 +1105,13 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
               </FormControl>
             </Grid>
 
-            <Grid size={{xs:12, md: 6}}>
-              <FormControl fullWidth>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <FormControl fullWidth required error={!!errors.payoutMethods}>
                 <InputLabel>Payout Methods</InputLabel>
                 <Select
                   multiple
                   name="payoutMethods"
-                  value={formData.tradingConditions.payoutMethods}
+                  value={formData?.tradingConditions.payoutMethods}
                   onChange={handleMultiSelect}
                   input={<OutlinedInput label="Payout Methods" />}
                   renderValue={(selected) => (
@@ -987,22 +1126,41 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                   {payoutMethodOptions.map((method) => (
                     <MenuItem key={method} value={method}>
                       <Checkbox
-                        checked={formData.tradingConditions.payoutMethods.indexOf(method) > -1}
+                        checked={
+                          formData?.tradingConditions.payoutMethods
+                            ? formData?.tradingConditions.payoutMethods.indexOf(
+                                method
+                              ) > -1
+                            : ""
+                        }
                       />
                       <ListItemText primary={method} />
                     </MenuItem>
                   ))}
                 </Select>
+                {errors.payoutMethods && (
+                  <Typography
+                    variant="caption"
+                    color="error"
+                    sx={{ ml: 2, mt: 0.5, display: "block" }}
+                  >
+                    {errors.payoutMethods}
+                  </Typography>
+                )}
               </FormControl>
             </Grid>
 
-            <Grid size={{xs:12, md: 6}}>
-              <FormControl fullWidth>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <FormControl
+                fullWidth
+                required
+                error={!!errors.payoutFrequencies}
+              >
                 <InputLabel>Payout Frequencies</InputLabel>
                 <Select
                   multiple
                   name="payoutFrequencies"
-                  value={formData.tradingConditions.payoutFrequencies}
+                  value={formData?.tradingConditions.payoutFrequencies}
                   onChange={handleMultiSelect}
                   input={<OutlinedInput label="Payout Frequencies" />}
                   renderValue={(selected) => (
@@ -1017,22 +1175,41 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                   {payoutFrequencyOptions.map((frequency) => (
                     <MenuItem key={frequency} value={frequency}>
                       <Checkbox
-                        checked={formData.tradingConditions.payoutFrequencies.indexOf(frequency) > -1}
+                        checked={
+                          formData?.tradingConditions.payoutFrequencies
+                            ? formData?.tradingConditions.payoutFrequencies.indexOf(
+                                frequency
+                              ) > -1
+                            : ""
+                        }
                       />
                       <ListItemText primary={frequency} />
                     </MenuItem>
                   ))}
                 </Select>
+                {errors.payoutFrequencies && (
+                  <Typography
+                    variant="caption"
+                    color="error"
+                    sx={{ ml: 2, mt: 0.5, display: "block" }}
+                  >
+                    {errors.payoutFrequencies}
+                  </Typography>
+                )}
               </FormControl>
             </Grid>
 
-            <Grid size={{xs:12, md: 6}}>
-              <FormControl fullWidth>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <FormControl
+                required
+                fullWidth
+                error={!!errors.prohibitedStrategies}
+              >
                 <InputLabel>Prohibited Strategies</InputLabel>
                 <Select
                   multiple
                   name="prohibitedStrategies"
-                  value={formData.tradingConditions.prohibitedStrategies}
+                  value={formData?.tradingConditions.prohibitedStrategies}
                   onChange={handleMultiSelect}
                   input={<OutlinedInput label="Prohibited Strategies" />}
                   renderValue={(selected) => (
@@ -1047,22 +1224,37 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                   {prohibitedStrategiesOptions.map((strategy) => (
                     <MenuItem key={strategy} value={strategy}>
                       <Checkbox
-                        checked={formData.tradingConditions.prohibitedStrategies.indexOf(strategy) > -1}
+                        checked={
+                          formData?.tradingConditions.prohibitedStrategies
+                            ? formData?.tradingConditions.prohibitedStrategies.indexOf(
+                                strategy
+                              ) > -1
+                            : ""
+                        }
                       />
                       <ListItemText primary={strategy} />
                     </MenuItem>
                   ))}
                 </Select>
+                {errors.prohibitedStrategies && (
+                  <Typography
+                    variant="caption"
+                    color="error"
+                    sx={{ ml: 2, mt: 0.5, display: "block" }}
+                  >
+                    {errors.prohibitedStrategies}
+                  </Typography>
+                )}
               </FormControl>
             </Grid>
 
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>Restricted Countries</InputLabel>
                 <Select
                   multiple
                   name="restrictedCountries"
-                  value={formData.tradingConditions.restrictedCountries}
+                  value={formData?.tradingConditions.restrictedCountries}
                   onChange={handleMultiSelect}
                   input={<OutlinedInput label="Restricted Countries" />}
                   renderValue={(selected) => (
@@ -1077,7 +1269,13 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                   {countryOptions.map((country) => (
                     <MenuItem key={country.label} value={country.label}>
                       <Checkbox
-                        checked={formData.tradingConditions.restrictedCountries.indexOf(country.label) > -1}
+                        checked={
+                          formData?.tradingConditions.restrictedCountries
+                            ? formData?.tradingConditions.restrictedCountries.indexOf(
+                                country.label
+                              ) > -1
+                            : ""
+                        }
                       />
                       <ListItemText primary={country.label} />
                     </MenuItem>
@@ -1087,11 +1285,11 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
             </Grid>
 
             {/* Boolean Switches */}
-            <Grid size={{xs:12, md:4}}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <FormControlLabel
                 control={
                   <Switch
-                    checked={formData.tradingConditions.rawSpreads}
+                    checked={formData?.tradingConditions.rawSpreads}
                     onChange={handleTradingConditionsChange}
                     name="rawSpreads"
                   />
@@ -1099,11 +1297,11 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 label="Raw Spreads"
               />
             </Grid>
-            <Grid size={{xs:12, md:4}}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <FormControlLabel
                 control={
                   <Switch
-                    checked={formData.tradingConditions.hedgingAllowed}
+                    checked={formData?.tradingConditions.hedgingAllowed}
                     onChange={handleTradingConditionsChange}
                     name="hedgingAllowed"
                   />
@@ -1111,11 +1309,11 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 label="Hedging Allowed"
               />
             </Grid>
-            <Grid size={{xs:12, md:4}}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <FormControlLabel
                 control={
                   <Switch
-                    checked={formData.tradingConditions.allowMultipleDevices}
+                    checked={formData?.tradingConditions.allowMultipleDevices}
                     onChange={handleTradingConditionsChange}
                     name="allowMultipleDevices"
                   />
@@ -1123,11 +1321,11 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 label="Allow Multiple Devices"
               />
             </Grid>
-            <Grid size={{xs:12, md:4}}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <FormControlLabel
                 control={
                   <Switch
-                    checked={formData.tradingConditions.requireIpConsistency}
+                    checked={formData?.tradingConditions.requireIpConsistency}
                     onChange={handleTradingConditionsChange}
                     name="requireIpConsistency"
                   />
@@ -1135,11 +1333,11 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 label="Require IP Consistency"
               />
             </Grid>
-            <Grid size={{xs:12, md:4}}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <FormControlLabel
                 control={
                   <Switch
-                    checked={formData.tradingConditions.consistencyRuleApplied}
+                    checked={formData?.tradingConditions.consistencyRuleApplied}
                     onChange={handleTradingConditionsChange}
                     name="consistencyRuleApplied"
                   />
@@ -1147,11 +1345,11 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 label="Consistency Rule Applied"
               />
             </Grid>
-            <Grid size={{xs:12, md:4}}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <FormControlLabel
                 control={
                   <Switch
-                    checked={formData.tradingConditions.liveChatAvailable}
+                    checked={formData?.tradingConditions.liveChatAvailable}
                     onChange={handleTradingConditionsChange}
                     name="liveChatAvailable"
                   />
@@ -1161,22 +1359,24 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
             </Grid>
 
             {/* Numeric Fields */}
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 type="number"
                 label="Commission Per Lot"
                 name="commissionPerLot"
-                value={formData.tradingConditions.commissionPerLot}
+                value={formData?.tradingConditions.commissionPerLot}
                 onChange={handleTradingNumberChange}
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <FormControl fullWidth>
                 <InputLabel>Daily Drawdown Calculation</InputLabel>
                 <Select
                   name="dailyDrawdownCalculation"
-                  value={formData.tradingConditions.dailyDrawdownCalculation}
+                  value={
+                    formData?.tradingConditions.dailyDrawdownCalculation ?? ""
+                  }
                   label="Daily Drawdown Calculation"
                   onChange={handleTradingConditionsChange}
                 >
@@ -1190,85 +1390,91 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
             </Grid>
 
             {/* Scaling Options */}
-            <Grid size={{xs:12, md:4}}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 type="number"
                 label="Scaling Criteria Days"
                 name="scalingCriteriaDays"
-                value={formData.tradingConditions.scalingCriteriaDays}
+                value={formData?.tradingConditions.scalingCriteriaDays}
                 onChange={handleTradingNumberChange}
               />
             </Grid>
-            <Grid size={{xs:12, md:4}}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 type="number"
                 label="Max Allocation After Scaling"
                 name="maxAllocationAfterScaling"
-                value={formData.tradingConditions.maxAllocationAfterScaling}
+                value={formData?.tradingConditions.maxAllocationAfterScaling}
                 onChange={handleTradingNumberChange}
               />
             </Grid>
-            <Grid size={{xs:12, md:4}}>
+            <Grid size={{ xs: 12, md: 4 }}>
               <TextField
                 fullWidth
                 type="number"
                 label="Scaling Reward %"
                 name="scalingRewardPct"
-                value={formData.tradingConditions.scalingRewardPct}
+                value={formData?.tradingConditions.scalingRewardPct}
                 onChange={handleTradingNumberChange}
                 inputProps={{ min: 0, max: 100 }}
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 type="number"
                 label="Scaling Cycle Days"
                 name="scalingCycleDays"
-                value={formData.tradingConditions.scalingCycleDays}
+                value={formData?.tradingConditions.scalingCycleDays}
                 onChange={handleTradingNumberChange}
               />
             </Grid>
 
             {/* Support Information */}
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Support Email"
                 name="supportEmail"
-                value={formData.tradingConditions.supportEmail}
+                value={formData?.tradingConditions.supportEmail}
                 onChange={handleTradingConditionsChange}
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Support Phone"
                 name="supportPhone"
-                value={formData.tradingConditions.supportPhone}
+                required
+                value={formData?.tradingConditions.supportPhone}
                 onChange={handleTradingConditionsChange}
+                error={!!errors.supportPhone}
+                helperText={errors.supportPhone}
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Discord URL"
+                required
                 name="discordUrl"
-                value={formData.tradingConditions.discordUrl}
+                value={formData?.tradingConditions.discordUrl}
                 onChange={handleTradingConditionsChange}
+                error={!!errors.discordUrl}
+                helperText={errors.discordUrl}
               />
             </Grid>
 
-            <Grid size={{xs:12}}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 multiline
                 rows={3}
                 label="News Trading Rule"
                 name="newsTradingRule"
-                value={formData.tradingConditions.newsTradingRule}
+                value={formData?.tradingConditions.newsTradingRule}
                 onChange={handleTradingConditionsChange}
                 placeholder="Enter news trading rules..."
               />
@@ -1278,23 +1484,35 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
 
         {/* Leverages Tab */}
         <TabPanel value={currentTab} index={2}>
-          <Typography variant="h6" gutterBottom fontWeight={600} color="primary">
+          <Typography
+            variant="h6"
+            gutterBottom
+            fontWeight={600}
+            color="primary"
+          >
             Leverage Configuration
           </Typography>
 
           <Grid container spacing={3}>
             {/* Add New Leverage */}
-            <Grid size={{xs:12}}>
+            <Grid size={{ xs: 12 }}>
               <Card variant="outlined" sx={{ p: 2, mb: 2 }}>
-                <Typography variant="h6" gutterBottom>Add New Leverage</Typography>
+                <Typography variant="h6" gutterBottom>
+                  Add New Leverage
+                </Typography>
                 <Grid container spacing={2} alignItems="center">
-                  <Grid size={{xs:12, md:3}}>
+                  <Grid size={{ xs: 12, md: 3 }}>
                     <FormControl fullWidth>
                       <InputLabel>Profile</InputLabel>
                       <Select
                         value={newLeverage.profile}
                         label="Profile"
-                        onChange={(e) => setNewLeverage({...newLeverage, profile: e.target.value})}
+                        onChange={(e) =>
+                          setNewLeverage({
+                            ...newLeverage,
+                            profile: e.target.value,
+                          })
+                        }
                       >
                         {leverageProfileOptions.map((profile) => (
                           <MenuItem key={profile} value={profile}>
@@ -1304,32 +1522,45 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid size={{xs:12, md:3}}>
+                  <Grid size={{ xs: 12, md: 3 }}>
                     <FormControl fullWidth>
                       <InputLabel>Instrument</InputLabel>
                       <Select
                         value={newLeverage.instrument}
                         label="Instrument"
-                        onChange={(e) => setNewLeverage({...newLeverage, instrument: e.target.value})}
+                        onChange={(e) =>
+                          setNewLeverage({
+                            ...newLeverage,
+                            instrument: e.target.value,
+                          })
+                        }
                       >
-                        {instrumentOptions.map((instrument) => (
-                          <MenuItem key={instrument} value={instrument}>
-                            {instrument}
+                        {assetOptions.map((instrument) => (
+                          <MenuItem
+                            key={instrument.code}
+                            value={instrument.code}
+                          >
+                            {instrument.name}
                           </MenuItem>
                         ))}
                       </Select>
                     </FormControl>
                   </Grid>
-                  <Grid size={{xs:12, md:3}}>
+                  <Grid size={{ xs: 12, md: 3 }}>
                     <TextField
                       fullWidth
                       type="number"
                       label="Leverage Factor"
                       value={newLeverage.leverageFactor}
-                      onChange={(e) => setNewLeverage({...newLeverage, leverageFactor: parseInt(e.target.value) || 0})}
+                      onChange={(e) =>
+                        setNewLeverage({
+                          ...newLeverage,
+                          leverageFactor: parseInt(e.target.value) || 0,
+                        })
+                      }
                     />
                   </Grid>
-                  <Grid size={{xs:12, md:3}}>
+                  <Grid size={{ xs: 12, md: 3 }}>
                     <Button
                       variant="contained"
                       startIcon={<Add />}
@@ -1344,42 +1575,81 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
             </Grid>
 
             {/* Current Leverages */}
-            <Grid size={{xs:12}}>
-              <Typography variant="h6" gutterBottom>Current Leverages</Typography>
-              {formData.tradingConditions.leverages.length === 0 ? (
-                <Typography color="textSecondary" sx={{ textAlign: 'center', py: 4 }}>
+            <Grid size={{ xs: 12 }}>
+              <Typography variant="h6" gutterBottom>
+                Current Leverages
+              </Typography>
+              {formData?.tradingConditions.leverages &&
+              formData?.tradingConditions.leverages.length === 0 ? (
+                <Typography
+                  color="textSecondary"
+                  sx={{ textAlign: "center", py: 4 }}
+                >
                   No leverages configured yet
                 </Typography>
               ) : (
-                formData.tradingConditions.leverages.map((leverage, profileIndex) => (
-                  <Card key={profileIndex} sx={{ mb: 2 }}>
-                    <CardContent>
-                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                        <Typography variant="h6">{leverage.profile} Profile</Typography>
-                      </Box>
-                      {leverage.instrumentLeverages.map((instrumentLeverage, instrumentIndex) => (
-                        <Box key={instrumentIndex} sx={{ 
-                          display: 'flex', 
-                          justifyContent: 'space-between', 
-                          alignItems: 'center',
-                          py: 1,
-                          borderBottom: instrumentIndex < leverage.instrumentLeverages.length - 1 ? '1px solid #e0e0e0' : 'none'
-                        }}>
-                          <Typography>
-                            <strong>{instrumentLeverage.instrument}:</strong> 1:{instrumentLeverage.leverageFactor}
+                formData?.tradingConditions.leverages &&
+                formData?.tradingConditions.leverages.map(
+                  (leverage, profileIndex) => (
+                    <Card key={profileIndex} sx={{ mb: 2 }}>
+                      <CardContent>
+                        <Box
+                          sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            alignItems: "center",
+                            mb: 2,
+                          }}
+                        >
+                          <Typography variant="h6">
+                            {leverage.profile} Profile
                           </Typography>
-                          <IconButton
-                            color="error"
-                            size="small"
-                            onClick={() => removeLeverage(profileIndex, instrumentIndex)}
-                          >
-                            <Delete />
-                          </IconButton>
                         </Box>
-                      ))}
-                    </CardContent>
-                  </Card>
-                ))
+                        {leverage.instrumentLeverages.map(
+                          (instrumentLeverage, instrumentIndex) => (
+                            <Box
+                              key={instrumentIndex}
+                              sx={{
+                                display: "flex",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                py: 1,
+                                borderBottom:
+                                  instrumentIndex <
+                                  leverage.instrumentLeverages.length - 1
+                                    ? "1px solid #e0e0e0"
+                                    : "none",
+                              }}
+                            >
+                              <Typography>
+                                <strong>
+                                  {assetOptions.length
+                                    ? assetOptions?.find(
+                                        (e) =>
+                                          e.code ===
+                                          instrumentLeverage.instrument
+                                      )?.name
+                                    : instrumentLeverage.instrument}
+                                  :
+                                </strong>{" "}
+                                1:{instrumentLeverage.leverageFactor}
+                              </Typography>
+                              <IconButton
+                                color="error"
+                                size="small"
+                                onClick={() =>
+                                  removeLeverage(profileIndex, instrumentIndex)
+                                }
+                              >
+                                <Delete />
+                              </IconButton>
+                            </Box>
+                          )
+                        )}
+                      </CardContent>
+                    </Card>
+                  )
+                )
               )}
             </Grid>
           </Grid>
@@ -1387,117 +1657,124 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
 
         {/* About Firm Tab */}
         <TabPanel value={currentTab} index={3}>
-          <Typography variant="h6" gutterBottom fontWeight={600} color="primary">
+          <Typography
+            variant="h6"
+            gutterBottom
+            fontWeight={600}
+            color="primary"
+          >
             About the Firm
           </Typography>
 
           <Grid container spacing={3}>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Legal Name"
                 name="legalName"
-                value={formData.about.legalName}
+                value={formData?.about.legalName}
                 onChange={handleAboutChange}
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Registration Number"
                 name="registrationNo"
-                value={formData.about.registrationNo}
+                value={formData?.about.registrationNo}
                 onChange={handleAboutChange}
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 type="date"
                 label="Established Date"
                 name="establishedDate"
-                value={formData.about.establishedDate}
+                value={formData?.about.establishedDate ?? ""}
                 onChange={handleAboutChange}
                 InputLabelProps={{ shrink: true }}
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 type="number"
                 label="Founded Year"
                 name="foundedYear"
-                value={formData.about.foundedYear}
+                value={formData?.about.foundedYear}
                 onChange={handleAboutChange}
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Headquarters"
                 name="headquarters"
-                value={formData.about.headquarters}
+                value={formData?.about.headquarters}
                 onChange={handleAboutChange}
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Jurisdiction"
                 name="jurisdiction"
-                value={formData.about.jurisdiction}
+                value={formData?.about.jurisdiction}
                 onChange={handleAboutChange}
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="Founders"
                 name="founders"
-                value={formData.about.founders}
+                value={formData?.about.founders}
                 onChange={handleAboutChange}
                 placeholder="Comma separated names"
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
+            <Grid size={{ xs: 12, md: 6 }}>
               <TextField
                 fullWidth
                 label="CEO Name"
                 name="ceoName"
-                value={formData.about.ceoName}
+                value={formData?.about.ceoName}
                 onChange={handleAboutChange}
               />
             </Grid>
-            <Grid size={{xs:12}}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 multiline
                 rows={3}
                 label="About Description"
                 name="description"
-                value={formData.about.description}
+                value={formData?.about.description}
                 onChange={handleAboutChange}
                 placeholder="Detailed description about the firm..."
               />
             </Grid>
-            <Grid size={{xs:12}}>
+            <Grid size={{ xs: 12 }}>
               <TextField
                 fullWidth
                 multiline
                 rows={2}
                 label="Extra Notes"
                 name="extraNotes"
-                value={formData.about.extraNotes}
+                value={formData?.about.extraNotes}
                 onChange={handleAboutChange}
                 placeholder="Any additional notes..."
               />
             </Grid>
-            <Grid size={{xs:12, md: 6}}>
-              <Box sx={{ display: "flex", alignItems: "center", height: "100%" }}>
+            <Grid size={{ xs: 12, md: 6 }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", height: "100%" }}
+              >
                 <FormControlLabel
                   control={
                     <Switch
-                      checked={formData.about.firmStatus === "Active"}
+                      checked={formData?.about.firmStatus === "Active"}
                       onChange={handleFirmStatusToggle}
                       color="success"
                     />
@@ -1505,10 +1782,12 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                   label={
                     <Box>
                       <Typography variant="body1">
-                        Firm Status: {formData.about.firmStatus}
+                        Firm Status: {formData?.about.firmStatus}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {formData.about.firmStatus === "Active" ? "Active" : "Inactive"}
+                        {formData?.about.firmStatus === "Active"
+                          ? "Active"
+                          : "Inactive"}
                       </Typography>
                     </Box>
                   }
@@ -1529,9 +1808,24 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
           </Button>
 
           {currentTab < 3 ? (
-            <Button variant="contained" onClick={handleNextTab}>
-              Next
-            </Button>
+            <span>
+              {firm && onCancel && (
+                <Button
+                  variant="outlined"
+                  startIcon={<Cancel />}
+                  onClick={onCancel}
+                >
+                  Cancel
+                </Button>
+              )}
+              <Button
+                variant="contained"
+                onClick={handleNextTab}
+                sx={{ ml: 3 }}
+              >
+                Next
+              </Button>
+            </span>
           ) : (
             <Box sx={{ display: "flex", gap: 2 }}>
               {onCancel && (

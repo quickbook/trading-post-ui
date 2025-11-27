@@ -219,7 +219,7 @@ export const TrustedFirms = () => {
                 id={card.id}
                 name={card.name}
                 logo={card.logo}
-                buyUrl={card.buyUrl}
+                buyUrl={card.website}
               />
             </Grid>
           ))}

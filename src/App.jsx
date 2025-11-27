@@ -71,7 +71,7 @@ function App() {
 
   // STEP 1 → Initialize auth (run once)
   useEffect(() => {
-    if(!initCalled.current){
+    if (!initCalled.current) {
       initializeAuth();
       initCalled.current = true;
     }
@@ -82,25 +82,11 @@ function App() {
     }
   }, []);
 
-  // useEffect(() => {
-  //   if (token) {
-  //     if(!initToken.current){
-  //       initToken.current = true;
-  //       dispatch(initApp());
-  //     }
-  //   }
-  // }, [token]);
-
-  useEffect(()=>{
-    if(token){
+  useEffect(() => {
+    if (!initToken.current) {
+      initToken.current = true;
       dispatch(initApp());
     }
-  },[token])
-
-  // Loading skeleton timeout
-  useEffect(() => {
-    const t = setTimeout(() => setIsLoading(false), 1200);
-    return () => clearTimeout(t);
   }, []);
 
   // Scroll logic

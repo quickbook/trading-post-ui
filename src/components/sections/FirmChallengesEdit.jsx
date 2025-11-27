@@ -22,48 +22,58 @@ import {
   IconButton,
 } from "@mui/material";
 import { Delete, Edit, Save } from "@mui/icons-material";
+import { useSelector } from "react-redux";
+import {
+  selectPhases,
+  selectTiers,
+} from "../../features/domain/domainDataSlice";
+import { selectFirms } from "../../features/firms/firmsSelectors";
 
-const tierOptions = [
-  "King",
-  "Duke",
-  "1 Step",
-  "2 Step",
-  "3 Step",
-  "One-Stage",
-  "Two-Stage",
-  "Three-Stage",
-  "Knight",
-];
+// const tierOptions = [
+//   "King",
+//   "Duke",
+//   "1 Step",
+//   "2 Step",
+//   "3 Step",
+//   "One-Stage",
+//   "Two-Stage",
+//   "Three-Stage",
+//   "Knight",
+// ];
 
-const phaseOptions = [
-  "1-Phase",
-  "2-Phase",
-  "Evaluation",
-  "1-Step Challenge",
-  "2-Step Challenge",
-];
+// const phaseOptions = [
+//   "1-Phase",
+//   "2-Phase",
+//   "Evaluation",
+//   "1-Step Challenge",
+//   "2-Step Challenge",
+// ];
 
 const initialChallengeData = {
   firmId: "",
   tier: "King",
-  phase: "2-Phase",
+  phase: "2 Phase",
   profitTargetPct: 10.0,
   dailyLossPct: 5.0,
   maxLossPct: 10.0,
   accountSizeUsd: 50000,
   price: { amount: 299.0, currency: "USD" },
-  buyUrl: "",
 };
 
 const FirmChallengesEdit = ({
-  firms,
+  allChallenges,
   onSubmit,
   onUpdateChallenge,
   onDeleteChallenge,
 }) => {
+  const tierOptions = useSelector(selectTiers);
+  const phaseOptions = useSelector(selectPhases);
+  const firms = useSelector(selectFirms);
+
+  const firmFilterOptions = firms.flatMap((e) => ({ id: e.id, name: e.name }));
+
   const [formData, setFormData] = useState(initialChallengeData);
   const [errors, setErrors] = useState({});
-  const [success, setSuccess] = useState(false);
   const [editingChallenge, setEditingChallenge] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [challengeToDelete, setChallengeToDelete] = useState(null);
@@ -111,29 +121,6 @@ const FirmChallengesEdit = ({
     });
   };
 
-  const handleUpdateChallenge = (e) => {
-    e.preventDefault();
-
-    const formErrors = validateForm();
-
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
-      return;
-    }
-
-    // Update the challenge data
-    onUpdateChallenge(editingChallenge.id, formData);
-
-    // Reset form and show success message
-    setFormData(initialChallengeData);
-    setEditingChallenge(null);
-    setErrors({});
-    setSuccess(true);
-    window.scrollTo({top: 10, behavior:"smooth"});
-
-    // Hide success message after 3 seconds
-    setTimeout(() => setSuccess(false), 3000);
-  };
 
   const handleDeleteClick = (challengeId, firmId) => {
     setChallengeToDelete({ challengeId, firmId });
@@ -144,8 +131,6 @@ const FirmChallengesEdit = ({
     onDeleteChallenge(challengeToDelete.challengeId, challengeToDelete.firmId);
     setDeleteDialogOpen(false);
     setChallengeToDelete(null);
-    setSuccess(true);
-    setTimeout(() => setSuccess(false), 3000);
   };
 
   const handleCancelEdit = () => {
@@ -157,9 +142,6 @@ const FirmChallengesEdit = ({
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.firmId) {
-      newErrors.firmId = "Please select a firm";
-    }
     if (!formData.tier) {
       newErrors.tier = "Tier is required";
     }
@@ -185,47 +167,66 @@ const FirmChallengesEdit = ({
       newErrors.maxLossPct =
         "Maximum loss limit is required and must be greater than 0";
     }
-    if (!formData.buyUrl.trim()) {
-      newErrors.buyUrl = "Buy URL is required";
-    }
-
     return newErrors;
   };
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    const formErrors = validateForm();
+  const formErrors = validateForm();
+  if (Object.keys(formErrors).length > 0) {
+    setErrors(formErrors);
+    return;
+  }
 
-    if (Object.keys(formErrors).length > 0) {
-      setErrors(formErrors);
-      return;
-    }
+  // Build payload (common for both update and create)
+  const tierId = tierOptions.find((item) => item.name === formData.tier)?.id;
+  const phaseId = phaseOptions.find((item) => item.label === formData.phase)?.id;
 
-    // Submit the challenge data
-    onSubmit(formData);
-
-    // Reset form and show success message
-    setFormData(initialChallengeData);
-    setErrors({});
-    setSuccess(true);
-    window.scrollTo({top: 10, behavior:"smooth"});
-
-    // Hide success message after 3 seconds
-    setTimeout(() => setSuccess(false), 3000);
+  const payload = {
+    firmId: formData.firmId,
+    dmnTierId: tierId,
+    dmnPhaseId: phaseId,
+    profitTargetPct: formData.profitTargetPct,
+    dailyLossPct: formData.dailyLossPct,
+    maxLossPct: formData.maxLossPct,
+    accountSizeUsd: formData.accountSizeUsd,
+    price: {
+      amount: formData.price?.amount,
+      currency: "USD",
+    },
   };
+
+  console.log("Challenge Payload:", payload);
+
+  if (editingChallenge) {
+    // 👉 UPDATE MODE
+    onUpdateChallenge(editingChallenge.id, payload);
+    setEditingChallenge(null);
+    setSuccess("Challenge updated successfully!");
+  } else {
+    // 👉 CREATE MODE
+    onSubmit(payload);
+    setSuccess("Challenge created successfully!");
+  }
+
+  // Reset form
+  setFormData(initialChallengeData);
+  setErrors({});
+  window.scrollTo({ top: 10, behavior: "smooth" });
+};
+
 
   const resetForm = () => {
     setFormData(initialChallengeData);
     setErrors({});
-    setSuccess(false);
   };
 
   return (
     <Container
       sx={{
         p: 4,
-        width: { xs: "100vw", lg: 940, xl: 1200 },
+        width: { xs: "100%", lg: 940, xl: "75vw" },
         mx: "auto",
       }}
     >
@@ -250,13 +251,16 @@ const FirmChallengesEdit = ({
 
         <Divider sx={{ mb: 4 }} />
 
-        {success && (
+        {/* {success && (
           <Alert severity="success" sx={{ mb: 3 }}>
             Challenge added successfully!
           </Alert>
-        )}
+        )} */}
 
-        <Box component="form" onSubmit={editingChallenge ? handleUpdateChallenge : handleSubmit}>
+        <Box
+          component="form"
+          onSubmit={handleSubmit}
+        >
           <Grid container spacing={3}>
             {/* Firm Selection */}
             <Grid size={{ xs: 12 }}>
@@ -271,7 +275,7 @@ const FirmChallengesEdit = ({
                   <MenuItem value="" disabled>
                     <em>Select a firm</em>
                   </MenuItem>
-                  {firms.map((firm) => (
+                  {firmFilterOptions.map((firm) => (
                     <MenuItem key={firm.id} value={firm.id}>
                       {firm.name}
                     </MenuItem>
@@ -300,8 +304,8 @@ const FirmChallengesEdit = ({
                   onChange={handleChange}
                 >
                   {tierOptions.map((tier) => (
-                    <MenuItem key={tier} value={tier}>
-                      {tier}
+                    <MenuItem key={tier.name} value={tier.name}>
+                      {tier.name}
                     </MenuItem>
                   ))}
                 </Select>
@@ -322,13 +326,13 @@ const FirmChallengesEdit = ({
                 <InputLabel>Phase</InputLabel>
                 <Select
                   name="phase"
-                  value={formData.phase}
+                  value={formData.phase ?? ""}
                   label="Phase"
                   onChange={handleChange}
                 >
                   {phaseOptions.map((phase) => (
-                    <MenuItem key={phase} value={phase}>
-                      {phase}
+                    <MenuItem key={phase.code} value={phase.label}>
+                      {phase.label}
                     </MenuItem>
                   ))}
                 </Select>
@@ -414,20 +418,6 @@ const FirmChallengesEdit = ({
               />
             </Grid>
 
-            <Grid size={{ xs: 12 }}>
-              <TextField
-                required
-                fullWidth
-                label="Buy URL"
-                name="buyUrl"
-                value={formData.buyUrl}
-                onChange={handleChange}
-                error={!!errors.buyUrl}
-                helperText={errors.buyUrl}
-                placeholder="https://example.com/challenge"
-              />
-            </Grid>
-
             {/* Action Buttons */}
             <Grid size={{ xs: 12 }}>
               <Box
@@ -501,9 +491,11 @@ const FirmChallengesEdit = ({
                 const selectedFirm = firms.find(
                   (f) => f.id === formData.firmId
                 );
-                const challenges = selectedFirm?.challenges || [];
+                const challengesByFirm = allChallenges.filter(
+                  (c) => c.firmId === selectedFirm.id
+                );
 
-                if (challenges.length === 0) {
+                if (challengesByFirm.length === 0) {
                   return (
                     <Typography color="textSecondary">
                       No challenges added yet for this firm.
@@ -511,7 +503,7 @@ const FirmChallengesEdit = ({
                   );
                 }
 
-                return challenges.map((challenge, index) => (
+                return challengesByFirm.map((challenge, index) => (
                   <Card key={challenge.id || index} sx={{ mb: 2 }}>
                     <CardContent>
                       <Box
@@ -546,11 +538,10 @@ const FirmChallengesEdit = ({
                         <Box sx={{ display: "flex", gap: 1 }}>
                           <IconButton
                             color="primary"
-                            onClick={() =>{
+                            onClick={() => {
                               handleEditChallenge(challenge, selectedFirm.id);
-                              window.scrollTo({top:120, behavior:"smooth"})
-                            }
-                            }
+                              window.scrollTo({ top: 120, behavior: "smooth" });
+                            }}
                             size="small"
                           >
                             <Edit />
