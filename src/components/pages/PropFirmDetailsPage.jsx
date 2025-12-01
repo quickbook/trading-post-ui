@@ -56,7 +56,7 @@ export const PropFirmDetailsPage = () => {
   const [firmDetails, setFirmDetails] = useState(propFirm);
   const [copiedCode, setCopiedCode] = useState("");
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [filterVerifiedOnly, setFilterVerifiedOnly] = useState(false);
   const [sortBy, setSortBy] = useState("newest");
   const navigate = useNavigate();
@@ -117,11 +117,29 @@ export const PropFirmDetailsPage = () => {
     setValue(newValue);
   };
 
+  const handleCopyCode = (code) => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopiedCode(code);
+      setSnackbarOpen(true);
+    });
+  };
+
   useEffect(() => {
-    if(!initPropFirmDetails.current){
-      if(!propFirm) dispatch(fetchFirmById(firmId));
+    // if(propFirm && (propFirm.id != Number(firmId))){
+    //   initPropFirmDetails.current = false;
+    // }
+    if (!initPropFirmDetails.current) {
+      if(propFirm && (propFirm.id != Number(firmId))) dispatch(fetchFirmById(firmId));
       initPropFirmDetails.current = true;
     }
+    if(propFirmStatus === "loading"){
+      setIsLoading(true);
+    }else{
+      const timer = setTimeout(()=>{
+        setIsLoading(false);
+      },1000);
+    }
+    return () => clearTimeout();
   }, []);
 
   useEffect(() => {

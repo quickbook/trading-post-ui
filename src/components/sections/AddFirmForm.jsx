@@ -239,7 +239,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
   const [logoError, setLogoError] = useState("");
   const [newLeverage, setNewLeverage] = useState({
     profile: "EVALUATION",
-    instrument: "FX",
+    instrument: "FOREX",
     leverageFactor: 100,
   });
 
@@ -508,7 +508,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
     // Reset new leverage form
     setNewLeverage({
       profile: "EVALUATION",
-      instrument: "FX",
+      instrument: "FOREX",
       leverageFactor: 100,
     });
   };
@@ -572,6 +572,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
 
     console.log("Submitting firm data:", finalFormData);
     onSubmit(finalFormData);
+    setCurrentTab(0);
     if (!firm) {
       setFormData(initialFirmData);
       setLogoPreview("");
@@ -1702,7 +1703,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 type="number"
                 label="Founded Year"
                 name="foundedYear"
-                value={formData?.about.foundedYear}
+                value={formData?.about.foundedYear ?? ""}
                 onChange={handleAboutChange}
               />
             </Grid>
@@ -1711,7 +1712,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 fullWidth
                 label="Headquarters"
                 name="headquarters"
-                value={formData?.about.headquarters}
+                value={formData?.about.headquarters ?? ""}
                 onChange={handleAboutChange}
               />
             </Grid>
@@ -1720,7 +1721,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 fullWidth
                 label="Jurisdiction"
                 name="jurisdiction"
-                value={formData?.about.jurisdiction}
+                value={formData?.about.jurisdiction ?? ""}
                 onChange={handleAboutChange}
               />
             </Grid>
@@ -1729,7 +1730,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 fullWidth
                 label="Founders"
                 name="founders"
-                value={formData?.about.founders}
+                value={formData?.about.founders ?? ""}
                 onChange={handleAboutChange}
                 placeholder="Comma separated names"
               />
@@ -1739,7 +1740,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 fullWidth
                 label="CEO Name"
                 name="ceoName"
-                value={formData?.about.ceoName}
+                value={formData?.about.ceoName ?? ""}
                 onChange={handleAboutChange}
               />
             </Grid>
@@ -1750,7 +1751,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 rows={3}
                 label="About Description"
                 name="description"
-                value={formData?.about.description}
+                value={formData?.about.description ?? ""}
                 onChange={handleAboutChange}
                 placeholder="Detailed description about the firm..."
               />
@@ -1762,7 +1763,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                 rows={2}
                 label="Extra Notes"
                 name="extraNotes"
-                value={formData?.about.extraNotes}
+                value={formData?.about.extraNotes ?? ""}
                 onChange={handleAboutChange}
                 placeholder="Any additional notes..."
               />

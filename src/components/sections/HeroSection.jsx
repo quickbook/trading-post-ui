@@ -110,12 +110,12 @@ const UserMenu = () => {
         {user && user.id ? (
           <Avatar
             title={user?.userName || "A"}
-            sx={{ bgcolor: "#4b0082", fontSize: 18, width: 32, height: 32 }}
+            sx={{ bgcolor: "#4b0082", fontSize: 18, width: 38, height: 38 }}
           >
             {user?.userName.charAt(0).toUpperCase() || "A"}
           </Avatar>
         ) : (
-          <AccountCircleIcon sx={{ color: "#4b0082", fontSize: 32 }} />
+          <AccountCircleIcon sx={{ color: "#4b0082", fontSize: 38 }} />
         )}
       </IconButton>
 
@@ -127,7 +127,7 @@ const UserMenu = () => {
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
       >
-        {role === "ADMIN" ? (
+        {(role === "ADMIN" || role === "ROOT") ? (
           <div>
             <MenuItem sx={menuItemStyle} onClick={handleAdminOption}>
               Admin Dashboard

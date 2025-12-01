@@ -59,51 +59,55 @@ const LoginPage = () => {
 
   const handleKeyUp = (e) => {
     const caps =
-      typeof e.getModifierState === "function" && e.getModifierState("CapsLock");
+      typeof e.getModifierState === "function" &&
+      e.getModifierState("CapsLock");
     setCapsOn(Boolean(caps));
   };
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (formValues) => {
     setIsLoading(true);
+
     try {
-      // Send identifier (email or username) + password to the backend
-      const user = await dispatch(
-        login({ username: data.identifier, password: data.password })
+      const { identifier, password, remember } = formValues;
+
+      // Attempt login request
+      const response = await dispatch(
+        login({ username: identifier, password })
       ).unwrap();
 
-      if (user && user.roleName) {
+      const user = response?.user;
+      const role = user?.roleName;
 
-        if (data.remember) {
-          localStorage.setItem("tpui_saved_identifier", data.identifier);
-        } else {
-          localStorage.removeItem("tpui_saved_identifier");
-        }
+      if (!user || !role) {
+        throw new Error("Invalid login response. Please try again.");
+      }
 
-        setSnackbarMessage(
-          `Login successful! Welcome back${user.name ? ", " + user.name : ""}.`
-        );
-        setSnackbarSeverity("success");
-        setSnackbarOpen(true);
-        navigate("/");
+      // Save remembered login identifier
+      if (remember) {
+        localStorage.setItem("tpui_saved_identifier", identifier);
       } else {
-        const errMsg =
-          user?.errorDetails?.errorMessage ||
-          user?.message ||
-          "Login failed. Try again.";
-        setSnackbarMessage(errMsg);
-        setSnackbarSeverity("error");
-        setSnackbarOpen(true);
+        localStorage.removeItem("tpui_saved_identifier");
       }
-    } catch (err) {
-      if (err?.errorDetails?.fieldErrors) {
-        const firstError = Object.values(err.errorDetails.fieldErrors)[0];
-        setSnackbarMessage(firstError || "Login failed. Try again.");
-      } else if (err?.errorDetails?.errorMessage) {
-        const e = err.errorDetails.errorMessage;
-        setSnackbarMessage(err.message ? `${err.message}: ${e}` : e);
-      } else {
-        setSnackbarMessage(err?.message || "Login failed. Try again.");
-      }
+
+      // Success UI feedback
+      setSnackbarMessage(
+        `Welcome${user.firstName ? `, ${user.firstName}` : ""}!`
+      );
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+
+      // Redirect user
+      navigate("/");
+    } catch (error) {
+      console.warn("Login error:", error);
+
+      const errorMsg = error?.errorDetails?.fieldErrors
+        ? Object.values(error.errorDetails.fieldErrors)[0] // backend validation errors
+        : error?.errorDetails?.errorMessage ||
+          error?.message ||
+          "Login failed. Please try again.";
+
+      setSnackbarMessage(errorMsg);
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {
@@ -111,9 +115,10 @@ const LoginPage = () => {
     }
   };
 
-  useEffect(()=>{
-    window.scrollTo({top: 0, behavior:'smooth'});
-  },[])
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    setIsLoading(false);
+  }, []);
 
   return isLoading ? (
     <LoadingScreen />
@@ -124,12 +129,12 @@ const LoginPage = () => {
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
       sx={{
-        height: {xs:'auto',md:"90vh"}, // full viewport height
+        height: { xs: "auto", md: "90vh" }, // full viewport height
         display: "flex",
         alignItems: "center", // vertical center
         justifyContent: "center", // horizontal center
         px: 2,
-        py:3,
+        py: 3,
         // 👇 remove the pink gradient by using a solid/transparent background
         bgcolor: "transparent", // or set a solid color like '#1e1b4b'
       }}
@@ -141,13 +146,16 @@ const LoginPage = () => {
           maxWidth: 440,
           borderRadius: 4,
           p: { xs: 3, sm: 5 },
-          background:
-          "linear-gradient(135deg, #f4e5ffff 40%, #e5c1ffff 80%)",
+          background: "linear-gradient(135deg, #f4e5ffff 40%, #e5c1ffff 80%)",
         }}
       >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
           <LockOutlined fontSize="small" />
-          <Typography variant="overline" color="text.secondary" letterSpacing={1}>
+          <Typography
+            variant="overline"
+            color="text.secondary"
+            letterSpacing={1}
+          >
             SECURE LOGIN
           </Typography>
         </Box>
@@ -205,7 +213,9 @@ const LoginPage = () => {
                   endAdornment: (
                     <InputAdornment position="end">
                       <IconButton
-                        aria-label={showPassword ? "Hide password" : "Show password"}
+                        aria-label={
+                          showPassword ? "Hide password" : "Show password"
+                        }
                         onClick={() => setShowPassword((s) => !s)}
                         edge="end"
                         size="small"
@@ -221,7 +231,12 @@ const LoginPage = () => {
 
           {/* Remember / Forgot */}
           <Box
-            sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 0.5 }}
+            sx={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              mt: 0.5,
+            }}
           >
             <Controller
               name="remember"
@@ -233,7 +248,12 @@ const LoginPage = () => {
                 />
               )}
             />
-            <MuiLink component={RouterLink} to="/forgotpassword" underline="hover" sx={{ fontSize: 14 }}>
+            <MuiLink
+              component={RouterLink}
+              to="/forgotpassword"
+              underline="hover"
+              sx={{ fontSize: 14 }}
+            >
               Forgot password?
             </MuiLink>
           </Box>
@@ -252,10 +272,10 @@ const LoginPage = () => {
                 textTransform: "none",
                 fontWeight: 700,
                 letterSpacing: 0.3,
-                bgcolor:"#4b0082",
-                '&:hover':{
-                  bgcolor:'#4b0082c1'
-                }
+                bgcolor: "#4b0082",
+                "&:hover": {
+                  bgcolor: "#4b0082c1",
+                },
               }}
             >
               {isLoading ? "Signing in..." : "Login"}
@@ -263,14 +283,25 @@ const LoginPage = () => {
             {isLoading && (
               <CircularProgress
                 size={22}
-                sx={{ position: "absolute", top: "50%", left: "50%", mt: "-11px", ml: "-11px" }}
+                sx={{
+                  position: "absolute",
+                  top: "50%",
+                  left: "50%",
+                  mt: "-11px",
+                  ml: "-11px",
+                }}
               />
             )}
           </Box>
 
           <Typography variant="body2" sx={{ mt: 2, textAlign: "center" }}>
             New here?{" "}
-            <MuiLink component={RouterLink} to="/register" underline="hover" sx={{ fontWeight: 600 }}>
+            <MuiLink
+              component={RouterLink}
+              to="/register"
+              underline="hover"
+              sx={{ fontWeight: 600 }}
+            >
               Create an account
             </MuiLink>
           </Typography>

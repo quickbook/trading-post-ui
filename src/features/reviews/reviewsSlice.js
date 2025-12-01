@@ -2,6 +2,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosClient from "../../api/axiosClient";
 import { API_ENDPOINTS, getFullUrl } from "../../config/apiEndpoints";
+import axiosAdmin from "../../api/axiosAdmin";
 
 // Shapes expected:
 // GET    /api/reviews                 -> Review[]
@@ -45,7 +46,7 @@ export const updateReview = createAsyncThunk(
   "reviews/updateReview",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.put(
+      const res = await axiosAdmin.put(
         getFullUrl(API_ENDPOINTS.REVIEWS.BY_ID(id)),
         data
       );
@@ -60,7 +61,7 @@ export const deleteReview = createAsyncThunk(
   "reviews/deleteReview",
   async (id, { rejectWithValue }) => {
     try {
-      await axiosClient.delete(getFullUrl(API_ENDPOINTS.REVIEWS.BY_ID(id)));
+      await axiosAdmin.delete(getFullUrl(API_ENDPOINTS.REVIEWS.BY_ID(id)));
       return id;
     } catch (err) {
       return rejectWithValue(err.response?.data || "Failed to delete review");
