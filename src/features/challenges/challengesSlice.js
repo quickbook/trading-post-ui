@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosClient from "../../api/axiosClient";
 import { API_ENDPOINTS, getFullUrl } from "../../config/apiEndpoints";
+import axiosAdmin from "../../api/axiosAdmin";
 
 /**
  * ===================================
@@ -48,7 +49,7 @@ export const updateChallenge = createAsyncThunk(
   "challenges/updateChallenge",
   async ({ id, updatedData }, { rejectWithValue }) => {
     try {
-      const res = await axiosClient.put(
+      const res = await axiosAdmin.put(
         getFullUrl(API_ENDPOINTS.CHALLENGES.BY_ID(id)),
         updatedData
       );
@@ -66,7 +67,7 @@ export const deleteChallenge = createAsyncThunk(
   "challenges/deleteChallenge",
   async (id, { rejectWithValue }) => {
     try {
-      await axiosClient.delete(getFullUrl(API_ENDPOINTS.CHALLENGES.BY_ID(id)));
+      await axiosAdmin.delete(getFullUrl(API_ENDPOINTS.CHALLENGES.BY_ID(id)));
       return id; // return deleted challenge ID
     } catch (err) {
       return rejectWithValue(

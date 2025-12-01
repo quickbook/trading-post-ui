@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosClient from "../../api/axiosClient";
 import { API_ENDPOINTS, getFullUrl } from "../../config/apiEndpoints";
+import axiosAdmin from "../../api/axiosAdmin";
 const FETCH_FIRMS_ACTION = `firms${API_ENDPOINTS.FIRMS.BASE}`;
 
 const initialState = {
@@ -90,7 +91,7 @@ export const updateFirm = createAsyncThunk(
   async ({ id, firmData }, { rejectWithValue }) => {
     try {
       const url = getFullUrl(API_ENDPOINTS.FIRMS.BY_ID(id));
-      const res = await axiosClient.put(url, firmData);
+      const res = await axiosAdmin.put(url, firmData);
       return res.data;
     } catch (err) {
       return rejectWithValue(err.response?.data || "Failed to update firm");
@@ -104,7 +105,7 @@ export const deleteFirm = createAsyncThunk(
   async (firmId, { rejectWithValue }) => {
     try {
       const url = getFullUrl(API_ENDPOINTS.FIRMS.BY_ID(firmId));
-      const res = await axiosClient.delete(url);
+      const res = await axiosAdmin.delete(url);
       return { ...res.data, firmId };
     } catch (err) {
       return rejectWithValue(err.response?.data || "Failed to delete firm");

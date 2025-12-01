@@ -5,14 +5,15 @@ import { API_ENDPOINTS, getFullUrl } from "../../config/apiEndpoints";
 const FETCH_LOGIN_ACTION = `login${API_ENDPOINTS.USERS.BASE}`;
 
 // ✅ Read stored user from sessionStorage (preferred)
-const storedUser = (() => {
+const storedAuth = (() => {
   try {
-    const user = sessionStorage.getItem("user");
-    return user ? JSON.parse(user) : null;
+    console.log("authSession", JSON.parse(sessionStorage.getItem("authSession")) || null)
+    return JSON.parse(sessionStorage.getItem("authSession")) || null;
   } catch {
     return null;
   }
 })();
+
 // POST /api/auth/login -> { id, name, role: "admin"|"user" }
 export const login = createAsyncThunk(
   FETCH_LOGIN_ACTION,
@@ -26,7 +27,7 @@ export const login = createAsyncThunk(
         getFullUrl(API_ENDPOINTS.USERS.LOGIN),
         body
       );
-      return res.data.data.user; // { id, name, role }
+      return res.data.data; // { id, name, role }
     } catch (err) {
       return rejectWithValue(err.response?.data || "Login failed");
     }
@@ -77,7 +78,10 @@ export const logout = createAsyncThunk("login/logout", async () => {
 const slice = createSlice({
   name: "login",
   initialState: {
-    user: storedUser, // ✅ initialize from storage
+    user: storedAuth?.user || null,
+    token: storedAuth?.accessToken || null,
+    refreshToken: storedAuth?.refreshToken || null,
+    expiresIn: storedAuth?.expiresIn || null,
     status: "idle",
     error: null,
   },
@@ -88,10 +92,13 @@ const slice = createSlice({
     //has to change
     setLogout: (state) => {
       state.user = null;
+      state.refreshToken = null;
+      state.expiresIn = null;
+      state.token = null;
       state.status = "idle";
       state.error = null;
       try {
-        sessionStorage.removeItem("user");
+        sessionStorage.removeItem("authSession");
       } catch {
         /* ignore */
       }
@@ -102,14 +109,25 @@ const slice = createSlice({
       s.status = "loading";
       s.error = null;
     });
-    b.addCase(login.fulfilled, (s, { payload }) => {
-      s.status = "succeeded";
-      s.user = payload;
-      try {
-        sessionStorage.setItem("user", JSON.stringify(payload));
-      } catch {
-        /* empty */
-      }
+    b.addCase(login.fulfilled, (state, { payload }) => {
+      state.status = "succeeded";
+
+      console.log("loginpayload", payload)
+
+      const authData = {
+        user: payload.user,
+        accessToken: payload.accessToken,
+        refreshToken: payload.refreshToken,
+        expiresIn: Date.now() + payload.expiresIn * 1000, // convert seconds → timestamp
+      };
+
+      // Save structured data
+      sessionStorage.setItem("authSession", JSON.stringify(authData));
+
+      state.user = authData.user;
+      state.token = authData.accessToken;
+      state.refreshToken = authData.refreshToken;
+      state.expiresIn = authData.expiresIn;
     });
     b.addCase(login.rejected, (s, a) => {
       s.status = "failed";

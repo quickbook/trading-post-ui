@@ -19,9 +19,9 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import ChallengeIcon from "@mui/icons-material/EmojiEvents";
+import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
 import AddFirmForm from "../sections/AddFirmForm";
 import ViewAllFirms from "../sections/ViewAllFirms";
-import { cardData } from "../../../CardsData";
 import FirmChallengesEdit from "../sections/FirmChallengesEdit";
 import { MainContext } from "../../App";
 import { useDispatch, useSelector } from "react-redux";
@@ -39,9 +39,12 @@ import {
 import { fetchAllDomainData } from "../../features/domain/domainDataSlice";
 import {
   createChallenge,
+  deleteChallenge,
   fetchChallenges,
   updateChallenge,
 } from "../../features/challenges/challengesSlice";
+import AdminRegisterPage from "./AdminRegisterPage";
+import { selectRole, selectUser } from "../../features/auth/loginSlice";
 
 const drawerWidth = "320px";
 
@@ -66,6 +69,8 @@ const AdminPage = () => {
 
   // Redux selectors
   //const firms = useSelector((st) => st.firms.content || []);
+  const user = useSelector(selectUser);
+  const role = useSelector(selectRole);
   const currentFirmDetails = useSelector(selectCurrentFirm);
   const firmsStatus = useSelector((st) => st.firms.status.firms);
   const challenges = useSelector((st) => st.challenges.data) || [];
@@ -98,48 +103,48 @@ const AdminPage = () => {
   }, [activeView]);
 
   const handleAddOrUpdateFirm = async (finalFormData) => {
-    if (editingFirmLocal) {
-      // Update existing firm
-      if (editingFirmLocal && editingFirmLocal?.id) {
+    let isSuccess = false;
+
+    try {
+      if (editingFirmLocal?.id) {
+        // --- UPDATE ----
         await dispatch(
           updateFirm({ id: editingFirmLocal.id, firmData: finalFormData })
-        )
-          .unwrap()
-          .then(() => {
-            setSnackbarMessage(
-              editingFirmLocal.name + " firm updated successfully"
-            );
-            setSnackbarSeverity("success");
-            setSnackbarOpen(true);
-          })
-          .catch((err) => {
-            setSnackbarMessage("Failed to update firm" + editingFirmLocal.name);
-            setSnackbarSeverity("error");
-            setSnackbarOpen(true);
-          });
+        ).unwrap();
+
+        setSnackbarMessage(
+          `Firm ID: ${editingFirmLocal.id} updated successfully`
+        );
+        setSnackbarSeverity("success");
+        isSuccess = true;
+      } else {
+        // --- CREATE ----
+        await dispatch(createFirm(finalFormData)).unwrap();
+
+        setSnackbarMessage("Firm created successfully");
+        setSnackbarSeverity("success");
+        isSuccess = true;
       }
-      setEditingFirm(null);
-    } else {
-      // Add new firm
-      const newFirm = {
-        ...finalFormData,
-      };
-      await dispatch(createFirm(finalFormData))
-        .unwrap()
-        .then(() => {
-          setSnackbarMessage("Firm Created successfully");
-          setSnackbarSeverity("success");
-          setSnackbarOpen(true);
-        })
-        .catch((err) => {
-          setSnackbarMessage("Failed to Create New Firm");
-          setSnackbarSeverity("error");
-          setSnackbarOpen(true);
-        });
+    } catch (err) {
+      console.error("Firm submit error:", err);
+
+      const firmName = editingFirmLocal?.name || "Firm";
+      const errorMessage = editingFirmLocal?.id
+        ? `Failed to update ${firmName}`
+        : `Failed to create new firm`;
+
+      setSnackbarMessage(errorMessage);
+      setSnackbarSeverity("error");
     }
-    dispatch(fetchFirmsData());
-    setEditingFirmLocal(null);
-    setActiveView("view");
+
+    setSnackbarOpen(true);
+
+    // Only refresh and navigate if the operation succeeded
+    if (isSuccess) {
+      await dispatch(fetchFirmsData());
+      setEditingFirmLocal(null);
+      setActiveView("view");
+    }
   };
 
   const handleEditFirm = async (firm) => {
@@ -161,8 +166,14 @@ const AdminPage = () => {
     if (!firmToDelete) return;
     try {
       await dispatch(deleteFirm(firmToDelete)).unwrap();
+      setSnackbarMessage("Firm Id:" + firmToDelete + " Deleted successfully");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
     } catch (err) {
       console.error("Delete firm failed:", err);
+      setSnackbarMessage("Failed to delete firm");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
       // optionally show toast/snackbar
     } finally {
       setDeleteFirmDialogOpen(false);
@@ -178,10 +189,8 @@ const AdminPage = () => {
   const handleAddChallenge = async (challengeData) => {
     // challengeData expected to contain firmId (as in FirmChallengesEdit)
     try {
-      await dispatch(
-        createChallenge(challengeData)
-      ).unwrap();
-      setSnackbarMessage("Firm Challenge Created successfully");
+      await dispatch(createChallenge(challengeData)).unwrap();
+      setSnackbarMessage("Challenge created successfully");
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
     } catch (err) {
@@ -201,8 +210,16 @@ const AdminPage = () => {
       await dispatch(
         updateChallenge({ id: challengeId, updatedData })
       ).unwrap();
+      setSnackbarMessage(
+        "Challenge Id:" + challengeId + " updated successfully"
+      );
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
     } catch (err) {
       console.error("Update challenge failed:", err);
+      setSnackbarMessage("Failed to update challenge");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     } finally {
       dispatch(fetchChallenges());
       dispatch(fetchFirmsData());
@@ -218,8 +235,18 @@ const AdminPage = () => {
     if (!challengeToDelete) return;
     try {
       await dispatch(deleteChallenge(challengeToDelete.challengeId)).unwrap();
+      setSnackbarMessage(
+        "Challenge Id:" +
+          challengeToDelete.challengeId +
+          " deleted successfully"
+      );
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
     } catch (err) {
       console.error("Delete challenge failed:", err);
+      setSnackbarMessage("Failed to delete challenge");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     } finally {
       setDeleteChallengeDialogOpen(false);
       setChallengeToDelete(null);
@@ -245,6 +272,11 @@ const AdminPage = () => {
       icon: <ChallengeIcon />,
       view: "challenge",
     },
+    (role === "ROOT" &&{
+      text: "Register Admin",
+      icon: <SupervisorAccountIcon />,
+      view: "admin",
+    }),
   ];
 
   const drawer = (
@@ -374,6 +406,8 @@ const AdminPage = () => {
               handleDeleteChallengeRequest(challengeId, firmId)
             }
           />
+        ) : activeView === "admin" ? (
+          <AdminRegisterPage />
         ) : (
           <></>
         )}

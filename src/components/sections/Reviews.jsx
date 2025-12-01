@@ -200,7 +200,7 @@ const Reviews = () => {
   }, []);
 
   const canModify = useCallback(() => {
-    if (user && role === "ADMIN") return true;
+    if (user && (role === "ADMIN" || role === "ROOT")) return true;
     return false;
   }, [user]);
 

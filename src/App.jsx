@@ -166,7 +166,7 @@ function App() {
             <Route
               path="/profile"
               element={
-                user && (role === "ADMIN" || role === "USER") ? (
+                user && (role === "ADMIN" || role === "USER" || role === "ROOT") ? (
                   <UserProfile />
                 ) : (
                   <Navigate to="/" />
@@ -177,7 +177,8 @@ function App() {
             <Route
               path="/admin"
               element={
-                user && role === "ADMIN" ? <AdminPage /> : <Navigate to="/" />
+                user && (role === "ADMIN" || role === "ROOT" )? <AdminPage /> : <Navigate to="/" />
+                //<AdminPage />
               }
             />
 

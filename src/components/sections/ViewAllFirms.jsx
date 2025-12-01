@@ -48,8 +48,8 @@ const ViewAllFirms = ({ onEdit, onDelete }) => {
   const filteredFirms = useMemo(() => {
     return allFirms?.filter(firm => {
       const matchesSearch = searchTerm === "" || 
-        firm.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        firm.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        firm.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        firm.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         (firm.tradingConditions?.discountCode && firm.tradingConditions.discountCode.toLowerCase().includes(searchTerm.toLowerCase()));
 
       const matchesRating = ratingFilter === "" || firm.rating === ratingFilter;
