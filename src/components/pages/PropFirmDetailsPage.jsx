@@ -125,27 +125,23 @@ export const PropFirmDetailsPage = () => {
   };
 
   useEffect(() => {
-     if(propFirm && (propFirm.id != Number(firmId))){
-      initPropFirmDetails.current = false;
-    }
-    if (!initPropFirmDetails.current) {
-      dispatch(fetchFirmById(firmId));
-      initPropFirmDetails.current = true;
-    }
-    if(propFirmStatus === "loading"){
-      setIsLoading(true);
-    }else{
-      const timer = setTimeout(()=>{
-        setIsLoading(false);
-      },1000);
-    }
-    return () => clearTimeout();
+      if (!initPropFirmDetails.current) {
+        dispatch(fetchFirmById(firmId));
+        initPropFirmDetails.current = true;
+      }
   }, []);
 
   useEffect(() => {
-    setIsLoading(!propFirm || propFirmStatus === "loading" ? true : false);
+    if(propFirmStatus === "loading"){
+      setIsLoading(true);
+    } 
     setFirmDetails(propFirm);
     window.scrollTo({ top: 0, behavior: "smooth" });
+    const timer = setTimeout(()=>{
+      setIsLoading(false);
+    },1000);
+
+    return () => clearTimeout(timer);
   }, [propFirm]);
 
   return isLoading ? (
