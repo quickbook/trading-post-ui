@@ -50,8 +50,23 @@ const refreshTokenRequest = async () => {
 axiosAdmin.interceptors.request.use(
   async (config) => {
     const stored = JSON.parse(sessionStorage.getItem("authSession"));
+    console.log("Stored session:", stored);
 
     if (!stored?.accessToken) return config;
+
+          const token = stored?.accessToken
+      if (token) {
+        const bearer = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
+        // Axios v1 headers can be AxiosHeaders or plain object
+        if (config.headers && typeof config.headers.set === 'function') {
+          config.headers.set('Authorization', bearer);
+        } else {
+          config.headers = config.headers || {};
+          
+          config.headers['Authorization'] = bearer;
+        }
+        console.debug('Authorization header set: yes');
+      } 
 
     // Token expired? refresh first.
     if (Date.now() > stored.expiresIn) {

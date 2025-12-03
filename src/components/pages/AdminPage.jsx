@@ -128,13 +128,32 @@ const AdminPage = () => {
     } catch (err) {
       console.error("Firm submit error:", err);
 
-      const firmName = editingFirmLocal?.name || "Firm";
-      const errorMessage = editingFirmLocal?.id
-        ? `Failed to update ${firmName}`
-        : `Failed to create new firm`;
 
-      setSnackbarMessage(errorMessage);
-      setSnackbarSeverity("error");
+const firmName = editingFirmLocal?.name || "Firm";
+const baseMessage = editingFirmLocal?.id
+  ? `Failed to update ${firmName}`
+  : `Failed to create new firm`; 
+
+const fieldErrors = err?.errorDetails?.fieldErrors;
+ 
+const backendErrorMessage =
+  // If there are field errors, join all messages
+  fieldErrors && Object.keys(fieldErrors).length > 0
+    ? Object.entries(fieldErrors)
+        .map(([field, msg]) => `${field}: ${msg}`)
+        .join("\n")
+    // Otherwise, fall back to general error messages
+    : err?.errorDetails?.errorMessage ||
+      err?.message ||
+      "Unexpected error occurred";
+
+const finalMessage = backendErrorMessage
+  ? `${baseMessage}:\n${backendErrorMessage}`
+  : baseMessage;
+
+      setSnackbarMessage(finalMessage); 
+       setSnackbarSeverity("error");
+        setSnackbarOpen(true);
     }
 
     setSnackbarOpen(true);
