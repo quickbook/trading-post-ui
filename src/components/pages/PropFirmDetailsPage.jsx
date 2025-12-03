@@ -129,7 +129,7 @@ export const PropFirmDetailsPage = () => {
       initPropFirmDetails.current = false;
     }
     if (!initPropFirmDetails.current) {
-      if(propFirm && (propFirm.id != Number(firmId))) dispatch(fetchFirmById(firmId));
+      dispatch(fetchFirmById(firmId));
       initPropFirmDetails.current = true;
     }
     if(propFirmStatus === "loading"){
