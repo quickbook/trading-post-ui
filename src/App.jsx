@@ -191,7 +191,7 @@ function App() {
           {/* Snackbar */}
           <Snackbar
             open={snackbarOpen}
-            autoHideDuration={2500}
+            autoHideDuration={4000}
             onClose={handleSnackbarClose}
             anchorOrigin={{ vertical: "top", horizontal: "center" }}
           >

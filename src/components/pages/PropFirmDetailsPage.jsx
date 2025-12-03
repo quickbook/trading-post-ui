@@ -125,11 +125,11 @@ export const PropFirmDetailsPage = () => {
   };
 
   useEffect(() => {
-    // if(propFirm && (propFirm.id != Number(firmId))){
-    //   initPropFirmDetails.current = false;
-    // }
+    if(propFirm && (propFirm.id != Number(firmId))){
+      initPropFirmDetails.current = false;
+    }
     if (!initPropFirmDetails.current) {
-      if(propFirm && (propFirm.id != Number(firmId))) dispatch(fetchFirmById(firmId));
+      dispatch(fetchFirmById(firmId));
       initPropFirmDetails.current = true;
     }
     if(propFirmStatus === "loading"){

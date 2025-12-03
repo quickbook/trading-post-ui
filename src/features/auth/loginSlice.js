@@ -7,7 +7,6 @@ const FETCH_LOGIN_ACTION = `login${API_ENDPOINTS.USERS.BASE}`;
 // ✅ Read stored user from sessionStorage (preferred)
 const storedAuth = (() => {
   try {
-    console.log("authSession", JSON.parse(sessionStorage.getItem("authSession")) || null)
     return JSON.parse(sessionStorage.getItem("authSession")) || null;
   } catch {
     return null;

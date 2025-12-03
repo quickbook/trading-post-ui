@@ -111,11 +111,11 @@ const AdminPage = () => {
         await dispatch(
           updateFirm({ id: editingFirmLocal.id, firmData: finalFormData })
         ).unwrap();
-
+        //console.log("Update Firm", finalFormData)
         setSnackbarMessage(
           `Firm ID: ${editingFirmLocal.id} updated successfully`
         );
-        setSnackbarSeverity("success");
+        setSnackbarSeverity("success"); 
         isSuccess = true;
       } else {
         // --- CREATE ----
@@ -130,11 +130,12 @@ const AdminPage = () => {
 
       const firmName = editingFirmLocal?.name || "Firm";
       const errorMessage = editingFirmLocal?.id
-        ? `Failed to update ${firmName}`
-        : `Failed to create new firm`;
+        ? `Failed to update ${firmName}\nError:${err.errorDetails.errorMessage}`
+        : `Failed to create new firm\n${err}`;
 
       setSnackbarMessage(errorMessage);
       setSnackbarSeverity("error");
+      setActiveView('view');
     }
 
     setSnackbarOpen(true);
@@ -171,7 +172,7 @@ const AdminPage = () => {
       setSnackbarOpen(true);
     } catch (err) {
       console.error("Delete firm failed:", err);
-      setSnackbarMessage("Failed to delete firm");
+      setSnackbarMessage("Failed to delete firm\nError: "+err.errorDetails.errorMessage);
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
       // optionally show toast/snackbar
@@ -195,7 +196,7 @@ const AdminPage = () => {
       setSnackbarOpen(true);
     } catch (err) {
       console.error("Create challenge failed:", err);
-      setSnackbarMessage("Failed to create firm challenge");
+      setSnackbarMessage("Failed to create firm challenge\nError: "+err.errorDetails.errorMessage);
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {
@@ -217,7 +218,7 @@ const AdminPage = () => {
       setSnackbarOpen(true);
     } catch (err) {
       console.error("Update challenge failed:", err);
-      setSnackbarMessage("Failed to update challenge");
+      setSnackbarMessage("Failed to update challenge\nError: "+err.errorDetails.errorMessage);
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {
@@ -244,7 +245,7 @@ const AdminPage = () => {
       setSnackbarOpen(true);
     } catch (err) {
       console.error("Delete challenge failed:", err);
-      setSnackbarMessage("Failed to delete challenge");
+      setSnackbarMessage("Failed to delete challenge\nError: "+err.errorDetails.errorMessage);
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {

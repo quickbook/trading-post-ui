@@ -342,6 +342,12 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
     if (!formData?.tradingConditions.availableAssets.length) {
       newErrors.availableAssets = "At least one asset type is required";
     }
+    if (!formData?.tradingConditions.withdrawalSpeed) {
+      newErrors.withdrawalSpeed = "Withdrawl speed is required";
+    }
+    if (!formData?.tradingConditions.dailyDrawdownCalculation) {
+      newErrors.dailyDrawdownCalculation = "Daily Dropdown Calculation is required";
+    }
 
     return newErrors;
   };
@@ -569,6 +575,10 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
     };
 
     delete finalFormData.country;
+    delete finalFormData.buyUrl;
+    delete finalFormData.challenges;
+    delete finalFormData.reviews;
+    
 
     console.log("Submitting firm data:", finalFormData);
     onSubmit(finalFormData);
@@ -908,11 +918,11 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
             </Grid>
 
             <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth>
+              <FormControl required fullWidth>
                 <InputLabel>Withdrawal Speed</InputLabel>
                 <Select
                   name="withdrawalSpeed"
-                  value={formData?.tradingConditions.withdrawalSpeed ?? " "}
+                  value={formData?.tradingConditions.withdrawalSpeed ?? ""}
                   label="Withdrawal Speed"
                   onChange={handleTradingConditionsChange}
                 >
@@ -922,6 +932,15 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                     </MenuItem>
                   ))}
                 </Select>
+                {errors.withdrawalSpeed && (
+                  <Typography
+                    variant="caption"
+                    color="error"
+                    sx={{ ml: 2, mt: 0.5, display: "block" }}
+                  >
+                    {errors.withdrawalSpeed}
+                  </Typography>
+                )}
               </FormControl>
             </Grid>
 
@@ -1371,7 +1390,7 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
               />
             </Grid>
             <Grid size={{ xs: 12, md: 6 }}>
-              <FormControl fullWidth>
+              <FormControl required fullWidth>
                 <InputLabel>Daily Drawdown Calculation</InputLabel>
                 <Select
                   name="dailyDrawdownCalculation"
@@ -1387,6 +1406,15 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
                     </MenuItem>
                   ))}
                 </Select>
+                {errors.dailyDrawdownCalculation && (
+                  <Typography
+                    variant="caption"
+                    color="error"
+                    sx={{ ml: 2, mt: 0.5, display: "block" }}
+                  >
+                    {errors.dailyDrawdownCalculation}
+                  </Typography>
+                )}
               </FormControl>
             </Grid>
 

@@ -121,7 +121,6 @@ const FirmChallengesEdit = ({
     });
   };
 
-
   const handleDeleteClick = (challengeId, firmId) => {
     setChallengeToDelete({ challengeId, firmId });
     setDeleteDialogOpen(true);
@@ -170,56 +169,55 @@ const FirmChallengesEdit = ({
     return newErrors;
   };
 
-  const handleSubmit = (e) => {
-  e.preventDefault();
-
-  const formErrors = validateForm();
-  if (Object.keys(formErrors).length > 0) {
-    setErrors(formErrors);
-    return;
-  }
-
-  // Build payload (common for both update and create)
-  const tierId = tierOptions.find((item) => item.name === formData.tier)?.id;
-  const phaseId = phaseOptions.find((item) => item.label === formData.phase)?.id;
-
-  const payload = {
-    firmId: formData.firmId,
-    dmnTierId: tierId,
-    dmnPhaseId: phaseId,
-    profitTargetPct: formData.profitTargetPct,
-    dailyLossPct: formData.dailyLossPct,
-    maxLossPct: formData.maxLossPct,
-    accountSizeUsd: formData.accountSizeUsd,
-    price: {
-      amount: formData.price?.amount,
-      currency: "USD",
-    },
-  };
-
-  console.log("Challenge Payload:", payload);
-
-  if (editingChallenge) {
-    // 👉 UPDATE MODE
-    onUpdateChallenge(editingChallenge.id, payload);
-    setEditingChallenge(null);
-    setSuccess("Challenge updated successfully!");
-  } else {
-    // 👉 CREATE MODE
-    onSubmit(payload);
-    setSuccess("Challenge created successfully!");
-  }
-
-  // Reset form
-  setFormData(initialChallengeData);
-  setErrors({});
-  window.scrollTo({ top: 10, behavior: "smooth" });
-};
-
-
   const resetForm = () => {
     setFormData(initialChallengeData);
     setErrors({});
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+
+    const formErrors = validateForm();
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return;
+    }
+
+    // Build payload (common for both update and create)
+    const tierId = tierOptions.find((item) => item.name === formData.tier)?.id;
+    const phaseId = phaseOptions.find(
+      (item) => item.label === formData.phase
+    )?.id;
+
+    const payload = {
+      firmId: formData.firmId,
+      dmnTierId: tierId,
+      dmnPhaseId: phaseId,
+      profitTargetPct: formData.profitTargetPct,
+      dailyLossPct: formData.dailyLossPct,
+      maxLossPct: formData.maxLossPct,
+      accountSizeUsd: formData.accountSizeUsd,
+      price: {
+        amount: formData.price?.amount,
+        currency: "USD",
+      },
+    };
+
+    console.log("Challenge Payload:", payload);
+
+    if (editingChallenge) {
+      // 👉 UPDATE MODE
+      onUpdateChallenge(editingChallenge.id, payload);
+      setEditingChallenge(null);
+    } else {
+      // 👉 CREATE MODE
+      onSubmit(payload);
+    }
+
+    // Reset form
+    setFormData(initialChallengeData);
+    setErrors({});
+    window.scrollTo({ top: 10, behavior: "smooth" });
   };
 
   return (
@@ -257,10 +255,7 @@ const FirmChallengesEdit = ({
           </Alert>
         )} */}
 
-        <Box
-          component="form"
-          onSubmit={handleSubmit}
-        >
+        <Box component="form" onSubmit={handleSubmit}>
           <Grid container spacing={3}>
             {/* Firm Selection */}
             <Grid size={{ xs: 12 }}>
