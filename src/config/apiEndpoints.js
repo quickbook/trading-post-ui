@@ -9,6 +9,7 @@ export const API_ENDPOINTS = {
   USERS: {
     BASE: '/api/v1/users',
     REGISTER: '/api/v1/users/register',
+    ADMIN_REGISTER: '/api/v1/users/createAdminUser',
     LOGIN: '/api/v1/users/login'
   },
 

@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { MainContext } from "../../App";
 import { LoadingScreen } from "./HomePage";
-import { registerUser } from "../../features/auth/registrationSlice";
+import { registerAdmin, registerUser } from "../../features/auth/registrationSlice";
 import {
   fetchCountries,
   selectCountryOptions,
@@ -168,20 +168,19 @@ const AdminRegisterPage = () => {
 
     setIsLoading(true);
     console.log(payload);
-    // try {
-    //   await dispatch(registerUser(payload)).unwrap?.();
-    //   setSnackbarMessage("Registration successful. Please log in.");
-    //   setSnackbarSeverity("success");
-    //   setSnackbarOpen(true);
-    //   navigate("/login");
-    // } catch (error) {
-    //   setSnackbarMessage(error?.message || "Registration failed");
-    //   setSnackbarSeverity("error");
-    //   setSnackbarOpen(true);
-    // } finally {
-    //   setIsLoading(false);
-    //   setFormData(initialData);
-    // }
+    try {
+      await dispatch(registerAdmin(payload)).unwrap?.();
+      setSnackbarMessage("Admin registration successful.");
+      setSnackbarSeverity("success");
+      setSnackbarOpen(true);
+    } catch (error) {
+      setSnackbarMessage(error?.message || "Admin registration failed");
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
+    } finally {
+      setIsLoading(false);
+      setFormData(initialData);
+    }
   };
 
   useEffect(() => {

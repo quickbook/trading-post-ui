@@ -2,6 +2,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosClient from "../../api/axiosClient";
 import { API_ENDPOINTS, getFullUrl } from "../../config/apiEndpoints";
+import axiosAdmin from "../../api/axiosAdmin";
 // POST /api/auth/register -> { id, name, role }
 export const registerUser = createAsyncThunk(
   "registration/registerUser",
@@ -15,6 +16,18 @@ export const registerUser = createAsyncThunk(
   }
 );
 
+export const registerAdmin = createAsyncThunk(
+  "registration/registerAdmin",
+  async (payload, { rejectWithValue }) => {
+    try {
+      const res = await axiosAdmin.post(getFullUrl(API_ENDPOINTS.USERS.ADMIN_REGISTER), payload);
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || "Admin registration failed"); 
+    }
+  }
+);
+
 const slice = createSlice({
   name: "registration",
   initialState: { status: "idle", error: null, createdUser: null },
@@ -23,6 +36,9 @@ const slice = createSlice({
     b.addCase(registerUser.pending, (s) => { s.status = "loading"; s.error = null; s.createdUser = null; });
     b.addCase(registerUser.fulfilled, (s, { payload }) => { s.status = "succeeded"; s.createdUser = payload; });
     b.addCase(registerUser.rejected, (s, a) => { s.status = "failed"; s.error = a.payload; });
+    b.addCase(registerAdmin.pending, (s) => { s.status = "loading"; s.error = null; s.createdUser = null; });
+    b.addCase(registerAdmin.fulfilled, (s, { payload }) => { s.status = "succeeded"; s.createdUser = payload; });
+    b.addCase(registerAdmin.rejected, (s, a) => { s.status = "failed"; s.error = a.payload; });
   },
 });
 
