@@ -174,7 +174,7 @@ const AdminRegisterPage = () => {
       setSnackbarSeverity("success");
       setSnackbarOpen(true);
     } catch (error) {
-      setSnackbarMessage(error?.message || "Admin registration failed");
+      setSnackbarMessage(error?.errorDetails.errorMessage || "Admin registration failed");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {

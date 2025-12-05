@@ -174,7 +174,8 @@ const RegisterPage = () => {
       setSnackbarOpen(true);
       navigate("/login");
     } catch (error) {
-      setSnackbarMessage(error?.message || "Registration failed");
+      console.log(error);
+      setSnackbarMessage(error?.errorDetails.errorMessage || "Registration failed");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {

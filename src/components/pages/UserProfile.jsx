@@ -165,7 +165,7 @@ const UserProfile = () => {
       setSnackbarOpen(true);
       navigate("/login");
     } catch (error) {
-      setSnackbarMessage(error?.message || "Profile update failed");
+      setSnackbarMessage(error?.errorDetails.errorMessage || "Profile update failed");
       setSnackbarSeverity("error");
       setSnackbarOpen(true);
     } finally {}

@@ -261,7 +261,7 @@ const Reviews = () => {
           setSnackbarOpen(true);
         })
         .catch((err) => {
-          setSnackbarMessage("Failed to delete review");
+          setSnackbarMessage(err?.errorDetails.errorMessage || "Failed to delete review");
           setSnackbarSeverity("error");
           setSnackbarOpen(true);
         });
@@ -368,7 +368,7 @@ const Reviews = () => {
             handleCloseModal();
           })
           .catch((err) => {
-            setSnackbarMessage("Failed to update review");
+            setSnackbarMessage(err?.errorDetails.errorMessage || "Failed to update review");
             setSnackbarSeverity("error");
             setSnackbarOpen(true);
           });
@@ -392,7 +392,7 @@ const Reviews = () => {
             handleCloseModal();
           })
           .catch((err) => {
-            setSnackbarMessage("Failed to create review");
+            setSnackbarMessage(err.errorDetails.errorMessage || "Failed to create review");
             setSnackbarSeverity("error");
             setSnackbarOpen(true);
             console.log(err);
