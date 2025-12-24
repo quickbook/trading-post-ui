@@ -43,12 +43,20 @@ const FooterSection = () => {
       sx={{
         //position: "relative",
         width: "100%",
-        bgcolor: "black",
+        background:
+          "linear-gradient(180deg, rgba(0,0,0,1) 20%, rgba(18, 6, 27, 1) 80%, rgba(41, 1, 70, 1) 100%)",
+
         py: 6,
         px: 2,
       }}
     >
-      <Grid container mx="auto" spacing={6} justifyContent={"space-between"} sx={{width: '100%', maxWidth:'1640'}}>
+      <Grid
+        container
+        mx="auto"
+        spacing={6}
+        justifyContent={"space-between"}
+        sx={{ width: "100%", maxWidth: "1640" }}
+      >
         {/* Trading Post Logo and Socials */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Box

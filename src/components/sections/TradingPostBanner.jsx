@@ -69,17 +69,19 @@ const TradingPostBanner = () => {
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
-        bgcolor: "#000",
+        background:
+          "linear-gradient(180deg, rgba(0,0,0,1) 20%, rgba(27, 9, 41, 1) 80%, rgba(41, 1, 70, 1) 100%)",
+
         //mt: '4px',
         mb: 1,
         borderRadius: "14px",
-        p: { xs: 0, md: 2 },
+        //p: { xs: 0, md: 2 },
       }}
     >
       <Card
         sx={{
           width: "100%",
-          backgroundColor: "#000",
+          backgroundColor: "transparent",
           color: "#fff",
           borderRadius: "20px",
           textAlign: "center",
@@ -107,7 +109,7 @@ const TradingPostBanner = () => {
         {/* CTA Button */}
         <Button
           variant="contained"
-          onClick={()=>navigate('/comparefirms')}
+          onClick={() => navigate("/comparefirms")}
           sx={{
             backgroundColor: "#4b0082",
             borderRadius: "12px",

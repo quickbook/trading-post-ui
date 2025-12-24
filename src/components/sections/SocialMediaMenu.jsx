@@ -38,50 +38,57 @@ const SocialMediaMenu = () => {
       icon: <Instagram />,
       color: "#E4405F",
       bgColor: "linear-gradient(45deg, #E4405F 0%, #405DE6 100%)",
+      url: "https://www.instagram.com/", // Official site[citation:4]
     },
     {
       name: "Facebook",
       icon: <Facebook />,
       color: "#1877F2",
       bgColor: "#1877F2",
+      url: "https://www.facebook.com/", // Official site[citation:2]
     },
     {
       name: "X (Twitter)",
       icon: <X />,
       color: "#000000",
       bgColor: "#000000",
+      url: "https://x.com/", // Formerly twitter.com[citation:10]
     },
     {
       name: "Discord",
-      icon: <X />,
+      icon: <X />, // You can keep a placeholder or find a Discord icon
       color: "#5865F2",
       bgColor: "#a0c4f3ff",
+      url: "https://discord.com/", // Official site[citation:1]
     },
     {
       name: "LinkedIn",
       icon: <LinkedIn />,
       color: "#0A66C2",
       bgColor: "#0A66C2",
+      url: "https://www.linkedin.com/", // Official site[citation:3]
     },
     {
       name: "YouTube",
       icon: <YouTube />,
       color: "#FF0000",
       bgColor: "#FF0000",
+      url: "https://www.youtube.com/", // Official site[citation:7]
     },
     {
       name: "Reddit",
       icon: <Reddit />,
       color: "#FF5700",
       bgColor: "#FF5700",
+      url: "https://www.reddit.com/", // Official site[citation:8]
     },
   ];
 
   const handleSocialMediaClick = (platform) => {
-    console.log(`Navigating to ${platform}`);
-    handleClose();
-    // Here you would typically navigate to the social media URL
-    // window.open(platform.url, '_blank');
+    handleClose(); // Closes the menu
+    if (platform.url) {
+      window.open(platform.url, "_blank", "noopener,noreferrer"); // Opens the URL in a new tab
+    }
   };
 
   return (
@@ -91,12 +98,12 @@ const SocialMediaMenu = () => {
         onClick={handleClick}
         endIcon={<ExpandMore />}
         sx={{
-          background: open ? "#4b008220" :"#fff",
+          background: open ? "#4b008220" : "#fff",
           color: "#4b0082",
           borderRadius: "10px",
           //fontWeight: 500,
           //fontFamily: "Lora, serif",
-          fontSize: {xs: "14px",xl:"16px"},
+          fontSize: { xs: "14px", xl: "16px" },
           textTransform: "none",
           boxShadow: "none",
           transition: "all 0.3s ease",
