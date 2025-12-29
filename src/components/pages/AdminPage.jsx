@@ -20,6 +20,8 @@ import AddIcon from "@mui/icons-material/Add";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import ChallengeIcon from "@mui/icons-material/EmojiEvents";
 import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
+import PeopleIcon from "@mui/icons-material/People";
+import ViewAllUsers from "../sections/ViewAllUsers";
 import AddFirmForm from "../sections/AddFirmForm";
 import ViewAllFirms from "../sections/ViewAllFirms";
 import FirmChallengesEdit from "../sections/FirmChallengesEdit";
@@ -128,32 +130,31 @@ const AdminPage = () => {
     } catch (err) {
       console.error("Firm submit error:", err);
 
+      const firmName = editingFirmLocal?.name || "Firm";
+      const baseMessage = editingFirmLocal?.id
+        ? `Failed to update ${firmName}`
+        : `Failed to create new firm`;
 
-const firmName = editingFirmLocal?.name || "Firm";
-const baseMessage = editingFirmLocal?.id
-  ? `Failed to update ${firmName}`
-  : `Failed to create new firm`; 
+      const fieldErrors = err?.errorDetails?.fieldErrors;
 
-const fieldErrors = err?.errorDetails?.fieldErrors;
- 
-const backendErrorMessage =
-  // If there are field errors, join all messages
-  fieldErrors && Object.keys(fieldErrors).length > 0
-    ? Object.entries(fieldErrors)
-        .map(([field, msg]) => `${field}: ${msg}`)
-        .join("\n")
-    // Otherwise, fall back to general error messages
-    : err?.errorDetails?.errorMessage ||
-      err?.message ||
-      "Unexpected error occurred";
+      const backendErrorMessage =
+        // If there are field errors, join all messages
+        fieldErrors && Object.keys(fieldErrors).length > 0
+          ? Object.entries(fieldErrors)
+              .map(([field, msg]) => `${field}: ${msg}`)
+              .join("\n")
+          : // Otherwise, fall back to general error messages
+            err?.errorDetails?.errorMessage ||
+            err?.message ||
+            "Unexpected error occurred";
 
-const finalMessage = backendErrorMessage
-  ? `${baseMessage}:\n${backendErrorMessage}`
-  : baseMessage;
+      const finalMessage = backendErrorMessage
+        ? `${baseMessage}:\n${backendErrorMessage}`
+        : baseMessage;
 
-      setSnackbarMessage(finalMessage); 
-       setSnackbarSeverity("error");
-        setSnackbarOpen(true);
+      setSnackbarMessage(finalMessage);
+      setSnackbarSeverity("error");
+      setSnackbarOpen(true);
     }
 
     setSnackbarOpen(true);
@@ -291,11 +292,16 @@ const finalMessage = backendErrorMessage
       icon: <ChallengeIcon />,
       view: "challenge",
     },
-    (role === "ROOT" &&{
+    {
+      text: "View Users",
+      icon: <PeopleIcon />,
+      view: "users",
+    },
+    role === "ROOT" && {
       text: "Register Admin",
       icon: <SupervisorAccountIcon />,
       view: "admin",
-    }),
+    },
   ];
 
   const drawer = (
@@ -427,6 +433,10 @@ const finalMessage = backendErrorMessage
           />
         ) : activeView === "admin" ? (
           <AdminRegisterPage />
+        ) : activeView === "users" ? (
+          <ViewAllUsers
+          //users={users}
+          />
         ) : (
           <></>
         )}
