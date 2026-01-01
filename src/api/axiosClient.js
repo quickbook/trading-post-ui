@@ -21,10 +21,62 @@ const axiosClient = axios.create({
   baseURL: "https://dev01-api.pranalyticx.cloud",
   headers: { "Content-Type": "application/json" },
 });
+let isRefreshing = false;
+let failedQueue = [];
 
+const processQueue = (error, token = null) => {
+  failedQueue.forEach((prom) => {
+    if (token) {
+      prom.resolve(token);
+    } else {
+      prom.reject(error);
+    }
+  });
+
+  failedQueue = [];
+};
+const refreshTokenRequest = async () => {
+  console.log('Initiating token refresh');
+  const stored =getTokenDetailsFromStore();
+    const store = getStore();
+  if (!stored?.refreshToken) return null;
+
+  try {
+    const res = await axios.post(getFullUrl(API_ENDPOINTS.AUTH.REFRESH), {
+      refreshToken: stored.refreshToken,
+    });
+
+     const { accessToken, refreshToken, expiresIn } = res.data;
+    
+      if (!accessToken) {
+      throw new Error('No access token received from server');
+    }
+      // Format token if needed
+    const formattedToken = accessToken.startsWith('Bearer ') 
+      ? accessToken 
+      : `Bearer ${accessToken}`;
+
+   // Dispatch the token data to store
+    await store.dispatch({
+      type: 'auth/setCredentials',
+      payload: {
+        accessToken: formattedToken,
+        refreshToken: refreshToken ?? null,
+        expiresAt: Date.now() + (expiresIn ?? 0) * 1000
+      }
+    });
+      console.debug('Refresh token initialized, token stored');
+
+    return res.accessToken;
+  } catch (err) {
+    console.error('Token refresh failed:', err);
+    return null; // ✨ signal failure
+  }
+};
   
 // Initialize auth on app start
 export const initializeAuth = async () => {
+  console.log('Initializing authentication');
   try {
     const store = getStore();
     const response = await axiosClient.post(getFullUrl(API_ENDPOINTS.AUTH.TOKEN));
@@ -67,6 +119,11 @@ const getTokenFromStore = () => {
   console.debug('Token from store:', token ? 'exists' : 'missing');
   return token;
 };
+const getTokenDetailsFromStore = () => {
+  const store = getStore();
+  const token = store.getState().auth;
+  return token;
+};
 // Add a pre-request configuration
 const getHostUrl = (config) => {
   const base = config.baseURL || '';
@@ -79,14 +136,15 @@ const getHostUrl = (config) => {
 };
 
 axiosClient.interceptors.request.use(
-  (config) => {
-    const fullUrl = getHostUrl(config);
+ async (config) => {
+    const fullUrl = getHostUrl(config); 
     const isAuthEndpoint = AUTH_PATHS.some((p) => fullUrl.includes(p));
-
-    console.debug('Request:', config.method?.toUpperCase(), fullUrl, '| isAuth:', isAuthEndpoint);
+    let stored;
+    console.log('Request:', config.method?.toUpperCase(), fullUrl, '| isAuth:', isAuthEndpoint);
 
     if (!isAuthEndpoint) {
       const token = getTokenFromStore?.();
+      stored = getTokenDetailsFromStore();
       if (token) {
         const bearer = token.startsWith('Bearer ') ? token : `Bearer ${token}`;
         // Axios v1 headers can be AxiosHeaders or plain object
@@ -100,8 +158,41 @@ axiosClient.interceptors.request.use(
       } else {
         console.debug('Authorization header set: no (no token)');
       }
-    }
-
+   
+        // Token expired? refresh first.
+        console.debug('Token expiry check:', {
+          now: Date.now(),
+          expiresIn: stored?.expiresAt
+        });
+        if (Date.now() > stored.expiresAt) {
+          if (!isRefreshing) {
+            isRefreshing = true;
+    
+            const newToken = await refreshTokenRequest();
+            isRefreshing = false;
+    
+            if (!newToken) {
+              // ❌ Refresh failed → logout user
+              sessionStorage.clear();
+              window.location.href = "/login?session-expired=true";
+              return Promise.reject("Session expired");
+            }
+    
+            processQueue(null, newToken);
+          }
+    
+          // Queue pending requests until refresh done
+          return new Promise((resolve, reject) => {
+            failedQueue.push({
+              resolve: (token) => {
+                config.headers.Authorization = `Bearer ${token}`;
+                resolve(config);
+              },
+              reject: (err) => reject(err),
+            });
+          });
+        }
+ }
     return config;
   },
   (error) => Promise.reject(error)
