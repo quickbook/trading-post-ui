@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   Box,
   Grid,
@@ -16,158 +16,105 @@ import {
   Stack,
   Avatar,
   Button,
+  CircularProgress,
 } from "@mui/material";
 import { Search, Email, Person, Phone, LocationOn } from "@mui/icons-material";
+import AccessibilityIcon from "@mui/icons-material/Accessibility";
+import {
+  getAllUsers,
+  selectAllUsers,
+  getUsersStatus,
+  getUsersError,
+} from "../../features/auth/getAllUsersSlice";
 
-// Mock users data - in real app, this would come from props or API
-const mockUsers = [
-  {
-    id: 1,
-    gmail: "john.doe@example.com",
-    userName: "johndoe",
-    firstName: "John",
-    middleName: "Michael",
-    lastName: "Doe",
-    contactNumber: "+1 (555) 123-4567",
-    address: "123 Main Street",
-    city: "New York",
-    stateName: "NY",
-    zipCode: "10001",
-    countryName: "United States",
-    active: true,
-    joinedDate: "2024-01-15",
-  },
-  {
-    id: 2,
-    gmail: "jane.smith@example.com",
-    userName: "janesmith",
-    firstName: "Jane",
-    middleName: "Elizabeth",
-    lastName: "Smith",
-    contactNumber: "+1 (555) 987-6543",
-    address: "456 Oak Avenue",
-    city: "Los Angeles",
-    stateName: "CA",
-    zipCode: "90001",
-    countryName: "United States",
-    active: true,
-    joinedDate: "2024-02-20",
-  },
-  {
-    id: 3,
-    gmail: "robert.wilson@example.com",
-    userName: "robwilson",
-    firstName: "Robert",
-    middleName: "",
-    lastName: "Wilson",
-    contactNumber: "+44 20 1234 5678",
-    address: "789 High Street",
-    city: "London",
-    stateName: "",
-    zipCode: "SW1A 1AA",
-    countryName: "United Kingdom",
-    active: true,
-    joinedDate: "2024-03-10",
-  },
-  {
-    id: 4,
-    gmail: "maria.garcia@example.com",
-    userName: "mariag",
-    firstName: "Maria",
-    middleName: "Isabel",
-    lastName: "Garcia",
-    contactNumber: "+34 91 123 4567",
-    address: "101 Gran Via",
-    city: "Madrid",
-    stateName: "Madrid",
-    zipCode: "28013",
-    countryName: "Spain",
-    active: false,
-    joinedDate: "2024-01-05",
-  },
-  {
-    id: 5,
-    gmail: "alex.chen@example.com",
-    userName: "alexchen",
-    firstName: "Alex",
-    middleName: "",
-    lastName: "Chen",
-    contactNumber: "+86 10 1234 5678",
-    address: "789 Nanjing Road",
-    city: "Shanghai",
-    stateName: "Shanghai",
-    zipCode: "200000",
-    countryName: "China",
-    active: true,
-    joinedDate: "2024-02-28",
-  },
-  {
-    id: 6,
-    gmail: "sarah.miller@example.com",
-    userName: "sarahm",
-    firstName: "Sarah",
-    middleName: "Anne",
-    lastName: "Miller",
-    contactNumber: "+1 (555) 456-7890",
-    address: "321 Pine Street",
-    city: "Chicago",
-    stateName: "IL",
-    zipCode: "60601",
-    countryName: "United States",
-    active: true,
-    joinedDate: "2024-03-25",
-  },
-];
+import { useDispatch, useSelector } from "react-redux";
 
 const ViewAllUsers = () => {
-  const [users] = useState(mockUsers); // In real app, users would come from props or API
+  const dispatch = useDispatch();
+  const allUsers = useSelector(selectAllUsers) ?? [];
+  const [users, setUsers] = useState(allUsers);
+  const [status, setStatus] = useState(useSelector(getUsersStatus));
+  const [error, setError] = useState(useSelector(getUsersError));
+
   const [searchTerm, setSearchTerm] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
-  // Get unique countries for filter
-  const countries = useMemo(() => {
-    return [...new Set(users.map((user) => user.countryName))].sort();
-  }, [users]);
+  const initUsersRef = useRef(false);
 
-  // Get unique user statuses (active/inactive) for filter
-  const userStatuses = useMemo(() => {
-    return ["Active", "Inactive"]; // Simplified status
+  useEffect(() => {
+    if (!initUsersRef.current) {
+      if (!allUsers.length) {
+        dispatch(getAllUsers())
+          .unwrap()
+          .then((e) => {
+            setUsers(e.data);
+            setStatus("succeeded");
+          })
+          .catch((e) => {
+            setStatus("failed");
+            setError(e);
+          });
+      }
+      initUsersRef.current = true;
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }, []);
 
-  // Filter users based on search and filter criteria
+  const countries = useMemo(
+    () => [...new Set(users.map((u) => u?.countryName).filter(Boolean))],
+    [users]
+  );
+  const userStatuses = ["Active", "Inactive"];
+
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
       const matchesSearch =
-        searchTerm === "" ||
-        user.gmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        `${user.firstName} ${user.lastName}`
+        !searchTerm ||
+        user?.gmail?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user?.userName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        `${user?.firstName} ${user?.lastName}`
           .toLowerCase()
-          .includes(searchTerm.toLowerCase()) ||
-        user.city.toLowerCase().includes(searchTerm.toLowerCase());
+          .includes(searchTerm.toLowerCase());
 
       const matchesCountry =
-        countryFilter === "" || user.countryName === countryFilter;
+        !countryFilter || user?.countryName === countryFilter;
+
       const matchesStatus =
-        statusFilter === "" ||
-        (statusFilter === "Active" ? user.active : !user.active);
+        !statusFilter ||
+        (statusFilter === "Active"
+          ? user?.active !== false
+          : user?.active === false);
 
       return matchesSearch && matchesCountry && matchesStatus;
     });
   }, [users, searchTerm, countryFilter, statusFilter]);
 
-  const getUserInitials = (firstName, lastName) => {
-    return `${firstName?.charAt(0) || ""}${
-      lastName?.charAt(0) || ""
-    }`.toUpperCase();
-  };
+  const getUserInitials = (f, l) => `${f?.[0] || ""}${l?.[0] || ""}`;
 
   const clearFilters = () => {
     setSearchTerm("");
     setCountryFilter("");
     setStatusFilter("");
   };
+
+  if (status === "loading") {
+    return (
+      <Box sx={{ display: "flex", justifyContent: "center", mt: 6 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (status === "failed") {
+    return (
+      <Paper sx={{ p: 4, textAlign: "center" }}>
+        <Typography color="error">
+          Failed to load users: {error?.message || "Unknown error"}
+        </Typography>
+      </Paper>
+    );
+  }
 
   const getStatusColor = (status) => {
     return status ? "success" : "error";
@@ -296,7 +243,11 @@ const ViewAllUsers = () => {
       </Box>
 
       {/* Users Grid */}
-      {filteredUsers.length === 0 ? (
+      {status !== "succeeded" ? (
+        <Box sx={{ display: "flex", justifyContent: "center", pt: 4 }}>
+          <CircularProgress />
+        </Box>
+      ) : filteredUsers.length === 0 ? (
         <Paper sx={{ p: 4, textAlign: "center" }}>
           <Typography variant="h6" color="textSecondary">
             No users match your search criteria.
@@ -308,7 +259,7 @@ const ViewAllUsers = () => {
       ) : (
         <Grid container spacing={3}>
           {filteredUsers.map((user) => (
-            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={user.id}>
+            <Grid size={{ xs: 12, sm: 6, md: 4 }} key={user?.id}>
               <Card
                 sx={{
                   height: "100%",
@@ -334,14 +285,14 @@ const ViewAllUsers = () => {
                         mr: 2,
                       }}
                     >
-                      {getUserInitials(user.firstName, user.lastName)}
+                      {getUserInitials(user?.firstName, user?.lastName)}
                     </Avatar>
                     <Box>
                       <Typography variant="h6" component="div">
-                        {user.firstName} {user.lastName}
+                        {user?.firstName} {user?.lastName}
                       </Typography>
                       <Typography variant="body2" color="textSecondary">
-                        @{user.userName}
+                        @{user?.userName}
                       </Typography>
                     </Box>
                   </Box>
@@ -353,11 +304,11 @@ const ViewAllUsers = () => {
                         sx={{ fontSize: 16, mr: 1, color: "text.secondary" }}
                       />
                       <Typography variant="body2">
-                        <strong>Email:</strong> {user.gmail}
+                        <strong>Email:</strong> {user?.gmail}
                       </Typography>
                     </Box>
 
-                    {user.contactNumber && (
+                    {user?.contactNumber && (
                       <Box
                         sx={{ display: "flex", alignItems: "center", mb: 1 }}
                       >
@@ -365,7 +316,7 @@ const ViewAllUsers = () => {
                           sx={{ fontSize: 16, mr: 1, color: "text.secondary" }}
                         />
                         <Typography variant="body2">
-                          <strong>Phone:</strong> {user.contactNumber}
+                          <strong>Phone:</strong> {user?.contactNumber}
                         </Typography>
                       </Box>
                     )}
@@ -375,8 +326,17 @@ const ViewAllUsers = () => {
                         sx={{ fontSize: 16, mr: 1, color: "text.secondary" }}
                       />
                       <Typography variant="body2">
-                        <strong>Full Name:</strong> {user.firstName}{" "}
-                        {user.middleName} {user.lastName}
+                        <strong>Full Name:</strong> {user?.firstName}{" "}
+                        {user?.middleName} {user?.lastName}
+                      </Typography>
+                    </Box>
+
+                    <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                      <AccessibilityIcon
+                        sx={{ fontSize: 16, mr: 1, color: "text.secondary" }}
+                      />
+                      <Typography variant="body2">
+                        <strong>Role:</strong> {user?.roleName}
                       </Typography>
                     </Box>
 
@@ -385,20 +345,20 @@ const ViewAllUsers = () => {
                         sx={{ fontSize: 16, mr: 1, color: "text.secondary" }}
                       />
                       <Typography variant="body2">
-                        <strong>Location:</strong> {user.city}, {user.stateName}{" "}
-                        {user.zipCode}
+                        <strong>Location:</strong> {user?.city},{" "}
+                        {user?.stateName} {user?.zipCode}
                       </Typography>
                     </Box>
                   </Box>
 
                   {/* Address Section */}
-                  {user.address && (
+                  {user?.address && (
                     <Box sx={{ mb: 2 }}>
                       <Typography variant="body2" gutterBottom>
                         <strong>Address:</strong>
                       </Typography>
                       <Typography variant="body2" color="textSecondary">
-                        {user.address}
+                        {user?.address}
                       </Typography>
                     </Box>
                   )}
@@ -415,21 +375,21 @@ const ViewAllUsers = () => {
                     }}
                   >
                     <Chip
-                      label={user.countryName}
+                      label={user?.countryName}
                       size="small"
                       variant="outlined"
                       color="primary"
                     />
 
                     <Chip
-                      label={getStatusText(user.active)}
-                      color={getStatusColor(user.active)}
+                      label={getStatusText(user?.active ?? true)}
+                      color={getStatusColor(user?.active ?? true)}
                       size="small"
                     />
                   </Box>
 
                   {/* Joined Date */}
-                  {user.joinedDate && (
+                  {/* {user?.joinedDate && (
                     <Typography
                       variant="caption"
                       color="textSecondary"
@@ -440,9 +400,9 @@ const ViewAllUsers = () => {
                         fontStyle: "italic",
                       }}
                     >
-                      Joined: {new Date(user.joinedDate).toLocaleDateString()}
+                      Joined: {new Date(user?.joinedDate).toLocaleDateString()}
                     </Typography>
-                  )}
+                  )} */}
                 </CardContent>
               </Card>
             </Grid>
@@ -457,7 +417,7 @@ const ViewAllUsers = () => {
             Users Statistics
           </Typography>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Box
                 sx={{
                   textAlign: "center",
@@ -474,7 +434,7 @@ const ViewAllUsers = () => {
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            {/* <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Box
                 sx={{
                   textAlign: "center",
@@ -491,7 +451,7 @@ const ViewAllUsers = () => {
                 </Typography>
               </Box>
             </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Box
                 sx={{
                   textAlign: "center",
@@ -507,8 +467,8 @@ const ViewAllUsers = () => {
                   Inactive Users
                 </Typography>
               </Box>
-            </Grid>
-            <Grid item xs={12} sm={6} md={3}>
+            </Grid> */}
+            <Grid size={{ xs: 12, sm: 6, md: 3 }}>
               <Box
                 sx={{
                   textAlign: "center",

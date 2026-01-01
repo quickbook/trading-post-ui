@@ -10,8 +10,9 @@ export const API_ENDPOINTS = {
     BASE: '/api/v1/users',
     REGISTER: '/api/v1/users/register',
     ADMIN_REGISTER: '/api/v1/users/createAdminUser',
-    LOGIN: '/api/v1/users/login'
-  },
+    LOGIN: '/api/v1/users/login',
+    ALL_USERS: '/api/v1/users/all'
+  },  
 
   DOMAIN_DATA: {
     BASE: '/api/v1/domain',

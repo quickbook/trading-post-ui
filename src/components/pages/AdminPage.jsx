@@ -372,6 +372,8 @@ const AdminPage = () => {
               "& .MuiDrawer-paper": {
                 boxSizing: "border-box",
                 width: drawerWidth,
+                backgroundColor: "#00000010",
+                blur: "blur(10px)",
               },
             }}
           >

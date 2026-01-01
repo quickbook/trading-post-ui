@@ -252,6 +252,8 @@ const AddFirmForm = ({ firm, onSubmit, onCancel }) => {
         ...firm,
         country: countryValue,
       });
+      delete formData?.challenges;
+      delete formData?.reviews;
       //if (firm.logo) setLogoPreview(firm.logo);
     } else {
       setFormData(initialFirmData);
