@@ -11,7 +11,8 @@ export const API_ENDPOINTS = {
     REGISTER: '/api/v1/users/register',
     ADMIN_REGISTER: '/api/v1/users/createAdminUser',
     LOGIN: '/api/v1/users/login',
-    ALL_USERS: '/api/v1/users/all'
+    ALL_USERS: '/api/v1/users/all',
+    ENQUIRIES: '/api/v1/enquiries',
   },  
 
   DOMAIN_DATA: {

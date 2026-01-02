@@ -17,9 +17,11 @@ import {
 import CloseIcon from "@mui/icons-material/Close";
 import { useForm, Controller } from "react-hook-form";
 import { MainContext } from "../../App";
+import axiosClient from "../../api/axiosClient";
+import { API_ENDPOINTS, getFullUrl } from "../../config/apiEndpoints";
 
 export default function BookACallSection() {
-  const {openForm, handleOpenForm} = useContext(MainContext);
+  const { openForm, handleOpenForm } = useContext(MainContext);
   const {
     control,
     handleSubmit,
@@ -27,18 +29,16 @@ export default function BookACallSection() {
     formState: { errors },
   } = useForm();
 
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const handleClose = () => {
     handleOpenForm(false);
     reset();
-  };
-
-  const handleSnackbarClose = (event, reason) => {
-    if (reason === "clickaway") {
-      return;
-    }
-    setSnackbarOpen(false);
   };
 
   const textFieldStyle = {
@@ -56,12 +56,44 @@ export default function BookACallSection() {
     },
   };
 
-  const onSubmit = (data) => {
-    console.log("Form Data:", data);
-    setTimeout(() => {
-      handleClose();
-    }, 1000); // Simulate form submission delay
-    setSnackbarOpen(true); // Show success snackbar
+  const onSubmit = async (data) => {
+    try {
+      setLoading(true);
+
+      // 🔹 API CALL
+      await axiosClient.post(getFullUrl(API_ENDPOINTS.USERS.ENQUIRIES), {
+        name: data.name,
+        email: data.email,
+        firm: data.firm,
+        whatsapp: data.whatsapp,
+        services: data.services,
+        aboutFirm: data.aboutFirm,
+        consent: data.consent,
+      }).then((response) => {
+        console.log("Form submission response:", response.data);
+      });
+
+      // 🔹 Show success snackbar
+
+      setSnackbar({
+        open: true,
+        message: "Form submitted successfully! We'll get back to you soon.",
+        severity: "success",
+      });
+
+      reset();
+      setTimeout(() => handleClose(), 800);
+    } catch (error) {
+      setSnackbar({
+        open: true,
+        message:
+          error?.response?.data?.message ||
+          "Something went wrong. Please try again later.",
+        severity: "error",
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -278,6 +310,7 @@ export default function BookACallSection() {
               <Button
                 type="submit"
                 variant="contained"
+                disabled={loading}
                 sx={{
                   backgroundColor: "#260242ff",
                   "&:hover": { backgroundColor: "#6b03bbff" },
@@ -286,15 +319,12 @@ export default function BookACallSection() {
                   borderRadius: "20px",
                   height: "51px",
                   px: 6,
-                  fontFamily: "Montserrat, Helvetica",
                   fontWeight: 600,
                   fontSize: "1rem",
-                  lineHeight: "1.5rem",
-                  letterSpacing: "0.15px",
                   textTransform: "none",
                 }}
               >
-                Submit
+                {loading ? "Submitting..." : "Submit"}
               </Button>
             </DialogActions>
           </form>
@@ -303,18 +333,17 @@ export default function BookACallSection() {
 
       {/* Success Snackbar */}
       <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={2000}
-        onClose={handleSnackbarClose}
+        open={snackbar.open}
+        autoHideDuration={3000}
+        onClose={() => setSnackbar({ ...snackbar, open: false })}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
-          onClose={handleSnackbarClose}
-          severity="success"
+          severity={snackbar.severity}
           variant="filled"
-          sx={{ width: "100%" }}
+          onClose={() => setSnackbar({ ...snackbar, open: false })}
         >
-          Form submitted successfully! We'll get back to you soon.
+          {snackbar.message}
         </Alert>
       </Snackbar>
     </>
