@@ -242,8 +242,8 @@ const FooterSection = () => {
             <Box
               component="img"
               alt="Image"
-              src="/cassel.jpg"
-              sx={{ width: 200, height: 160, objectFit: "cover" }}
+              src="/cassel.png"
+              sx={{ width: 200, height: 180, objectFit: "cover" }}
             />
             <Button
               variant="contained"
