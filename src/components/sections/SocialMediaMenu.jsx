@@ -38,28 +38,28 @@ const SocialMediaMenu = () => {
       icon: <Instagram />,
       color: "#E4405F",
       bgColor: "linear-gradient(45deg, #E4405F 0%, #405DE6 100%)",
-      url: "https://www.instagram.com/", // Official site[citation:4]
+      url: "https://www.instagram.com/tradingpost__/", // Official site[citation:4]
     },
     {
       name: "Facebook",
       icon: <Facebook />,
       color: "#1877F2",
       bgColor: "#1877F2",
-      url: "https://www.facebook.com/", // Official site[citation:2]
+      url: "https://www.facebook.com/profile.php?id=61579077061375", // Official site[citation:2]
     },
     {
       name: "X (Twitter)",
       icon: <X />,
       color: "#000000",
       bgColor: "#000000",
-      url: "https://x.com/", // Formerly twitter.com[citation:10]
+      url: "https://x.com/_TradingPost", // Formerly twitter.com[citation:10]
     },
     {
       name: "Discord",
       icon: <X />, // You can keep a placeholder or find a Discord icon
       color: "#5865F2",
       bgColor: "#a0c4f3ff",
-      url: "https://discord.com/", // Official site[citation:1]
+      url: "https://discord.gg/EGHV4XQn", // Official site[citation:1]
     },
     {
       name: "LinkedIn",
