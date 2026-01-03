@@ -46,7 +46,7 @@ export const platformSources = {
   DXtrade: "/platforms/DX-trade.webp",
   NinjaTrader: "/platforms/ninjatrader.webp",
   Volumetrica: "/platforms/volumetrica.webp",
-  TradingView: "/platorms/tradingview.png",
+  TradingView: "/platforms/tradingview.png",
   "MT5 Web Trader": "/platforms/mt5.webp",
   "MT5 Mobile": "/platforms/mt5.webp",
 };
