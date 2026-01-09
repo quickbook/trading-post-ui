@@ -99,14 +99,14 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 }));
 
 const StyledButton = styled(Button)(({ theme }) => ({
-  width: "110px",
+  width: "100px",
   height: "auto",
   backgroundColor: "#acacac54",
   borderRadius: "50px",
   fontFamily: "'Lora', Helvetica",
   fontWeight: 500,
-  fontSize: "16px",
-  lineHeight: "16px",
+  fontSize: {xs: "14px", md: "16px"},
+  lineHeight: {xs: "14px", md: "16px"},
   color: "white",
   textTransform: "none",
   "&:hover": {
@@ -329,6 +329,10 @@ const FirmDetailsTableSection = () => {
                   key={header.label}
                   //className={header.className}
                   sx={{
+                    display:
+                      header.label === "Firm" || header.label === "Actions"
+                        ? {xs: "table-cell", md: "table-cell"}
+                        : {xs: "none", md: "table-cell"},
                     color: "#cecece",
                     borderRight:
                       index === filteredFirms.length - 1
@@ -347,7 +351,7 @@ const FirmDetailsTableSection = () => {
               return (
                 <StyledTableRow key={index}>
                   {/* Firm Name and Logo */}
-                  <TableCell sx={{ width: "227px", height: "54px" }}>
+                  <TableCell sx={{ display: {xs: "table-cell", md: "table-cell"}, width: "227px", height: "54px" }}>
                     <Box
                       sx={{
                         display: "flex",
@@ -378,15 +382,15 @@ const FirmDetailsTableSection = () => {
                           flexDirection: "column",
                           justifyContent: "center",
                           alignItems: "flex-start",
-                          gap: "6px",
+                          gap: "10px",
                         }}
                       >
                         <Typography
                           sx={{
                             fontFamily: "'Lora', Helvetica",
                             fontWeight: 500,
-                            fontSize: "16px",
-                            lineHeight: "16px",
+                            fontSize: {xs: "14px", md: "16px"},
+                            lineHeight: {xs: "14px", md: "16px"},
                             color: "#cecece ",
                           }}
                         >
@@ -397,15 +401,15 @@ const FirmDetailsTableSection = () => {
                             position: "static",
                             backgroundColor: badgeStyles.bg,
                             color: badgeStyles.color,
-                            padding: "2px 8px",
+                            padding: "2px 6px",
                           }}
                         >
                           {badgeStyles.icon}
                           <Typography
                             sx={{
-                              fontSize: "10px",
+                              fontSize: {xs: "9px", md: "10px"},
                               fontWeight: "700",
-                              lineHeight: 1,
+                              lineHeight: 0.5,
                               letterSpacing: "1px",
                             }}
                           >
@@ -417,7 +421,7 @@ const FirmDetailsTableSection = () => {
                   </TableCell>
 
                   {/* Rating and Reviews */}
-                  <TableCell sx={{ width: "130px" }}>
+                  <TableCell sx={{ display: {xs: "none", md: "table-cell"}, width: "130px" }}>
                     <Box
                       sx={{
                         display: "flex",
@@ -459,13 +463,7 @@ const FirmDetailsTableSection = () => {
                   </TableCell>
 
                   {/* Country Flag and Name */}
-                  <TableCell
-                    sx={{
-                      width: "154px",
-                      overflow: "hidden",
-                      wordBreak: "break-word",
-                    }}
-                  >
+                  <TableCell sx={{ display: {xs: "none", md: "table-cell"}, width: "154px", overflow: "hidden", wordBreak: "break-word" }}>
                     <Box
                       sx={{
                         display: "flex",
@@ -496,7 +494,7 @@ const FirmDetailsTableSection = () => {
                   </TableCell>
 
                   {/* Assets Badges */}
-                  <TableCell sx={{ width: "152px", height: "54px" }}>
+                  <TableCell sx={{ display: {xs: "none", md: "table-cell"}, width: "152px", height: "54px" }}>
                     <Box
                       sx={{
                         width: "100%",
@@ -528,7 +526,7 @@ const FirmDetailsTableSection = () => {
                   </TableCell>
 
                   {/* Platforms */}
-                  <TableCell sx={{ width: "150px", height: "57px" }}>
+                  <TableCell sx={{ display: {xs: "none", md: "table-cell"}, width: "150px", height: "57px" }}>
                     <Box
                       sx={{
                         width: "100%",
@@ -572,7 +570,7 @@ const FirmDetailsTableSection = () => {
                   </TableCell>
 
                   {/* Max Allocation */}
-                  <TableCell sx={{ width: "143px", height: "54px" }}>
+                  <TableCell sx={{ display: {xs: "none", md: "table-cell"}, width: "143px", height: "54px" }}>
                     <Box
                       sx={{
                         display: "flex",
@@ -608,7 +606,7 @@ const FirmDetailsTableSection = () => {
                   </TableCell>
 
                   {/* Details Button */}
-                  <TableCell sx={{ width: "125px", borderRight: "none" }}>
+                  <TableCell sx={{ display: {xs: "table-cell", md: "table-cell"}, width: "125px", borderRight: "none" }}>
                     <Box
                       sx={{
                         display: "flex",

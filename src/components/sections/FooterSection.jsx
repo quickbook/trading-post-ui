@@ -104,7 +104,7 @@ const FooterSection = () => {
         </Grid>
 
         {/* Explore Links */}
-        <Grid size={{ xs: 12, md: 2 }}>
+        <Grid size={{ xs: 6, md: 2 }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <Box sx={{ pb: 1 }}>
               <Typography
@@ -126,7 +126,7 @@ const FooterSection = () => {
                 p: 0,
                 m: 0,
                 display: "flex",
-                flexDirection: { xs: "row", md: "column" },
+                flexDirection: "column",
               }}
             >
               {navigationItems.map((link, index) => (
@@ -165,7 +165,7 @@ const FooterSection = () => {
         </Grid>
 
         {/* Resources Links */}
-        <Grid size={{ xs: 12, md: 2 }}>
+        <Grid size={{ xs: 6, md: 2 }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
             <Box sx={{ pb: 1 }}>
               <Typography
@@ -187,7 +187,7 @@ const FooterSection = () => {
                 p: 0,
                 m: 0,
                 display: "flex",
-                flexDirection: { xs: "row", md: "column" },
+                flexDirection: "column",
               }}
             >
               {resourceLinks.map((link, index) => (

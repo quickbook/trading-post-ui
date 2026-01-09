@@ -99,7 +99,7 @@ const TradingPostBanner = () => {
             textTransform: "uppercase",
             mb: 3,
             fontStyle: "italic",
-            fontSize: { xs: "1.6rem", md: "2.5rem", lg: "3rem" },
+            fontSize: { xs: "1.3rem", sm: "2.5rem", lg: "3rem" },
             lineHeight: 1.2,
           }}
         >
