@@ -7,10 +7,12 @@ import reviewsReducer from "../features/reviews/reviewsSlice";
 import domainDataReducer from "../features/domain/domainDataSlice.js";
 import challengesReducer from "../features/challenges/challengesSlice.js"
 import getAllUsersReducer from "../features/auth/getAllUsersSlice.js";
+import getAllEnquiriesReducer from "../features/auth/getAllEnquiriesSlice.js";
 const store = configureStore({
   reducer: {
     auth: authReducer,
     getAllUsers: getAllUsersReducer,
+    getAllEnquiries: getAllEnquiriesReducer,
     firms: firmsReducer,
     challenges: challengesReducer,
     login: loginReducer,

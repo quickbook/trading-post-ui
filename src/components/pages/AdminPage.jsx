@@ -21,6 +21,7 @@ import ViewListIcon from "@mui/icons-material/ViewList";
 import ChallengeIcon from "@mui/icons-material/EmojiEvents";
 import SupervisorAccountIcon from "@mui/icons-material/SupervisorAccount";
 import PeopleIcon from "@mui/icons-material/People";
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import ViewAllUsers from "../sections/ViewAllUsers";
 import AddFirmForm from "../sections/AddFirmForm";
 import ViewAllFirms from "../sections/ViewAllFirms";
@@ -47,6 +48,7 @@ import {
 } from "../../features/challenges/challengesSlice";
 import AdminRegisterPage from "./AdminRegisterPage";
 import { selectRole, selectUser } from "../../features/auth/loginSlice";
+import ViewAllEnquiries from "../sections/ViewAllEnquiries";
 
 const drawerWidth = "320px";
 
@@ -297,6 +299,11 @@ const AdminPage = () => {
       icon: <PeopleIcon />,
       view: "users",
     },
+    {
+      text: "View Enquiries",
+      icon: <SupportAgentIcon />,
+      view: "enquiries",
+    },
     role === "ROOT" && {
       text: "Register Admin",
       icon: <SupervisorAccountIcon />,
@@ -305,7 +312,7 @@ const AdminPage = () => {
   ];
 
   const drawer = (
-    <Box>
+    <Box sx={{bgcolor:"#000000", height: "100%"}}>
       <Typography
         variant="h6"
         sx={{
@@ -337,6 +344,7 @@ const AdminPage = () => {
                     backgroundColor: "#4b0082a1",
                   },
                 },
+                "&:hover": { backgroundColor: "#ffffff10", color: "white" },
               }}
             >
               <ListItemIcon
@@ -439,6 +447,8 @@ const AdminPage = () => {
           <ViewAllUsers
           //users={users}
           />
+        ) : activeView === "enquiries" ? (
+          <ViewAllEnquiries />
         ) : (
           <></>
         )}
