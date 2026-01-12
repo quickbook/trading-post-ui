@@ -18,6 +18,13 @@ export const SocialLinks = () => {
       }}
     >
       <IconButton
+        onClick={() => {
+          window.open(
+            "https://www.instagram.com/tradingpost__/",
+            "_blank",
+            "noopener,noreferrer"
+          );
+        }}
         sx={{
           backgroundColor: "#ffdc00",
           "&:hover": { bgcolor: "#fff", opacity: 0.8 },
@@ -26,6 +33,13 @@ export const SocialLinks = () => {
         <InstagramIcon sx={{ color: "#000" }} />
       </IconButton>
       <IconButton
+        onClick={() => {
+          window.open(
+            "https://www.facebook.com/profile.php?id=61579077061375",
+            "_blank",
+            "noopener,noreferrer"
+          );
+        }}
         sx={{
           backgroundColor: "#ffdc00",
           "&:hover": { bgcolor: "#fff", opacity: 0.8 },
@@ -34,6 +48,7 @@ export const SocialLinks = () => {
         <FacebookIcon sx={{ color: "#000" }} />
       </IconButton>
       <IconButton
+        onClick={() => window.open("https://discord.gg/EGHV4XQn", "_blank")}
         sx={{
           backgroundColor: "#ffdc00",
           "&:hover": { bgcolor: "#fff", opacity: 0.8 },
@@ -48,6 +63,13 @@ export const SocialLinks = () => {
         />
       </IconButton>
       <IconButton
+        onClick={() => {
+          window.open(
+            "https://x.com/_TradingPost",
+            "_blank",
+            "noopener,noreferrer"
+          );
+        }}
         sx={{
           backgroundColor: "#ffdc00",
           "&:hover": { bgcolor: "#fff", opacity: 0.8 },

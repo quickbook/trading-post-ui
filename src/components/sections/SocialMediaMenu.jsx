@@ -73,7 +73,7 @@ const SocialMediaMenu = () => {
       icon: <YouTube />,
       color: "#FF0000",
       bgColor: "#FF0000",
-      url: "https://www.youtube.com/", // Official site[citation:7]
+      url: "https://www.youtube.com/@TradingPostOfficial", // Official site[citation:7]
     },
     {
       name: "Reddit",
