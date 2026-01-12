@@ -91,7 +91,7 @@ const TradingCard = ({ id, name, logo, buyUrl = "#" }) => {
 };
 
 export const TrustedFirms = () => {
-  const allFirms = useSelector((st)=>st.firms.content);
+  const allFirms = useSelector((st) => st.firms.content);
   const [firmDetails, setFirmDetails] = useState(allFirms);
   const navigate = useNavigate();
 
@@ -101,12 +101,10 @@ export const TrustedFirms = () => {
   };
 
   useEffect(() => {
-    const trustedFirms = firmDetails.filter(
-      (e) => e.firmType == "premium" || e.firmType == "trusted"
-    );
+    const trustedFirms = firmDetails.filter((e) => e.firmType == "trusted");
 
     setFirmDetails(trustedFirms);
-  }, []);
+  }, [allFirms]);
 
   return (
     <>

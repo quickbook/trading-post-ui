@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Card,
   CardContent,
@@ -53,7 +53,7 @@ const TradingCard = ({
       }}
     >
       <Card
-      onClick={()=>navigate(`/propfirm/${id}`)}
+        onClick={() => navigate(`/propfirm/${id}`)}
         sx={{
           width: "100%",
           maxWidth: { xs: "100%", md: 380 },
@@ -242,12 +242,16 @@ const TradingCard = ({
 };
 
 export const PromotionalCardsSection = ({ length }) => {
-  const allFirms = useSelector((st)=>st.firms.content);
+  const allFirms = useSelector((st) => st.firms.content);
   const [firmDetails, setFirmDetails] = useState(allFirms);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState("");
   const premiumCards = firmDetails?.filter((e) => e.firmType === "premium");
   const displayedCards = length ? premiumCards.slice(0, length) : premiumCards;
+
+  useEffect(() => {
+    setFirmDetails(premiumCards);
+  }, [allFirms]);
 
   const handleCopyCode = (code) => {
     navigator.clipboard.writeText(code).then(() => {
@@ -323,7 +327,7 @@ export const PromotionalCardsSection = ({ length }) => {
               sx={{ placeItems: "center" }}
             >
               <TradingCard
-              id={card.id}
+                id={card.id}
                 name={card.name}
                 profitSplit={card.tradingConditions.profitSplitPct}
                 account={foreignNumberSystem(

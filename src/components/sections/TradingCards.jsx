@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Slider from "react-slick";
 import {
   Card,
@@ -295,7 +295,13 @@ const TradingCard = ({
       </CardBody>
 
       <CardFooter>
-        <FundButton component='a' href={buyUrl} target="blank" variant="contained" size="large">
+        <FundButton
+          component="a"
+          href={buyUrl}
+          target="blank"
+          variant="contained"
+          size="large"
+        >
           Get Funded
         </FundButton>
       </CardFooter>
@@ -305,7 +311,7 @@ const TradingCard = ({
 
 // Main Component - Rest of the code remains the same...
 const TradingCards = () => {
-  const allFirms = useSelector((st)=>st.firms.content);
+  const allFirms = useSelector((st) => st.firms.content);
   const [firmDetails, setFirmDetails] = useState(allFirms);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [copiedCode, setCopiedCode] = useState("");
@@ -314,6 +320,11 @@ const TradingCards = () => {
   const isTablet = useMediaQuery(theme.breakpoints.between("sm", "lg"));
   const isDesktop = useMediaQuery(theme.breakpoints.down("xl"));
   const isLargeDesktop = useMediaQuery(theme.breakpoints.up("xl"));
+
+  useEffect(() => {
+    const premiumFirms = allFirms.filter((firm) => firm.firmType === "partner");
+    setFirmDetails([...premiumFirms]);
+  }, [allFirms]);
 
   const handleCopyCode = (code) => {
     navigator.clipboard
@@ -402,7 +413,9 @@ const TradingCards = () => {
                 <TradingCard
                   name={card?.name}
                   profitSplit={card?.tradingConditions.profitSplitPct}
-                  account={foreignNumberSystem(card?.tradingConditions.maximumAccountSizeUsd)}
+                  account={foreignNumberSystem(
+                    card?.tradingConditions.maximumAccountSizeUsd
+                  )}
                   code={card?.tradingConditions.discountCode}
                   logo={card?.logo}
                   firmType={card?.firmType}

@@ -42,7 +42,7 @@ const FirmsFilterSection = ({ setFilteredFirms, setPage, setValue, allFirms }) =
   };
 
   const handleTrustedOnly=()=>{
-    setFilteredFirms((firms)=>firms.filter((e)=> e.firmType=="premium" || e.firmType=="trusted"))
+    setFilteredFirms((firms)=>firms.filter((e)=> e.firmType=="trusted"))
   }
 
   const handleClear = useCallback(() => {
